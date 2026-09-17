@@ -7,7 +7,7 @@ final class AppDependencyContainer {
     let config: AppConfiguration
     let themeController: ThemeController
     let networkClient: any NetworkClient
-    let authService: any AuthService
+    let authService: SupabaseAuthService
     let subscriptionService: any SubscriptionService
     let monitoring: any MonitoringService
 
@@ -15,7 +15,7 @@ final class AppDependencyContainer {
         config: AppConfiguration,
         themeController: ThemeController,
         networkClient: any NetworkClient,
-        authService: any AuthService,
+        authService: SupabaseAuthService,
         subscriptionService: any SubscriptionService,
         monitoring: any MonitoringService
     ) {
@@ -32,7 +32,11 @@ final class AppDependencyContainer {
         let monitoring = ConsoleMonitoringService()
         let network = URLSessionNetworkClient(baseURL: config.supabaseURL)
         let auth = SupabaseAuthService(config: config, monitoring: monitoring)
-        let subscription = RevenueCatSubscriptionService(config: config, monitoring: monitoring)
+        let subscription = RevenueCatSubscriptionService(
+            config: config,
+            monitoring: monitoring,
+            supabase: auth.supabaseClient
+        )
 
         return AppDependencyContainer(
             config: config,
@@ -47,6 +51,11 @@ final class AppDependencyContainer {
     func start() async {
         monitoring.configure(environment: config.environment)
         await authService.restoreSession()
+        await subscriptionService.configure(userID: authService.currentUser?.id)
+    }
+
+    /// Call after successful login so RevenueCat `app_user_id` == Supabase user id.
+    func linkPurchasesToCurrentUser() async {
         await subscriptionService.configure(userID: authService.currentUser?.id)
     }
 }
