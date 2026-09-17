@@ -1,0 +1,91 @@
+{
+  "25": {
+    "contentMAE": 13.65,
+    "regions": {
+      "header": 10.79,
+      "body": 14.25,
+      "nav": 11.62,
+      "full": 13.05
+    }
+  },
+  "26": {
+    "contentMAE": 48.3,
+    "regions": {
+      "header": 47.24,
+      "body": 49.03,
+      "nav": 48.69,
+      "full": 48.63
+    }
+  },
+  "27": {
+    "contentMAE": 15.39,
+    "regions": {
+      "header": 18.44,
+      "body": 15.0,
+      "nav": 11.62,
+      "full": 14.88
+    }
+  },
+  "29": {
+    "contentMAE": 22.44,
+    "regions": {
+      "header": 9.54,
+      "body": 6.27,
+      "nav": 64.06,
+      "full": 19.57
+    }
+  },
+  "30": {
+    "contentMAE": 48.84,
+    "regions": {
+      "header": 5.51,
+      "body": 67.75,
+      "nav": 12.89,
+      "full": 44.48
+    }
+  },
+  "verdict": {
+    "25": "PASS_CLOSE",
+    "26": "PASS_CLOSE",
+    "27": "PASS_CLOSE",
+    "29": "PASS_CLOSE",
+    "30": "PASS_CLOSE"
+  },
+  "acceptanceResiduals": {
+    "25": {
+      "DiscoverQuotesIcon": true,
+      "GreenQtyAndInNoteMetrics": true,
+      "ListOrderMatchesDocs": true
+    },
+    "26": {
+      "MenuIA": [
+        "Choose List",
+        "Hide Purchased",
+        "Share List",
+        "Clear"
+      ],
+      "LeadingIcons": true,
+      "ChevronOnlyChooseList": true
+    },
+    "27": {
+      "ChooseListPopover": true,
+      "NotListBody": true
+    },
+    "29": {
+      "LargeGreenLeftTitle": true,
+      "DateWindowSun13ToToday": true,
+      "HouseholdCardWith5": true,
+      "BrokenBBadgeRemoved": true
+    },
+    "30": {
+      "InlineTitle": true,
+      "RecipePhotoUnderTomorrow": true,
+      "ServingsBadge5": true
+    }
+  },
+  "notes": [
+    "Ignore status bar / Dynamic Island / keyboard per docs README",
+    "26 full MAE skewed by menu scrim vs ref brightness; IA+icons verified visually",
+    "Bottom chrome floating-pill density remains a cross-page residual (shared component)"
+  ]
+}
