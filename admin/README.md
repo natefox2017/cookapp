@@ -2,6 +2,8 @@
 
 Local ops console for CookApp. Talks to cloud Admin APIs through a typed API layer. Default mode uses mock payloads shaped like the real contracts.
 
+Independent from iOS and from Supabase frontend code (Foundation §21). Live Admin API wiring is out of scope until backend Issue #11 exposes contracts.
+
 ## Stack
 
 - React + TypeScript + Vite
@@ -18,6 +20,14 @@ npm run dev
 ```
 
 Open `http://localhost:5173`.
+
+## Verify
+
+```bash
+cd admin
+npm run build   # tsc + vite production build
+npm run lint    # oxlint
+```
 
 ## Environment
 
@@ -57,4 +67,4 @@ Admin Dashboard UI
 
 - GitHub Issue #12
 - Cloud backend Issue #11 (live Admin APIs — follow-up)
-- Notion: Local Admin Dashboard system boundary
+- Notion: Foundation §21 Local Admin + Global Admin UI Standard
