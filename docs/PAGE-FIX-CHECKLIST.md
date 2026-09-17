@@ -84,7 +84,7 @@
 | 06 | Recipe Menu | `116:18396` | `/tmp/cursor/artifacts/w03_back_more_glass_after.png` | PENDING | Weak ref (inherits Detail). Menu overlay vs host Detail. |
 | 08 | Recently Added | `119:12665` | `/tmp/cookapp-shots/after/10-recent.png` | DONE | Single Beef @ y188; glassY **62** (header60+lead2); MSE≈2.5 vs `10-recent`. |
 | 09 | Main | `119:12726` | `/tmp/cookapp-shots/after/11-main.png` | DONE | Single Beef @ y188; glassY **62**; MSE≈1.1 vs `11-main`. |
-| 11 | Discover | `130:14331` | `/tmp/cursor/artifacts/w07_back_filter_glass_after.png` | DONE | Back+Filter glassY **62**; title 34@y58; feed matches w07; MSE≈1.7. |
+| 11 | Discover | `130:14331` | `docs/ui-screenshots/discover.jpg` + after2 | DONE | **PASS*** vs docs SoT: cards 184@y168/368/568/768 gap16; no Filter; ghost nav cleared (fill overrides). MAE≈15.9. Residual shared tab chrome. |
 | 13 | Recipe Editor | `119:12180` | `/tmp/cookapp-shots/after/34-editor.png` + `w07_1` | DONE | Close+Complete glassY **62**; Checkmark Primary on Complete (w07 family; `34-editor` blank circle superseded); MSE≈1.5. |
 | 14 | Category Selector | `119:12208` | `/tmp/cookapp-shots/after/35-category-v2.png` | DONE | Host y **−90** (was −110 over-clip); sheet@360 · Add/Done@382; glass host Complete@62; MSE≈3.7. |
 | 15 | Cuisine Selector | `119:12241` | `/tmp/cookapp-shots/after/36-cuisine.png` | DONE | Host y **−90**; French Selected=True; sheet chrome synced to 14; MSE≈2.1. |
@@ -109,7 +109,7 @@
 | 38 | Experiments | `117:10209` | chrome vs Import group | DONE | Group@160 r=26; toggle rows; hint restack; glassY **62**. |
 | 39 | Account | `117:10235` | `docs/ui-screenshots/account-settings.jpg` | DONE | Copy Support ID Clipboard Accent icon; MAE≈7.5. |
 | 40 | Create Account | `117:10279` | Create Account chrome | DONE | Inline nav title; centered body; pill Get started@820; glassY **62**. |
-| 41 | Trial / Paywall | `117:10305` | `docs/ui-screenshots/join-pestle-pro.jpg` | DONE | Join Pestle Pro composition (hero+timeline+social+footer); residual MAE≈49 (hero fidelity). |
+| 41 | Trial / Paywall | `117:10305` | `docs/ui-screenshots/join-pestle-pro.jpg` | DONE | **PASS***: hero PNG fidelity (MAE≈8.3) + single footer; full MAE≈25.2. Residual: social laurel vectors / timeline icon fill. Evidence `.cursor/walkthrough-artifacts/issue10-paywall-41/`. |
 | 42 | Join Mailing List | `117:10357` | form chrome vs Import | DONE | Fixed overlap; field `#f2f2f7` + Join CTA; glassY **62**. |
 | 43 | Household | `117:10383` | `docs/ui-screenshots/household-settings.jpg` | DONE | Existing household management (ba d); MAE≈5.7. |
 | 44 | Timers | `117:10435` | Timers + glass Add | DONE | Nav `Large/Back/Add`; trailing Add glassY **62**; group@160. |
@@ -294,7 +294,7 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 | 33 | 62 | Pro Active row; Chrome; mic; 0 Active; bad | ~10.7 | DONE |
 | 34 | 62 | App Icon thumb; Timers toggle row | ~13.9 | DONE |
 | 39 | 62 | Clipboard copy icon | ~7.5 | DONE |
-| 41 | 62 | Join Pestle Pro composition | ~49 (hero res) | DONE* |
+| 41 | 62 | hero PNG + deduped footer vs join-pestle-pro | ~25.2 (hero ~8.3) | DONE* |
 | 43 | 62 | household management | ~5.7 | DONE |
 | 47 | 62 | blank M18 | ~12 | DONE |
 | 48 | 62 | centered thanks | ~11.5 | DONE |

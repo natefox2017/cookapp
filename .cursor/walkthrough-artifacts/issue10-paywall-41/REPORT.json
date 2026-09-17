@@ -1,0 +1,22 @@
+{
+  "page": "41",
+  "frame": "117:10305",
+  "main": "116:19068",
+  "docs": "docs/ui-screenshots/join-pestle-pro.jpg",
+  "heroImageHash": "f88b36d2790801baecb9dce58e46a63b5feff001",
+  "heroAsset": "1320x840 PNG from docs crop y=120..960",
+  "fixes": [
+    "Replaced blocky/low-res hero via upload_assets PNG (was ~12KB JPEG)",
+    "Removed duplicate Footer Links 288:7200; kept spaced Restore/Terms/Privacy/View all plans",
+    "Sheet top corner radius 38 on main+hero"
+  ],
+  "mae_full_before": 49.89,
+  "mae_full_after": 25.16,
+  "mae_hero_before": 57.12,
+  "mae_hero_after": 8.33,
+  "footer_dup": false,
+  "hero_blocky": false,
+  "verdict": "PASS*",
+  "residual": "Social laurel vectors + timeline icon fill; docs phone chrome/margins inflate full MAE",
+  "issue10": "leave OPEN; remaining FAIL 02/11"
+}

@@ -86,8 +86,10 @@
   {
     "page": "41",
     "docs": "join-pestle-pro.jpg",
-    "mae": 50.04,
-    "side": "/tmp/cookapp-figma-audit/reaudit-sides/41-side.png"
+    "mae": 25.16,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/41-side.png",
+    "verdict": "PASS*",
+    "note": "hero PNG + footer dedupe; see issue10-paywall-41"
   },
   {
     "page": "43",
