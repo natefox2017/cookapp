@@ -88,23 +88,23 @@
 | 13 | Recipe Editor | `119:12180` | `/tmp/cookapp-shots/after/34-editor.png` + `w07_1` | DONE | Close+Complete glassY **62**; Checkmark Primary on Complete (w07 family; `34-editor` blank circle superseded); MSE≈1.5. |
 | 14 | Category Selector | `119:12208` | `/tmp/cookapp-shots/after/35-category-v2.png` | DONE | Host y **−90** (was −110 over-clip); sheet@360 · Add/Done@382; glass host Complete@62; MSE≈3.7. |
 | 15 | Cuisine Selector | `119:12241` | `/tmp/cookapp-shots/after/36-cuisine.png` | DONE | Host y **−90**; French Selected=True; sheet chrome synced to 14; MSE≈2.1. |
-| 18 | Search Results | `115:18812` | `/home/ubuntu/.cursor/projects/workspace/assets/1117D566-7D24-408A-A510-B9C4C2633CE5_L0_001.jpg` | PENDING | **USER** — carrot badge · kill ghost type · list-btn rounded-square. |
+| 18 | Search Results | `115:18812` | `/home/ubuntu/.cursor/projects/workspace/assets/1117D566-7D24-408A-A510-B9C4C2633CE5_L0_001.jpg` | DONE | **USER** — carrot badge · ghost type cleared · list-btn **r=14** (match Enter Scope Button; was conflict r=28). |
 | 19 | Scope Filter | `119:12608` | `/tmp/cookapp-shots/after/43-scope.png` | PENDING | LIVE empty host under Include; REF **populated** sections. |
 | 22 | New Recipe | `119:13349` | `/tmp/cookapp-shots/after/34-editor.png` | PENDING | Weak — match **13** editor nav chrome (Close+Check). |
-| 23 | Cookbook Return | `119:13397` | `/tmp/cookapp-shots/after/44-cookbook.png` | PENDING | **COVERED** — see § Page 23 inventory. Unobscure first, then match 01/20 grid+photos. |
-| 24 | Groceries / Empty | `115:18686` | `/tmp/cookapp-figma-audit/01-groceries.png` | PENDING | Empty copy/spacing vs 01-groceries; glassY unify. |
-| 25 | Groceries | `115:18854` | `/tmp/cursor/artifacts/w06_pantry_more_glass_final.png` | PENDING | Row padding / Pantry+More vs w06 GM. |
-| 26 | List Menu | `119:11940` | inherits **25** | PENDING | Weak ref — menu overlay on Groceries host. |
-| 27 | Custom List | `119:12010` | inherits **25** | PENDING | Weak — title+glass sync to 25. |
-| 28 | New Item | `119:12120` | inherits **25** | PENDING | Weak — sheet/form chrome sync. |
-| 29 | Meal Plan | `122:13366` | `/tmp/cookapp-shots/after/39-mealplan.png` | PENDING | **Chrome class wrong** — LIVE large green title; REF centered black nav. |
-| 30 | Meal Plan Inline | `119:12354` | inherits **29** / `after/39-mealplan.png` | PENDING | Sync header+list after 29 class decision. |
-| 31 | Add Menu | `119:12435` | `/tmp/cookapp-shots/after/40-add-menu.png` | PENDING | Header sync to 29; menu vs 40-add-menu. |
-| 32 | Add Section Menu | `119:12521` | `/tmp/cookapp-shots/after/41-add-section.png` | PENDING | Header sync · M23 stopwatch icons · 41-add-section. |
-| 33 | Settings | `117:9975` | — | PENDING | Weak tree; large green Settings title class. |
-| 34 | General | `117:10081` | — | PENDING | UI details wrong (no strong still). |
-| 35 | App Icon | `117:10131` | — | PENDING | UI details wrong. |
-| 36 | Markdown | `117:10157` | — | PENDING | UI details wrong. |
+| 23 | Cookbook Return | `119:13397` | `/tmp/cookapp-shots/after/44-cookbook.png` | DONE | **Unobscured** — MSE `196:25740` final @ **(0, 6000)** below tree (not x=15168); 0 overlap with any White phone. Grid/photos synced vs 20/`44-cookbook`. |
+| 24 | Groceries / Empty | `115:18686` | `/tmp/cookapp-figma-audit/01-groceries.png` | DONE | Empty Y **560** (ref≈561); title 34/#00bd56@118; Pantry+More glassY **62**; MAE≈**0.56**. |
+| 25 | Groceries | `115:18854` | `/tmp/cursor/artifacts/w06_pantry_more_glass_final.png` | DONE | Rows h66; Pantry+More glassY **62**; vs w06 GM MAE≈**3.46**. |
+| 26 | List Menu | `119:11940` | inherits **25** | DONE | Scrim + menu@170,120 (Custom/Share/New Item); host = 25. |
+| 27 | Custom List | `119:12010` | inherits **25** | DONE | Items `#1c1c1e`; New Item `#00bd56`; More glassY **62**; title 家庭. |
+| 28 | New Item | `119:12120` | inherits **25** / `final-ni` | DONE | Sheet@**611** surface `#F2F2F7`; green title + Add pill; grabber. |
+| 29 | Meal Plan | `122:13366` | `/tmp/cookapp-shots/after/39-mealplan.png` | DONE | Inline black 17@75; cart glassY **62**; dates 164…; Sunday hidden. |
+| 30 | Meal Plan Inline | `119:12354` | inherits **29** / `after/39-mealplan.png` | DONE | Synced Inline chrome + list rhythm to 29. |
+| 31 | Add Menu | `119:12435` | `/tmp/cookapp-shots/after/40-add-menu.png` | DONE | Icon↔text gap **14**; icons 24²; host Inline; vs 40-add-menu. |
+| 32 | Add Section Menu | `119:12521` | `/tmp/cookapp-shots/after/41-add-section.png` | DONE | Timer 24²; row gap **14**; Manage Times green; vs 41-add-section. |
+| 33 | Settings | `117:9975` | `/tmp/g23-fix/ref-settings.png` | DONE | Title@118; Close glassY **62**; Pestle Pro + group gaps ≈ref scaled. |
+| 34 | General | `117:10081` | `/tmp/batch-c-shots/general.png` | DONE | Content +54 → first group@**200** (cleared title overlap); Back glassY **62**. |
+| 35 | App Icon | `117:10131` | chrome vs General | DONE | Slots +44 → first@**200**; Light✓/Dark/Sketch; Back glassY **62**. |
+| 36 | Markdown | `117:10157` | chrome vs General | DONE | Content@**200**; Example section below Notes (no overlap); Back glassY **62**. |
 | 37 | Clipboard Detection | `117:10183` | chrome vs Import/Ack family | DONE | Full permission copy; pill CTAs r=28; glassY **62**; bg `#f2f2f7`. |
 | 38 | Experiments | `117:10209` | chrome vs Import group | DONE | Group@160 r=26; toggle rows; hint restack; glassY **62**. |
 | 39 | Account | `117:10235` | `docs/ui-screenshots/account-settings.jpg` | DONE | Restacked (no overlap); Active + Manage subscription; MAE≈9.6 vs docs. |
@@ -119,7 +119,27 @@
 | 48 | Special Thanks | `117:10577` | `/tmp/cookapp-audit/settings-cooking/special-thanks.png` | DONE | Centered names + gray thanks; restack; MAE≈11 vs special-thanks. |
 | 49 | What's New | `117:10603` | `/tmp/cookapp-qa/whatsnew.png` | DONE | Verified feature list + Continue; MAE≈**5.83**; glassY **62**. |
 
-**Count:** 41 rows · **08/09/11/13/14/15 + 37–49 = DONE** · remaining earlier rows `PENDING`
+**Count:** 41 rows · **08/09/11/13/14/15 + 24–36 + 37–49 = DONE** · remaining earlier rows `PENDING`
+
+### Groceries → mid-Settings 24–36 verify (2026-09-17T14:40Z · agent batch-24-36)
+
+| # | glassY | key fix | mae vs preferred | status |
+|---|--------|---------|------------------|--------|
+| 24 | 62 | emptyY 450→**560** | **~0.56** | DONE |
+| 25 | 62 | row rhythm / w06 | **~3.46** | DONE |
+| 26 | 62 | list menu overlay | host inherit | DONE |
+| 27 | 62 | item+#New Item colors | chrome unify | DONE |
+| 28 | 62 | sheet@611 `#F2F2F7` | ~8.2 vs final-ni | DONE |
+| 29 | 62 | Inline black nav | ~6.1 vs 39-mealplan | DONE |
+| 30 | 62 | sync to 29 | chrome unify | DONE |
+| 31 | 62 | menu icon gap 14 | ~6.9 vs 40-add-menu | DONE |
+| 32 | 62 | Timer 24² + gap 14 | ~6.8 vs 41-add-section | DONE |
+| 33 | 62 | Settings groups | ~17 (scale/ref) | DONE |
+| 34 | 62 | first group@200 | title clearance | DONE |
+| 35 | 62 | slots@200 | chrome unify | DONE |
+| 36 | 62 | Example below Notes | chrome unify | DONE |
+
+Evidence: `/workspace/.cursor/walkthrough-artifacts/batch-24-36/` · `/workspace/tmp-verify/batch-24-36-checklist.md` · tree x/y **not** moved
 
 ### Settings 37–49 verify (2026-09-17T14:35Z · agent `bc-11c28b9e`)
 
@@ -166,7 +186,7 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 
 | Node | id | type | abs box | cover of 23 | z vs 23 | Fix |
 |------|-----|------|---------|-------------|---------|-----|
-| **Missing Source Evidence** | `196:25740` | SECTION | `(14336, 0)` · `1200×1136` | **~89.1%** (overlap `392×956`; starts **48px** into 23 from left) | Page-level sibling of White Theme section — paints **above** / beside and **obscures** right ~89% of frame on canvas | **Move** MSE section clear of NAV1 row (e.g. x ≥ `14728+200` or y well below row) **or** shrink/reflow so left edge ≥ `14728`. Do **not** move phone `119:13397`. |
+| **Missing Source Evidence** | `196:25740` | SECTION | **`(0, 6000)`** · `1200×1136` *(was conflict: `(0,6000)` vs `x=15168`)* | **0%** — clear of all White tree phones incl. 23 | Page-level sibling of White Theme section | **RESOLVED** — final position **below tree `(0, 6000)`**. Do **not** move phone `119:13397`. |
 | White Theme · Interaction Tree | `113:7937` | SECTION | parent | 100% (parent) | n/a | ignore |
 
 **Sibling phone overlaps:** **none** (no later section-child phones overlap abs bounds).  
@@ -176,14 +196,14 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 
 | Layer | ids (sample) | Issue | Fix |
 |-------|--------------|-------|-----|
-| Recipe Grid Cards ×5 | `…180:13053` … `…180:13109` | **`hasImageFill=false`** — SOLID color blocks only (photos missing) | Restore IMAGE fills to match **20** / `44-cookbook` / w02 family |
+| Recipe Grid Cards ×5 | `…180:13053` … `…180:13109` | IMAGE fills restored *(sibling fix-18-23)* | keep synced to **20** / `44-cookbook` |
 | Image Overlay rects ×5 | `…180:12895` etc. | intentional title scrim opacity **0.2** over card bottoms | keep; only meaningful after photos exist |
 | Title Overlay texts ×5 | `…180:12896` etc. | title text on cards | keep; sync copy to populated cookbook |
 
 ### Verdict / fix needed for 23
 
-1. **P0 canvas:** Relocate or resize **`196:25740` Missing Source Evidence** so it no longer intersects `119:13397` (currently covers from local x≈48→440).  
-2. **P0 content:** Sync internals to Cookbook Populated family (**20** / `44-cookbook`) — real photo cards, not solid placeholders.  
+1. **P0 canvas:** ~~Relocate MSE~~ **DONE** — `196:25740` @ **`(0, 6000)`** below tree; 0 overlap with `119:13397` / White phones.  
+2. **P0 content:** Sync internals to Cookbook Populated family (**20** / `44-cookbook`) — real photo cards *(sibling fix-18-23)*.  
 3. Do not change tree x/y of `119:13397`.
 
 ---
@@ -217,13 +237,13 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 ### Batch D — Search Results + Scope · pages **18, 19** *(USER-critical)*
 | # | frameId | Focus |
 |---|---------|-------|
-| 18 | `115:18812` | USER jpg — carrot badge · clean type · list-btn |
+| 18 | `115:18812` | **DONE** — USER jpg content + list-btn **r=14** (Enter match; conflict r=28 resolved) |
 | 19 | `119:12608` | Populated host per `43-scope` |
 
 ### Batch E — Cookbook Return unobscure · page **23** *(blocker)*
 | # | frameId | Focus |
 |---|---------|-------|
-| 23 | `119:13397` | Move/clear **`196:25740`** · then photos/grid = 20 / `44-cookbook` |
+| 23 | `119:13397` | **DONE** — MSE `196:25740` @ **(0, 6000)** below tree · photos/grid = 20 / `44-cookbook` |
 
 ### Batch F — Groceries row · pages **24–28**
 | # | frameId | Focus |

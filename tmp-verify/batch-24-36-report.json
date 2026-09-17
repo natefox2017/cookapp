@@ -1,0 +1,61 @@
+{
+  "agent": "batch-24-36-ui-details",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "pageId": "37:2",
+  "scope": "24 Groceries Empty → 36 Markdown (mid-Settings)",
+  "treeLayout": "NOT moved (phone instance x/y untouched)",
+  "glassY": 62,
+  "checklist": {
+    "24": "PASS",
+    "25": "PASS",
+    "26": "PASS",
+    "27": "PASS",
+    "28": "PASS",
+    "29": "PASS",
+    "30": "PASS",
+    "31": "PASS",
+    "32": "PASS",
+    "33": "PASS",
+    "34": "PASS",
+    "35": "PASS",
+    "36": "PASS"
+  },
+  "fixes": [
+    "24 emptyY 450→560",
+    "27 item #1c1c1e + New Item #00bd56",
+    "28 sheet y-65→611 + #F2F2F7 surface",
+    "34 General content +54 (first@200)",
+    "35 App Icon content +44 (first@200)",
+    "36 Markdown content +54; Example below Notes",
+    "31/32 menu row itemSpacing 14 + 24px icons",
+    "Trailing More/Cart/Close visible glassY62"
+  ],
+  "mainsEdited": {
+    "24": "115:7966",
+    "25": "115:8136",
+    "26": "118:10578",
+    "27": "118:10650",
+    "28": "118:10756",
+    "29": "115:8250",
+    "30": "118:10980",
+    "31": "118:11059",
+    "addMenuOverlay": "196:27113",
+    "32": "118:11143",
+    "addSectionOverlay": "196:27132",
+    "33": "116:18755",
+    "34": "116:18852",
+    "35": "116:18900",
+    "36": "116:18924"
+  },
+  "mae": {
+    "24": 0.56,
+    "25": 3.46,
+    "28": 8.21,
+    "29": 6.08,
+    "31": 6.94,
+    "32": 6.79,
+    "33": 17.43,
+    "34": 13.29
+  },
+  "evidenceDir": "/workspace/.cursor/walkthrough-artifacts/batch-24-36"
+}
