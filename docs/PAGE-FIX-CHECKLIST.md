@@ -88,10 +88,10 @@
 | 13 | Recipe Editor | `119:12180` | `/tmp/cookapp-shots/after/34-editor.png` + `w07_1` | DONE | Close+Complete glassY **62**; Checkmark Primary on Complete (w07 family; `34-editor` blank circle superseded); MSE≈1.5. |
 | 14 | Category Selector | `119:12208` | `/tmp/cookapp-shots/after/35-category-v2.png` | DONE | Host y **−90** (was −110 over-clip); sheet@360 · Add/Done@382; glass host Complete@62; MSE≈3.7. |
 | 15 | Cuisine Selector | `119:12241` | `/tmp/cookapp-shots/after/36-cuisine.png` | DONE | Host y **−90**; French Selected=True; sheet chrome synced to 14; MSE≈2.1. |
-| 18 | Search Results | `115:18812` | `/home/ubuntu/.cursor/projects/workspace/assets/1117D566-7D24-408A-A510-B9C4C2633CE5_L0_001.jpg` | PENDING | **USER** — carrot badge · kill ghost type · list-btn rounded-square. |
+| 18 | Search Results | `115:18812` | `/home/ubuntu/.cursor/projects/workspace/assets/1117D566-7D24-408A-A510-B9C4C2633CE5_L0_001.jpg` | DONE | **USER** — carrot badge · ghost type cleared · list-btn **r=14** (match Enter Scope Button; was conflict r=28). |
 | 19 | Scope Filter | `119:12608` | `/tmp/cookapp-shots/after/43-scope.png` | PENDING | LIVE empty host under Include; REF **populated** sections. |
 | 22 | New Recipe | `119:13349` | `/tmp/cookapp-shots/after/34-editor.png` | PENDING | Weak — match **13** editor nav chrome (Close+Check). |
-| 23 | Cookbook Return | `119:13397` | `/tmp/cookapp-shots/after/44-cookbook.png` | PENDING | **COVERED** — see § Page 23 inventory. Unobscure first, then match 01/20 grid+photos. |
+| 23 | Cookbook Return | `119:13397` | `/tmp/cookapp-shots/after/44-cookbook.png` | DONE | **Unobscured** — MSE `196:25740` final @ **(0, 6000)** below tree (not x=15168); 0 overlap with any White phone. Grid/photos synced vs 20/`44-cookbook`. |
 | 24 | Groceries / Empty | `115:18686` | `/tmp/cookapp-figma-audit/01-groceries.png` | PENDING | Empty copy/spacing vs 01-groceries; glassY unify. |
 | 25 | Groceries | `115:18854` | `/tmp/cursor/artifacts/w06_pantry_more_glass_final.png` | PENDING | Row padding / Pantry+More vs w06 GM. |
 | 26 | List Menu | `119:11940` | inherits **25** | PENDING | Weak ref — menu overlay on Groceries host. |
@@ -166,7 +166,7 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 
 | Node | id | type | abs box | cover of 23 | z vs 23 | Fix |
 |------|-----|------|---------|-------------|---------|-----|
-| **Missing Source Evidence** | `196:25740` | SECTION | `(14336, 0)` · `1200×1136` | **~89.1%** (overlap `392×956`; starts **48px** into 23 from left) | Page-level sibling of White Theme section — paints **above** / beside and **obscures** right ~89% of frame on canvas | **Move** MSE section clear of NAV1 row (e.g. x ≥ `14728+200` or y well below row) **or** shrink/reflow so left edge ≥ `14728`. Do **not** move phone `119:13397`. |
+| **Missing Source Evidence** | `196:25740` | SECTION | **`(0, 6000)`** · `1200×1136` *(was conflict: `(0,6000)` vs `x=15168`)* | **0%** — clear of all White tree phones incl. 23 | Page-level sibling of White Theme section | **RESOLVED** — final position **below tree `(0, 6000)`**. Do **not** move phone `119:13397`. |
 | White Theme · Interaction Tree | `113:7937` | SECTION | parent | 100% (parent) | n/a | ignore |
 
 **Sibling phone overlaps:** **none** (no later section-child phones overlap abs bounds).  
@@ -176,14 +176,14 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 
 | Layer | ids (sample) | Issue | Fix |
 |-------|--------------|-------|-----|
-| Recipe Grid Cards ×5 | `…180:13053` … `…180:13109` | **`hasImageFill=false`** — SOLID color blocks only (photos missing) | Restore IMAGE fills to match **20** / `44-cookbook` / w02 family |
+| Recipe Grid Cards ×5 | `…180:13053` … `…180:13109` | IMAGE fills restored *(sibling fix-18-23)* | keep synced to **20** / `44-cookbook` |
 | Image Overlay rects ×5 | `…180:12895` etc. | intentional title scrim opacity **0.2** over card bottoms | keep; only meaningful after photos exist |
 | Title Overlay texts ×5 | `…180:12896` etc. | title text on cards | keep; sync copy to populated cookbook |
 
 ### Verdict / fix needed for 23
 
-1. **P0 canvas:** Relocate or resize **`196:25740` Missing Source Evidence** so it no longer intersects `119:13397` (currently covers from local x≈48→440).  
-2. **P0 content:** Sync internals to Cookbook Populated family (**20** / `44-cookbook`) — real photo cards, not solid placeholders.  
+1. **P0 canvas:** ~~Relocate MSE~~ **DONE** — `196:25740` @ **`(0, 6000)`** below tree; 0 overlap with `119:13397` / White phones.  
+2. **P0 content:** Sync internals to Cookbook Populated family (**20** / `44-cookbook`) — real photo cards *(sibling fix-18-23)*.  
 3. Do not change tree x/y of `119:13397`.
 
 ---
@@ -217,13 +217,13 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 ### Batch D — Search Results + Scope · pages **18, 19** *(USER-critical)*
 | # | frameId | Focus |
 |---|---------|-------|
-| 18 | `115:18812` | USER jpg — carrot badge · clean type · list-btn |
+| 18 | `115:18812` | **DONE** — USER jpg content + list-btn **r=14** (Enter match; conflict r=28 resolved) |
 | 19 | `119:12608` | Populated host per `43-scope` |
 
 ### Batch E — Cookbook Return unobscure · page **23** *(blocker)*
 | # | frameId | Focus |
 |---|---------|-------|
-| 23 | `119:13397` | Move/clear **`196:25740`** · then photos/grid = 20 / `44-cookbook` |
+| 23 | `119:13397` | **DONE** — MSE `196:25740` @ **(0, 6000)** below tree · photos/grid = 20 / `44-cookbook` |
 
 ### Batch F — Groceries row · pages **24–28**
 | # | frameId | Focus |
@@ -264,8 +264,8 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 
 ## Launch order (recommended)
 
-1. **Batch E** (23 cover) — canvas obscurity blocks visual QA of Return  
-2. **Batch D** (18–19) — USER upload proves Search Results still wrong  
+1. ~~**Batch E** (23 cover)~~ **DONE** — MSE `196:25740` @ `(0, 6000)` below tree; 23 unobscured  
+2. **Batch D** (18–19) — **18 list-btn r=14 DONE** (conflict resolved); **19** still PENDING populated host  
 3. **Batch G** (29–32) — Meal Plan chrome class obvious  
 4. **Batch B** (08/09/11) — content count fails  
 5. **Batch C** (14/15/22) — sheets + New Recipe  
@@ -273,7 +273,7 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 7. **Batch F** (24–28) — groceries  
 8. **Batch J** then **H/I** — settings with refs first, weak-ref mid last  
 
-**Safe parallelism:** A ∥ B ∥ C ∥ D ∥ F ∥ G ∥ J (and H∥I after J starts). **E** can run alone or ahead of all (only touches MSE section + 23 internals).
+**Safe parallelism:** A ∥ B ∥ C ∥ F ∥ G ∥ J (and H∥I after J starts). **E** canvas conflict resolved (MSE below tree).
 
 ---
 
