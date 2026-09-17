@@ -79,7 +79,7 @@
 | # | Name | frameId | ref_path | status | notes |
 |---|------|---------|----------|--------|-------|
 | 03 | Meal Plan Prompt | `116:18239` | — | PENDING | No strong still. Rebuild prompt/sheet chrome; strip orphan scrap text. |
-| 04 | Cooking Steps | `116:18290` | `/tmp/cookapp-qa/cooking-final.png` | PENDING | ≈ref; polish Dual Capsule glassY **52→~56**; Back+Next geometry. |
+| 04 | Cooking Steps | `116:18290` | `/tmp/cookapp-qa/cooking-final.png` | DONE | Instruction wrap fixed (forced breaks + fs **26**); MAE **9.28→7.98**; glassY **52**; Next **52**. |
 | 05 | Timer Form | `116:18318` | `/tmp/cookapp-qa/timer-final.png` | PENDING | ≈ref; glassY polish; picker selection band; Start green. |
 | 06 | Recipe Menu | `116:18396` | `/tmp/cursor/artifacts/w03_back_more_glass_after.png` | PENDING | Weak ref (inherits Detail). Menu overlay vs host Detail. |
 | 08 | Recently Added | `119:12665` | `/tmp/cookapp-shots/after/10-recent.png` | DONE | Single Beef @ y188; glassY **62** (header60+lead2); MSE≈2.5 vs `10-recent`. |
@@ -92,11 +92,11 @@
 | 19 | Scope Filter | `119:12608` | `/tmp/cookapp-shots/after/43-scope.png` | PENDING | LIVE empty host under Include; REF **populated** sections. |
 | 22 | New Recipe | `119:13349` | `/tmp/cookapp-shots/after/34-editor.png` | PENDING | Weak — match **13** editor nav chrome (Close+Check). |
 | 23 | Cookbook Return | `119:13397` | `/tmp/cookapp-shots/after/44-cookbook.png` | DONE | **Unobscured** — MSE `196:25740` final @ **(0, 6000)** below tree (not x=15168); 0 overlap with any White phone. Grid/photos synced vs 20/`44-cookbook`. |
-| 24 | Groceries / Empty | `115:18686` | `/tmp/cookapp-figma-audit/01-groceries.png` | PENDING | Empty copy/spacing vs 01-groceries; glassY unify. |
-| 25 | Groceries | `115:18854` | `/tmp/cursor/artifacts/w06_pantry_more_glass_final.png` | PENDING | Row padding / Pantry+More vs w06 GM. |
-| 26 | List Menu | `119:11940` | inherits **25** | PENDING | Weak ref — menu overlay on Groceries host. |
-| 27 | Custom List | `119:12010` | inherits **25** | PENDING | Weak — title+glass sync to 25. |
-| 28 | New Item | `119:12120` | inherits **25** | PENDING | Weak — sheet/form chrome sync. |
+| 24 | Groceries / Empty | `115:18686` | `/tmp/cookapp-figma-audit/01-groceries.png` | DONE | Empty Y **560**; MAE≈**1.26** vs 01-groceries; glassY **62**. |
+| 25 | Groceries | `115:18854` | `/tmp/cursor/artifacts/w06_pantry_more_glass_final.png` | DONE | Rows/Pantry+More vs w06 GM; MAE≈**3.87**; glassY **62**. |
+| 26 | List Menu | `119:11940` | inherits **25** | DONE | Scrim + Custom/Share/New Item menu @170,120. |
+| 27 | Custom List | `119:12010` | inherits **25** | DONE | Title 家庭; items #1c1c1e; New Item #00bd56; glassY **62**. |
+| 28 | New Item | `119:12120` | inherits **25** | DONE | Sheet@**611** · `#F2F2F7`; grabber/title/field/Add; MAE≈8.2. |
 | 29 | Meal Plan | `122:13366` | `/tmp/cookapp-shots/after/39-mealplan.png` | PENDING | **Chrome class wrong** — LIVE large green title; REF centered black nav. |
 | 30 | Meal Plan Inline | `119:12354` | inherits **29** / `after/39-mealplan.png` | PENDING | Sync header+list after 29 class decision. |
 | 31 | Add Menu | `119:12435` | `/tmp/cookapp-shots/after/40-add-menu.png` | PENDING | Header sync to 29; menu vs 40-add-menu. |
@@ -228,11 +228,11 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 ### Batch F — Groceries row · pages **24–28**
 | # | frameId | Focus |
 |---|---------|-------|
-| 24 | `115:18686` | Empty vs `01-groceries` |
-| 25 | `115:18854` | w06 GM row padding |
-| 26 | `119:11940` | List Menu on host |
-| 27 | `119:12010` | Custom List chrome |
-| 28 | `119:12120` | New Item sheet |
+| 24 | `115:18686` | **DONE** — emptyY 560 · MAE≈1.26 |
+| 25 | `115:18854` | **DONE** — w06 GM · MAE≈3.87 |
+| 26 | `119:11940` | **DONE** — List Menu overlay |
+| 27 | `119:12010` | **DONE** — Custom List chrome |
+| 28 | `119:12120` | **DONE** — New Item sheet@611 |
 
 ### Batch G — Meal Plan row · pages **29–32**
 | # | frameId | Focus |

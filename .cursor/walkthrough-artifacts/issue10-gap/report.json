@@ -1,0 +1,58 @@
+{
+  "cooking04": {
+    "baselineMAE": 9.279,
+    "finalMAE": 7.976,
+    "improved": true,
+    "fixes": [
+      "Instruction forced wraps matching cooking-final line breaks",
+      "Instruction fontSize 20\u219226 to match ref glyph widths (~1.2x Figma SF Pro under-render)",
+      "lineHeight 34 preserved; Next restored 52\u00d752"
+    ],
+    "lineWidths": {
+      "ref": [
+        316,
+        335,
+        308,
+        362,
+        323,
+        221
+      ],
+      "live": [
+        314,
+        332,
+        306,
+        359,
+        321,
+        219
+      ]
+    }
+  },
+  "groceries": {
+    "24": {
+      "mae": 1.257,
+      "ref": "/tmp/cookapp-figma-audit/01-groceries.png"
+    },
+    "25": {
+      "mae": 3.869,
+      "ref": "w06_pantry_more_glass_final"
+    },
+    "26": "menu overlay PASS (visual)",
+    "27": "custom list PASS (visual)",
+    "28": "new item sheet PASS (batch mae 8.21)"
+  },
+  "mse": {
+    "id": "196:25740",
+    "pos": [
+      0,
+      6000
+    ],
+    "overlaps": 0
+  },
+  "listBtn": {
+    "r": 14,
+    "size": [
+      56,
+      56
+    ]
+  }
+}
