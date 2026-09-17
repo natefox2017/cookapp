@@ -1,19 +1,30 @@
 # cookapp
 
-食谱应用项目。
+AI 菜谱 App（Phase 1：技术基础框架）。
 
-## UI 参考截屏
+## Source of Truth
 
-Pestle 风格页面截屏已保存在 [`docs/ui-screenshots/`](docs/ui-screenshots/)，共 42 张，按页面命名，详见该目录下 README。
+| 来源 | 职责 |
+|------|------|
+| [Notion Architecture Foundation](https://app.notion.com/p/3dee1df1f5a781b897b9f36c641b4708) | 产品/架构/长期规则 |
+| [Figma](https://www.figma.com/file/FHbikS2jILAeMv8mote0vD?type=design) | UI 唯一设计源 |
+| GitHub | 代码 / Issue / PR |
 
-一比一还原与防漂移约束见 [`docs/DESIGN.md`](docs/DESIGN.md)：
+## Phase 1 范围
 
-- 唯一 token + 唯一 UI kit；屏幕只组合、不私自改样式
-- 底栏等共享控件必须是 **iOS 26 Liquid Glass**（仅导航/控制层；亮色+暗色）
-- 对照 `docs/ui-screenshots/` 侧旁验收；忽略状态栏 / 灵动岛 / 键盘
-- **独立 UI QA agent 必须 PASS**；FAIL 则撤回或重做，禁止自审通过
-- 禁止各页私有色值/圆角/字号；有差异先改 token/组件
+只做基础设施：iOS 工程骨架、Theme/Token、Network/Error、Supabase、Auth 底座、Payment 底座。  
+**不做**业务功能、页面流程、AI 业务逻辑。
 
-## 开发
+## 工程入口
 
-项目正在初始化中，后续将在此补充技术栈、安装方式和使用说明。
+- iOS：[`ios/README.md`](ios/README.md)（`xcodegen generate` 后用 Xcode 打开）
+- Backend：`supabase/`（项目 ref：`semsjyrqjnumpvanibip`）
+- Issue：[#5 Phase 1 foundation](https://github.com/natefox2017/cookapp/issues/5)
+
+## Bundle
+
+`com.natefox.cookapp` / CookApp
+
+## UI 参考（后续业务阶段）
+
+历史截图参考见 [`docs/ui-screenshots/`](docs/ui-screenshots/)。业务 UI 以 Figma 为准。
