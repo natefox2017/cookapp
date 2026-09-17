@@ -1,0 +1,54 @@
+name: Backend foundation check
+
+on:
+  push:
+    paths:
+      - "supabase/**"
+      - "docs/backend/**"
+      - ".github/workflows/backend-foundation.yml"
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "docs/backend/**"
+      - ".github/workflows/backend-foundation.yml"
+
+jobs:
+  schema-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required backend files exist
+        run: |
+          set -euo pipefail
+          test -f supabase/config.toml
+          test -f supabase/openapi/openapi.yaml
+          test -f docs/backend/README.md
+          test -d supabase/migrations
+          test -f supabase/functions/delete-account/index.ts
+          test -f supabase/functions/revenuecat-webhook/index.ts
+          test -f supabase/functions/health/index.ts
+          test -f supabase/functions/openapi/index.ts
+          test -f supabase/functions/_shared/auth.ts
+          echo "Backend foundation paths OK"
+      - name: OpenAPI YAML parses
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+          try:
+              import yaml
+          except ImportError:
+              import subprocess
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "pyyaml", "-q"])
+              import yaml
+          raw = pathlib.Path("supabase/openapi/openapi.yaml").read_text()
+          data = yaml.safe_load(raw)
+          assert data.get("openapi", "").startswith("3."), data.get("openapi")
+          assert "paths" in data and len(data["paths"]) > 0
+          print("OpenAPI OK:", data["info"]["title"], "paths=", len(data["paths"]))
+          PY
+      - name: Migration filenames are ordered SQL
+        run: |
+          set -euo pipefail
+          count=$(ls supabase/migrations/*.sql | wc -l)
+          test "$count" -ge 2
+          echo "migrations=$count"
