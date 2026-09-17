@@ -1,0 +1,32 @@
+name: ios-foundation
+on:
+  pull_request:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-foundation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "ios/**"
+
+jobs:
+  placeholder:
+    name: iOS scaffold check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify iOS tree
+        run: |
+          test -f ios/project.yml
+          test -f ios/CookApp/App/CookAppApp.swift
+          test -f ios/CookApp/Core/Theme/DesignTokens.swift
+          test -f ios/CookApp/Features/Auth/AuthService.swift
+          test -f ios/CookApp/Features/Subscription/SubscriptionService.swift
+          echo "iOS foundation paths OK (Xcode build reserved for macOS runners)."
+  # Uncomment when macOS runners / signing are available:
+  # xcode-build:
+  #   runs-on: macos-15
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: brew install xcodegen
+  #     - run: cd ios && xcodegen generate && xcodebuild -scheme CookApp -destination 'platform=iOS Simulator,name=iPhone 16' test
