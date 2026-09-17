@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 export function PageHeader({
   title,
@@ -38,6 +39,30 @@ export function EmptyState({
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
+  )
+}
+
+export function ErrorState({
+  title = 'Something went wrong',
+  description,
+  onRetry,
+}: {
+  title?: string
+  description: string
+  onRetry?: () => void
+}) {
+  return (
+    <EmptyState
+      title={title}
+      description={description}
+      action={
+        onRetry ? (
+          <Button variant="outline" onClick={onRetry}>
+            Retry
+          </Button>
+        ) : undefined
+      }
+    />
   )
 }
 

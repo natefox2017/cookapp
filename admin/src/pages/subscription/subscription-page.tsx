@@ -2,7 +2,7 @@ import { listSubscriptions } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import type { SubscriptionStatus } from '@/types/admin'
 import { Badge } from '@/components/ui/badge'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ function statusVariant(status: SubscriptionStatus) {
 }
 
 export function SubscriptionPage() {
-  const { data, loading, error } = useAsyncData(() => listSubscriptions(), [])
+  const { data, loading, error, reload } = useAsyncData(() => listSubscriptions(), [])
 
   return (
     <div>
@@ -31,7 +31,9 @@ export function SubscriptionPage() {
       />
 
       {loading ? <LoadingBlock label="Loading subscriptions…" /> : null}
-      {error ? <EmptyState title="Could not load subscriptions" description={error} /> : null}
+      {error ? (
+        <ErrorState title="Could not load subscriptions" description={error} onRetry={reload} />
+      ) : null}
       {!loading && !error && data?.length === 0 ? (
         <EmptyState
           title="No subscriptions"
