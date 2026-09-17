@@ -29,7 +29,13 @@ Forbidden now: business features, page flows, AI business logic, recipe modules.
 - Pay: StoreKit 2 + RevenueCat (decoupled from business)
 - Bundle ID (Phase 1): `com.natefox.cookapp`
 
+## Owner config (non-blocking)
+
+Human dashboard secrets live in `docs/OWNER_CONFIG.md`.  
+**Missing config must not block development** — use placeholders and continue other work.
+
 ## Workflow
 
 Notion → GitHub Issue → Branch → Implement → Test → PR → Review → Merge  
 Every code change must link an Issue. Prefer open-source integration over reinventing.
+Agent merges ready PRs when checks pass (do not wait for user to click merge).
