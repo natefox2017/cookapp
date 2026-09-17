@@ -1,27 +1,54 @@
-# Design tokens & fidelity
+# Design system lock
 
 UI source of truth: [`docs/ui-screenshots/`](ui-screenshots/).  
-Fidelity process: `.cursor/rules/ui-fidelity.mdc`.
+Hard rules: `.cursor/rules/ui-consistency-lock.mdc`, `ui-fidelity.mdc`, `ui-screenshots.mdc`.
 
-## How we hit 1:1
+## Goal
 
-1. **One screenshot → one screen state** — implement against the named file, including `*-menu-open` / empty variants.
-2. **Tokens first** — extract shared color, type, radius, spacing, blur into theme variables; screens consume tokens only.
-3. **No invention** — if it is not in the screenshot, it does not ship.
-4. **Visual QA gate** — side-by-side (or overlay) vs screenshot at phone width; ignore status bar, Dynamic Island, keyboard.
-5. **Fix until match** — structure, spacing (~2–4px), type roles, green accent, control shapes must pass before merge.
+**Zero cross-screen UI drift.** Same control = same look everywhere. Each screen = 1:1 with its screenshot.
 
-## Token checklist (extract from screenshots)
+## Architecture (mandatory)
 
-| Token | Where it appears |
-|-------|------------------|
-| Brand green | Page titles, quantities, active tab, primary CTAs (`Start Cooking`, `Add N`) |
-| Text primary / secondary / tertiary | Titles, body, notes in parentheses |
-| Destructive red | Delete actions |
-| Surface white / page grey | Lists, settings cards, backgrounds |
-| Radii | Recipe cards, floating tab bar, circular icon buttons, pills |
-| Floating tab + search circle | Bottom chrome on main tabs |
-| Image scrim | White title text on food photography |
-| Glass / blur | Popovers, translucent header buttons on heroes |
+```
+tokens (one file)  →  UI kit components  →  screens
+```
 
-Update this file with concrete hex / pt values once measured from implementation or design tooling.
+- Screens **compose** kit components.
+- Screens **must not** redefine colors, radii, type, or tab/button chrome locally.
+- Need a new look? Add token + kit variant once; update all call sites.
+
+## Shared chrome inventory
+
+These must be single implementations:
+
+- Floating tab bar + separate search circle
+- Circular / pill header icon buttons
+- Green page title
+- Green primary CTA pill
+- Grocery/ingredient row (checkbox + green quantity + notes)
+- Recipe image card (servings pill + title scrim)
+- Frosted popover / context menu (incl. destructive red)
+- Settings grouped list card
+
+## Consistency checklist (every PR that touches UI)
+
+- [ ] No new raw colors/spacing/radii outside the token file
+- [ ] No duplicated/forked TabBar, buttons, cards, menus
+- [ ] Tab bar & primary green match other tabs
+- [ ] Screen matches its `docs/ui-screenshots/` file (side-by-side)
+- [ ] Status bar / Dynamic Island / keyboard ignored in comparison
+- [ ] Empty and menu states covered when screenshots exist
+
+## Token checklist (measure once, reuse)
+
+| Token | Usage |
+|-------|--------|
+| Brand green | Page titles, quantities, active tab, primary CTAs |
+| Text primary / secondary / tertiary | Titles, body, parenthetical notes |
+| Destructive red | Delete |
+| Surface white / page grey | Cards, settings, backgrounds |
+| Radii | Cards, floating tab, circles, pills |
+| Blur / glass | Popovers, translucent hero controls |
+| Image scrim | White titles on food photos |
+
+Fill concrete hex/pt values into the token module when the app scaffold lands; keep this doc in sync.

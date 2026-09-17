@@ -5,58 +5,29 @@ alwaysApply: true
 
 # 1:1 Screenshot Fidelity (cookapp)
 
-Goal: every screen must match `docs/ui-screenshots/` **one-to-one** in structure, hierarchy, spacing, color, type, and interaction chrome — not “inspired by.”
+Works with `ui-consistency-lock.mdc` (shared tokens/components) and `ui-screenshots.mdc` (ignore device chrome).
 
 ## Source of truth
 
 1. Named file in `docs/ui-screenshots/` for that screen/state.
-2. If a state has no screenshot, do not invent UI — ask for a screenshot or reuse the closest existing state.
-3. Prefer screenshots over recordings. Ignore status bar, Dynamic Island, and keyboard (see `ui-screenshots.mdc`).
+2. Missing state → do not invent UI; request a screenshot or reuse the closest existing state.
+3. Shared look comes from tokens + kit — screenshots define layout; they do not justify forking a shared control.
 
 ## Before coding a screen
 
-1. Open the matching screenshot(s), including menu-open / empty / filled variants.
-2. Inventory only what is on screen: hierarchy, components, copy, icons, states.
-3. Extract tokens into CSS/theme variables first (do not hardcode one-offs per screen):
-   - brand green, text blacks/greys, surfaces, dividers, destructive red
-   - title / body / meta type sizes & weights (serif title vs sans UI)
-   - radii (cards, pills, circular buttons, floating tab bar)
-   - spacing rhythm (screen padding, grid gutters, list row height, section gaps)
-   - effects (nav blur/glass, image gradient scrims, translucent header buttons)
-4. Do not add elements absent from the screenshot (extra cards, stat strips, badges, decorative chrome).
-
-## While implementing
-
-- Match **layout geometry**: columns, alignment, floating tab + separate search circle, header button shapes.
-- Match **typography roles**: e.g. green large page titles; serif recipe titles; green quantities in ingredient/grocery rows.
-- Match **interaction chrome**: circular icon buttons, pill menus, frosted popovers, active tab green pill.
-- Empty / loading / menu-open states must use their own screenshots when present.
-- Platform chrome (status bar, Dynamic Island, keyboard) is out of scope — never recreate.
+1. Open matching screenshot(s), including menu-open / empty / filled variants.
+2. Inventory hierarchy, components, copy, icons, states — only what is on screen.
+3. Map every element to an **existing** kit component or token; if missing, add to the kit/tokens first (global), then use it.
+4. Do not add elements absent from the screenshot.
 
 ## Done only when visually verified
 
-A screen is **not done** until side-by-side check vs the screenshot passes:
-
 | Check | Pass criteria |
 |-------|----------------|
-| Structure | Same sections, order, and density — nothing extra, nothing missing |
-| Spacing | Edges, gaps, and row rhythm match within ~2–4px at phone width |
-| Type | Same size/weight/color roles for title, body, meta, accents |
-| Color | Same green/grey/red usage; no substitute palette |
-| Controls | Same shapes (circle / pill / floating bar); same active/disabled look |
-| Overlays | Menus/modals match screenshot state (or dedicated `*-menu-open` file) |
+| Structure | Same sections/order/density — nothing extra/missing |
+| Spacing | Edges/gaps/rows within ~2–4px at phone width |
+| Type / color | Same token roles (green title, green qty, etc.) |
+| Shared chrome | Tab bar/buttons/menus identical to other screens |
+| Overlays | Match `*-menu-open` (or equivalent) screenshot |
 
-Verification method:
-
-1. Run the app at iPhone-like width.
-2. Capture the implemented screen (exclude status bar / Dynamic Island / keyboard from comparison).
-3. Compare to `docs/ui-screenshots/<name>.jpg` side-by-side or overlay.
-4. Fix deltas before claiming complete; do not “close enough.”
-
-## Anti-patterns (reject)
-
-- Generic SaaS / dashboard layouts
-- Invented cards, stat rows, or promo chips not in the shot
-- Replacing green accent with purple / cream AI-default themes
-- Skipping empty or menu states that have screenshots
-- Shipping without a screenshot comparison pass
+Method: run at iPhone-like width → capture UI (no status bar / Dynamic Island / keyboard) → side-by-side with `docs/ui-screenshots/<name>.jpg` → fix until match. “Close enough” is a fail.
