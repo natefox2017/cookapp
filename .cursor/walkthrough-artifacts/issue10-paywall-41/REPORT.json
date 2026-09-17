@@ -18,5 +18,5 @@
   "hero_blocky": false,
   "verdict": "PASS*",
   "residual": "Social laurel vectors + timeline icon fill; docs phone chrome/margins inflate full MAE",
-  "issue10": "leave OPEN; remaining FAIL 02/11"
+  "issue10": "leave OPEN; remaining FAIL: 02"
 }
