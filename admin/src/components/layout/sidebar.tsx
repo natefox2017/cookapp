@@ -4,9 +4,9 @@ import { cn } from '@/lib/utils'
 import { navItems } from '@/components/layout/nav'
 import { isMockMode } from '@/api'
 
-export function Sidebar() {
+export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <>
       <div className="flex items-center gap-2.5 border-b border-sidebar-border px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <CookingPot className="h-5 w-5" />
@@ -25,6 +25,7 @@ export function Sidebar() {
               key={item.href}
               to={item.href}
               end={item.href === '/'}
+              onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white',
@@ -42,6 +43,14 @@ export function Sidebar() {
       <div className="border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-foreground/60">
         {isMockMode() ? 'Mock API mode' : 'Live API mode'}
       </div>
+    </>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <aside className="hidden h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+      <SidebarNav />
     </aside>
   )
 }

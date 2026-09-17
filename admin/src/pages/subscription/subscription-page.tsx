@@ -32,6 +32,12 @@ export function SubscriptionPage() {
 
       {loading ? <LoadingBlock label="Loading subscriptions…" /> : null}
       {error ? <EmptyState title="Could not load subscriptions" description={error} /> : null}
+      {!loading && !error && data?.length === 0 ? (
+        <EmptyState
+          title="No subscriptions"
+          description="No subscription records were returned."
+        />
+      ) : null}
 
       {data && data.length > 0 ? (
         <div className="rounded-xl border bg-card">

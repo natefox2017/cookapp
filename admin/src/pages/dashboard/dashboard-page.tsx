@@ -122,21 +122,25 @@ export function DashboardPage() {
           <CardDescription>Latest admin-visible activity</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {data.recent.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-            >
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{item.title}</div>
-                <div className="truncate text-xs text-muted-foreground">{item.subtitle}</div>
+          {data.recent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recent activity.</p>
+          ) : (
+            data.recent.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium">{item.title}</div>
+                  <div className="truncate text-xs text-muted-foreground">{item.subtitle}</div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Badge variant="secondary">{item.type}</Badge>
+                  <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Badge variant="secondary">{item.type}</Badge>
-                <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

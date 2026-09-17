@@ -18,6 +18,9 @@ export function CollectionsPage() {
 
       {loading ? <LoadingBlock label="Loading collections…" /> : null}
       {error ? <EmptyState title="Could not load collections" description={error} /> : null}
+      {!loading && !error && data?.length === 0 ? (
+        <EmptyState title="No collections" description="No recipe collections were returned." />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {data?.map((collection) => (

@@ -41,6 +41,9 @@ export function GroceryPage() {
           <div className="border-b px-4 py-3 text-sm font-medium">Users</div>
           {users.loading ? <div className="p-4 text-sm text-muted-foreground">Loading…</div> : null}
           {users.error ? <div className="p-4 text-sm text-destructive">{users.error}</div> : null}
+          {!users.loading && !users.error && users.data?.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">No grocery users available.</div>
+          ) : null}
           <div className="divide-y">
             {users.data?.map((user) => (
               <button
@@ -67,7 +70,14 @@ export function GroceryPage() {
           {items.loading ? <LoadingBlock label="Loading items…" /> : null}
           {items.error ? <EmptyState title="Could not load items" description={items.error} /> : null}
           {!items.loading && !items.error && items.data?.length === 0 ? (
-            <EmptyState title="No grocery items" description="Select another user or wait for list data." />
+            <EmptyState
+              title="No grocery items"
+              description={
+                selectedUserId
+                  ? 'This user has an empty shopping list.'
+                  : 'No grocery list data is available yet.'
+              }
+            />
           ) : null}
           {items.data && items.data.length > 0 ? (
             <Table>

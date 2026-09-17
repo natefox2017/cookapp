@@ -22,7 +22,6 @@ export function RecipesPage() {
   const [q, setQ] = useState('')
   const [cuisine, setCuisine] = useState('all')
   const [category, setCategory] = useState('all')
-  const navigate = useNavigate()
 
   const params = useMemo(
     () => ({
@@ -84,35 +83,37 @@ export function RecipesPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {data?.map((recipe) => (
-          <Card
+          <Link
             key={recipe.id}
-            className="cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
-            onClick={() => navigate(`/recipes/${recipe.id}`)}
+            to={`/recipes/${recipe.id}`}
+            className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div className="aspect-[16/10] overflow-hidden bg-muted">
-              <img
-                src={recipe.coverUrl}
-                alt={recipe.title}
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <CardContent className="space-y-3 p-4">
-              <div>
-                <h3 className="font-semibold leading-snug">{recipe.title}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">{formatDate(recipe.createdAt)}</p>
+            <Card className="overflow-hidden transition-shadow hover:shadow-md">
+              <div className="aspect-[16/10] overflow-hidden bg-muted">
+                <img
+                  src={recipe.coverUrl}
+                  alt={recipe.title}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                <Badge variant="secondary">{recipe.cuisine}</Badge>
-                <Badge variant="outline">{recipe.category}</Badge>
-                {recipe.tags.slice(0, 2).map((tag) => (
-                  <Badge key={tag} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+              <CardContent className="space-y-3 p-4">
+                <div>
+                  <h3 className="font-semibold leading-snug">{recipe.title}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{formatDate(recipe.createdAt)}</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="secondary">{recipe.cuisine}</Badge>
+                  <Badge variant="outline">{recipe.category}</Badge>
+                  {recipe.tags.slice(0, 2).map((tag) => (
+                    <Badge key={tag} variant="outline">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
     </div>

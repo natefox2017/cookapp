@@ -52,10 +52,15 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
   }
 
   async function onSave() {
+    const nextName = name.trim()
+    if (!nextName) {
+      window.alert('Name is required.')
+      return
+    }
     setSaving(true)
     try {
-      if (editing) await updateTaxonomyItem(kind, editing.id, name)
-      else await createTaxonomyItem(kind, name)
+      if (editing) await updateTaxonomyItem(kind, editing.id, nextName)
+      else await createTaxonomyItem(kind, nextName)
       setOpen(false)
       reload()
     } catch (err) {
@@ -67,8 +72,12 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
 
   async function onDelete(id: string) {
     if (!window.confirm('Delete this item?')) return
-    await deleteTaxonomyItem(kind, id)
-    reload()
+    try {
+      await deleteTaxonomyItem(kind, id)
+      reload()
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Delete failed')
+    }
   }
 
   return (
@@ -82,6 +91,18 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
 
       {loading ? <LoadingBlock label="Loading…" /> : null}
       {error ? <EmptyState title="Load failed" description={error} /> : null}
+      {!loading && !error && data?.length === 0 ? (
+        <EmptyState
+          title={`No ${kind} items`}
+          description="Create an item to populate this taxonomy."
+          action={
+            <Button size="sm" onClick={openCreate}>
+              <Plus />
+              Create
+            </Button>
+          }
+        />
+      ) : null}
 
       {data && data.length > 0 ? (
         <div className="rounded-xl border bg-card">

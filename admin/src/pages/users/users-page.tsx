@@ -126,15 +126,12 @@ export function UsersPage() {
                 <TableHead>Favorites</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-28">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {list.data.data.map((user: AdminUser) => (
-                <TableRow
-                  key={user.id}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedId(user.id)}
-                >
+                <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
@@ -154,6 +151,11 @@ export function UsersPage() {
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(user.status)}>{user.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedId(user.id)}>
+                      View
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

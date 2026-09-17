@@ -61,10 +61,20 @@ export function IngredientsPage() {
   }
 
   async function onSave() {
+    const payload: IngredientInput = {
+      name: form.name.trim(),
+      category: form.category.trim(),
+      unit: form.unit.trim(),
+      alternativeName: form.alternativeName?.trim() || null,
+    }
+    if (!payload.name || !payload.category || !payload.unit) {
+      window.alert('Name, category, and unit are required.')
+      return
+    }
     setSaving(true)
     try {
-      if (editing) await updateIngredient(editing.id, form)
-      else await createIngredient(form)
+      if (editing) await updateIngredient(editing.id, payload)
+      else await createIngredient(payload)
       setOpen(false)
       reload()
     } catch (err) {
@@ -76,8 +86,12 @@ export function IngredientsPage() {
 
   async function onDelete(id: string) {
     if (!window.confirm('Delete this ingredient?')) return
-    await deleteIngredient(id)
-    reload()
+    try {
+      await deleteIngredient(id)
+      reload()
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Delete failed')
+    }
   }
 
   return (
@@ -95,6 +109,18 @@ export function IngredientsPage() {
 
       {loading ? <LoadingBlock label="Loading ingredients…" /> : null}
       {error ? <EmptyState title="Could not load ingredients" description={error} /> : null}
+      {!loading && !error && data?.length === 0 ? (
+        <EmptyState
+          title="No ingredients"
+          description="Create an ingredient to populate the catalog."
+          action={
+            <Button onClick={openCreate}>
+              <Plus />
+              Add ingredient
+            </Button>
+          }
+        />
+      ) : null}
 
       {data && data.length > 0 ? (
         <div className="rounded-xl border bg-card">
@@ -190,7 +216,11 @@ export function IngredientsPage() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button loading={saving} onClick={onSave} disabled={!form.name || !form.category || !form.unit}>
+            <Button
+              loading={saving}
+              onClick={onSave}
+              disabled={!form.name.trim() || !form.category.trim() || !form.unit.trim()}
+            >
               Save
             </Button>
           </DialogFooter>

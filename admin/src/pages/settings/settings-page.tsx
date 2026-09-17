@@ -116,10 +116,14 @@ export function SettingsPage() {
               </div>
               <div className="flex items-center justify-between rounded-lg border px-3 py-2">
                 <div>
-                  <div className="text-sm font-medium">Maintenance mode</div>
+                  <div id="maintenance-mode-label" className="text-sm font-medium">
+                    Maintenance mode
+                  </div>
                   <div className="text-xs text-muted-foreground">Disable write traffic when enabled</div>
                 </div>
                 <Switch
+                  id="maintenance-mode"
+                  aria-labelledby="maintenance-mode-label"
                   checked={draft.general.maintenanceMode}
                   onCheckedChange={(checked) =>
                     setDraft({
@@ -141,7 +145,7 @@ export function SettingsPage() {
             </CardHeader>
             <CardContent className="grid max-w-xl gap-4">
               <div className="grid gap-1.5">
-                <Label>Measurement system</Label>
+                <Label htmlFor="measurement-system">Measurement system</Label>
                 <Select
                   value={draft.units.measurementSystem}
                   onValueChange={(value) =>
@@ -154,7 +158,7 @@ export function SettingsPage() {
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="measurement-system">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -164,7 +168,7 @@ export function SettingsPage() {
                 </Select>
               </div>
               <div className="grid gap-1.5">
-                <Label>Temperature unit</Label>
+                <Label htmlFor="temperature-unit">Temperature unit</Label>
                 <Select
                   value={draft.units.temperatureUnit}
                   onValueChange={(value) =>
@@ -177,7 +181,7 @@ export function SettingsPage() {
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="temperature-unit">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -199,10 +203,14 @@ export function SettingsPage() {
             <CardContent className="grid max-w-xl gap-3">
               <div className="flex items-center justify-between rounded-lg border px-3 py-2">
                 <div>
-                  <div className="text-sm font-medium">Allow user tags</div>
+                  <div id="allow-user-tags-label" className="text-sm font-medium">
+                    Allow user tags
+                  </div>
                   <div className="text-xs text-muted-foreground">Users may create free-form tags</div>
                 </div>
                 <Switch
+                  id="allow-user-tags"
+                  aria-labelledby="allow-user-tags-label"
                   checked={draft.categories.allowUserTags}
                   onCheckedChange={(checked) =>
                     setDraft({
@@ -214,10 +222,14 @@ export function SettingsPage() {
               </div>
               <div className="flex items-center justify-between rounded-lg border px-3 py-2">
                 <div>
-                  <div className="text-sm font-medium">Require cuisine</div>
+                  <div id="require-cuisine-label" className="text-sm font-medium">
+                    Require cuisine
+                  </div>
                   <div className="text-xs text-muted-foreground">Recipes must set a cuisine</div>
                 </div>
                 <Switch
+                  id="require-cuisine"
+                  aria-labelledby="require-cuisine-label"
                   checked={draft.categories.requireCuisine}
                   onCheckedChange={(checked) =>
                     setDraft({
@@ -240,12 +252,19 @@ export function SettingsPage() {
             <CardContent className="grid max-w-xl gap-4">
               <div className="flex items-center justify-between rounded-lg border px-3 py-2">
                 <div>
-                  <div className="text-sm font-medium">Mock mode</div>
+                  <div id="mock-mode-label" className="text-sm font-medium">
+                    Mock mode
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Controlled by VITE_ADMIN_USE_MOCK at build time
                   </div>
                 </div>
-                <Switch checked={draft.system.mockMode} disabled />
+                <Switch
+                  id="mock-mode"
+                  aria-labelledby="mock-mode-label"
+                  checked={draft.system.mockMode}
+                  disabled
+                />
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="apiBase">API base URL</Label>
@@ -261,7 +280,7 @@ export function SettingsPage() {
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label>Log level</Label>
+                <Label htmlFor="log-level">Log level</Label>
                 <Select
                   value={draft.system.logLevel}
                   onValueChange={(value) =>
@@ -274,7 +293,7 @@ export function SettingsPage() {
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="log-level">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

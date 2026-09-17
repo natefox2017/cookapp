@@ -18,6 +18,9 @@ export function PantryPage() {
 
       {loading ? <LoadingBlock label="Loading pantry…" /> : null}
       {error ? <EmptyState title="Could not load pantry" description={error} /> : null}
+      {!loading && !error && data?.length === 0 ? (
+        <EmptyState title="Pantry is empty" description="No pantry stock records were returned." />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {data?.map((item) => (
