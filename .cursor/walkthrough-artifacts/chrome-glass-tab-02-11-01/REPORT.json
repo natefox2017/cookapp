@@ -1,0 +1,23 @@
+{
+  "agent": "retry-chrome-glass-tab-polish",
+  "scope": "shared top glass + bottom tab chrome",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "finished": "2026-09-17T23:52Z",
+  "policy": "edit shared components; docs Detail light frosted SoT; screenshot 02/11/01 after",
+  "changes": {
+    "Glass/TopButton": {"id": "196:23264", "fill": "white@0.78", "blur": 28, "stroke": "black@0.08", "icon": "Back/Primary"},
+    "Glass/TopCapsule": {"variants": ["Label", "AddMore", "CartCalendarMore"], "fill": "white@0.78", "blur": "24-28"},
+    "BottomNAV capsules": {"ids": ["152:15655","152:15678","…"], "fill": "white@0.72", "blur": 40, "stroke": "white@0.4"},
+    "SearchButton": {"id": "77:16", "matched": "Search Circle glass"},
+    "BottomChrome wrapper": {"hidDuplicateSearchButtons": ["107:16256","107:16277","107:16298","107:16319"]},
+    "Cookbook-Folders Bottom Chrome": {"outer+search": "synced 0.72/40", "selected": "green@0.18"}
+  },
+  "screenshots": {
+    "01": ".cursor/walkthrough-artifacts/after-01-cookbook-tab-chrome.png",
+    "02": ".cursor/walkthrough-artifacts/after-02-detail-light-frost.png",
+    "11": ".cursor/walkthrough-artifacts/after-11-discover-tab-chrome.png",
+    "25": ".cursor/walkthrough-artifacts/after-25-groceries-tab-chrome.png",
+    "29": ".cursor/walkthrough-artifacts/after-29-mealplan-tab-chrome.png"
+  },
+  "residuals": ["tab glyph fill-vs-outline art (shared Icon set)", "sibling race risk on Detail glass overrides"]
+}
