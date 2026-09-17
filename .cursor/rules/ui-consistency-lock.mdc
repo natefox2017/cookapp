@@ -60,6 +60,8 @@ Do **not** mark complete, commit as finished UI, or merge if:
 
 - Any shared control differs between two screens, or
 - Screenshot side-by-side fails, or
-- Feature code introduces local visual constants
+- Feature code introduces local visual constants, or
+- Liquid Glass rules fail (see `liquid-glass.mdc`), or
+- UI QA agent has not returned **PASS** (see `ui-qa-agent-gate.mdc`)
 
-Fix by aligning to tokens + kit + screenshot — not by adding another special case.
+Fix by aligning to tokens + kit + screenshot + Liquid Glass — not by adding another special case. On QA **FAIL**, redo or revert; do not self-approve.

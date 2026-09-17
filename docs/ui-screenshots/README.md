@@ -4,7 +4,7 @@ Pestle / cookapp 参考截屏，共 42 张。按页面与交互状态命名，�
 
 **优先用本目录截图，不必再看录屏。** 还原 UI 时一律忽略手机状态栏、灵动岛（Dynamic Island）和键盘。
 
-跨页面一致性由 `.cursor/rules/ui-consistency-lock.mdc` 强制：共享 token + UI kit，禁止各页私自改样式；详见 [`../DESIGN.md`](../DESIGN.md)。
+跨页面一致性由 `.cursor/rules/ui-consistency-lock.mdc` 强制；材质遵循 `.cursor/rules/liquid-glass.mdc`；完成后必须经 `.cursor/rules/ui-qa-agent-gate.mdc` 独立 QA（FAIL 则撤回重做）。详见 [`../DESIGN.md`](../DESIGN.md)。
 
 ## Cookbook
 

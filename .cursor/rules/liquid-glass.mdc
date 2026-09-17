@@ -1,0 +1,58 @@
+---
+description: iOS Liquid Glass material and chrome design constraints
+alwaysApply: true
+---
+
+# iOS Liquid Glass Design Spec (cookapp) — HARD RULES
+
+Default visual direction: **iOS 26 Liquid Glass** (light + dark), aligned with Apple HIG Materials / Adopting Liquid Glass, **and** Pestle screenshots in `docs/ui-screenshots/`.
+
+Screenshot = layout, hierarchy, brand green, copy.  
+Liquid Glass = how floating chrome / materials / motion behave.
+
+## Where Liquid Glass is allowed
+
+**Only the navigation / control layer** that floats above content:
+
+- Floating tab bar + search circle
+- Toolbars, circular/pill header buttons
+- Popovers, context menus, sheets, FABs over content
+- Transient interactive controls (when active)
+
+**Never** apply Liquid Glass to the content layer:
+
+- Recipe grids, ingredient lists, grocery rows, settings list bodies
+- Full-screen page backgrounds, large content cards as “glass slabs”
+- Stacking glass on glass (no nested frosted panels)
+
+## Material rules
+
+1. **Regular glass** (default) — tab bar, menus, alerts, text-heavy chrome; must keep label/icon legible (blur + adaptive luminosity).
+2. **Clear glass** — only small controls over rich media (hero photo buttons). If clear, add sufficient dimming/scrim so controls stay readable.
+3. **Low-contrast borders** — hairline / subtle separator on glass; no heavy opaque strokes.
+4. **Translucent, not muddy** — content should read through chrome; avoid opaque grey blocks pretending to be glass.
+5. **Light + dark** — both appearances required; glass and vibrancy must work in each. No dark-only defaults.
+6. **Tint sparingly** — brand green tints labels/active states; do not flood the whole glass surface with opaque brand color.
+7. **Tight spacing** — compact chrome padding consistent with screenshots / iOS density; no oversized SaaS padding.
+8. **Motion** — fluid morph/appear for menus, sheets, tab selection (2–3 intentional motions minimum on visually led surfaces). Honor Reduce Motion / Reduce Transparency / Increase Contrast: degrade to solid/legible fallbacks, do not break layout.
+
+## Control states (every interactive control)
+
+Must define once in the kit: **default · hover · active · disabled · loading**.  
+Missing states = QA fail.
+
+## Conflict resolution
+
+| Conflict | Winner |
+|----------|--------|
+| Screenshot layout vs invented layout | Screenshot |
+| Shared chrome material vs flat opaque clone | Liquid Glass (regular/clear as above) |
+| Brand green accents vs system multicolor | Brand green (Pestle), on glass — not instead of glass |
+| Status bar / Dynamic Island / keyboard | Ignore (never implement) |
+
+## Forbidden
+
+- Generic SaaS card stacks, purple/glow AI themes, cream+terracotta defaults
+- Opaque solid tab bars that ignore screenshot frosted glass
+- Glass used as full-page wallpaper or content-card fill
+- Shipping UI without light **and** dark pass when chrome is involved
