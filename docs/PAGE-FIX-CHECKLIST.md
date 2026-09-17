@@ -105,21 +105,41 @@
 | 34 | General | `117:10081` | — | PENDING | UI details wrong (no strong still). |
 | 35 | App Icon | `117:10131` | — | PENDING | UI details wrong. |
 | 36 | Markdown | `117:10157` | — | PENDING | UI details wrong. |
-| 37 | Clipboard Detection | `117:10183` | — | PENDING | UI details wrong. |
-| 38 | Experiments | `117:10209` | — | PENDING | UI details wrong. |
-| 39 | Account | `117:10235` | — | PENDING | UI details wrong. |
-| 40 | Create Account | `117:10279` | — | PENDING | UI details wrong. |
-| 41 | Trial / Paywall | `117:10305` | — | PENDING | UI details wrong. |
-| 42 | Join Mailing List | `117:10357` | — | PENDING | UI details wrong. |
-| 43 | Household | `117:10383` | — | PENDING | UI details wrong. |
-| 44 | Timers | `117:10435` | — | PENDING | UI details wrong. |
-| 45 | How To Add Recipes | `117:10461` | — | PENDING | UI details wrong. |
-| 46 | Import / Share | `196:27930` | `/tmp/cookapp-audit/settings-cooking/import-share.png` | PENDING | ≈ref — Import Recipes + Share Import rows polish. |
-| 47 | Acknowledgements | `196:28536` | `/tmp/cookapp-qa/ack.png` | PENDING | **Blank body** (M18); fill credits when source exists. |
-| 48 | Special Thanks | `117:10577` | `/tmp/cookapp-audit/settings-cooking/special-thanks.png` | PENDING | ≈ref — list polish. |
-| 49 | What's New | `117:10603` | `/tmp/cookapp-qa/whatsnew.png` | PENDING | ≈ref — feature list + Continue spacing. |
+| 37 | Clipboard Detection | `117:10183` | chrome vs Import/Ack family | DONE | Full permission copy; pill CTAs r=28; glassY **62**; bg `#f2f2f7`. |
+| 38 | Experiments | `117:10209` | chrome vs Import group | DONE | Group@160 r=26; toggle rows; hint restack; glassY **62**. |
+| 39 | Account | `117:10235` | `docs/ui-screenshots/account-settings.jpg` | DONE | Restacked (no overlap); Active + Manage subscription; MAE≈9.6 vs docs. |
+| 40 | Create Account | `117:10279` | Create Account chrome | DONE | Inline nav title; centered body; pill Get started@820; glassY **62**. |
+| 41 | Trial / Paywall | `117:10305` | `join-pestle-pro` / paywall docs | DONE | Trial timeline; Continue+US$24.99/year; footer links only (**no Privacy page**); Close glassY **62**. |
+| 42 | Join Mailing List | `117:10357` | form chrome vs Import | DONE | Fixed overlap; field `#f2f2f7` + Join CTA; glassY **62**. |
+| 43 | Household | `117:10383` | Create Household (recorded partial) | DONE | Body+field restack; **no invent** of existing-household UI; glassY **62**. |
+| 44 | Timers | `117:10435` | Timers + glass Add | DONE | Nav `Large/Back/Add`; trailing Add glassY **62**; group@160. |
+| 45 | How To Add Recipes | `117:10461` | How-to stack | DONE | Cleared step overlaps; search example + recipe slot restack; glassY **62**. |
+| 46 | Import / Share | `196:27930` | `/tmp/cookapp-audit/settings-cooking/import-share.png` | DONE | Verified vs import-share; MAE≈**1.69**; glassY **62**. |
+| 47 | Acknowledgements | `196:28536` | `/tmp/cookapp-qa/ack.png` | DONE | Title-only blank body retained (M18); glassY **62**; MAE≈12 vs qa-ack (chrome). |
+| 48 | Special Thanks | `117:10577` | `/tmp/cookapp-audit/settings-cooking/special-thanks.png` | DONE | Centered names + gray thanks; restack; MAE≈11 vs special-thanks. |
+| 49 | What's New | `117:10603` | `/tmp/cookapp-qa/whatsnew.png` | DONE | Verified feature list + Continue; MAE≈**5.83**; glassY **62**. |
 
-**Count:** 41 rows · **08/09/11/13/14/15 = DONE** (Batch B+C mid-cookbook) · remaining `PENDING`
+**Count:** 41 rows · **08/09/11/13/14/15 + 37–49 = DONE** · remaining earlier rows `PENDING`
+
+### Settings 37–49 verify (2026-09-17T14:35Z · agent `bc-11c28b9e`)
+
+| # | glassY | key fix | mae vs preferred | status |
+|---|--------|---------|------------------|--------|
+| 37 | 62 | permission copy + pill CTAs | chrome unify | DONE |
+| 38 | 62 | group/hint restack | chrome unify | DONE |
+| 39 | 62 | un-overlap + Manage subscription | ~9.6 vs account-settings | DONE |
+| 40 | 62 | inline title + Get started pill | chrome unify | DONE |
+| 41 | 62 | trial CTA + price footer (no Privacy page) | chrome unify | DONE |
+| 42 | 62 | email field + Join visible | chrome unify | DONE |
+| 43 | 62 | create-household field (no invent) | chrome unify | DONE |
+| 44 | 62 | Trailing=Add glass | chrome unify | DONE |
+| 45 | 62 | how-to step stack | chrome unify | DONE |
+| 46 | 62 | verified Import rows | **~1.69** | DONE |
+| 47 | 62 | blank body kept (M18) | ~12 vs ack | DONE |
+| 48 | 62 | gray thanks restack | ~11 vs special-thanks | DONE |
+| 49 | 62 | verified What's New | **~5.83** | DONE |
+
+Evidence: `/workspace/tmp-verify/settings-37-49/{live,ref,cmp,docs}/` · policy **glassY=62** · **No Privacy invent**
 
 ### Batch B+C verify (2026-09-17T14:25Z · agent `bc-66843953`)
 

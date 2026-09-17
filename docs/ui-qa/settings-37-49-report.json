@@ -1,0 +1,21 @@
+{
+  "agent": "bc-11c28b9e Fix pages 37-49 compare",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "pageId": "37:2",
+  "scope": "NAV 4 Settings formal pages 37-49",
+  "policy": {"glassY": 62, "noPrivacyInvent": true, "treeMoves": false},
+  "refs": {
+    "46": "/tmp/cookapp-audit/settings-cooking/import-share.png",
+    "47": "/tmp/cookapp-qa/ack.png",
+    "48": "/tmp/cookapp-audit/settings-cooking/special-thanks.png",
+    "49": "/tmp/cookapp-qa/whatsnew.png",
+    "39": "docs/ui-screenshots/account-settings.jpg"
+  },
+  "mainsEdited": {
+    "37": "116:18948", "38": "116:18972", "39": "116:18996", "40": "116:19044",
+    "41": "116:19068", "42": "116:19116", "43": "116:19140", "44": "116:19188",
+    "45": "116:19212", "47": "116:19308", "48": "116:19332"
+  },
+  "mae": {"39": 9.64, "46": 1.69, "47": 12.08, "48": 11.09, "49": 5.83},
+  "checklist": "docs/PAGE-FIX-CHECKLIST.md marked 37-49 DONE"
+}
