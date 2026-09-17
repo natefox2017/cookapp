@@ -8,3 +8,4 @@ ios/CookApp.xcworkspace/
 .swiftpm/
 Build/
 supabase/.tmp/
+supabase/.temp/
