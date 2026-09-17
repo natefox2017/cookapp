@@ -1,0 +1,46 @@
+# CookApp Supabase project
+# Cloud project: cookapp (ref: semsjyrqjnumpvanibip)
+# URL: https://semsjyrqjnumpvanibip.supabase.co
+# Region: ap-northeast-1
+
+project_id = "semsjyrqjnumpvanibip"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "cookapp://auth-callback"
+additional_redirect_urls = ["cookapp://auth-callback"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.external.apple]
+enabled = true
+client_id = "env(APPLE_CLIENT_ID)"
+secret = "env(APPLE_SECRET)"
+
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_SECRET)"
+redirect_uri = ""
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[functions]
+verify_jwt = true

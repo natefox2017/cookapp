@@ -1,0 +1,35 @@
+---
+description: Notion Architecture Foundation — project Source of Truth
+alwaysApply: true
+---
+
+# CookApp Project Foundation (SoT)
+
+Canonical Notion page:
+https://app.notion.com/p/3dee1df1f5a781b897b9f36c641b4708
+(`AI 菜谱 App｜Technical Architecture Foundation`)
+
+## Sources of Truth
+
+1. **Notion** — product rules, architecture, long-term decisions
+2. **Figma** — UI only: https://www.figma.com/file/FHbikS2jILAeMv8mote0vD?type=design
+3. **GitHub** — code, Issues, PRs, Bugs
+
+## Current phase
+
+Phase 1 = **technical foundation only**.  
+Forbidden now: business features, page flows, AI business logic, recipe modules.
+
+## Locked stack
+
+- iOS: Swift 6, SwiftUI, Swift Concurrency, Observation, MVVM, Feature Modules, DI, Protocol-oriented
+- UI: Apple iOS 26 Liquid Glass + HIG; native SwiftUI first
+- Backend: Supabase (Auth, DB, Storage, Functions)
+- Auth: Sign in with Apple + Google → Supabase Auth (never store third-party tokens)
+- Pay: StoreKit 2 + RevenueCat (decoupled from business)
+- Bundle ID (Phase 1): `com.natefox.cookapp`
+
+## Workflow
+
+Notion → GitHub Issue → Branch → Implement → Test → PR → Review → Merge  
+Every code change must link an Issue. Prefer open-source integration over reinventing.

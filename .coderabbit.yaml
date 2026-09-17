@@ -1,0 +1,6 @@
+# https://docs.coderabbit.ai/configuration/yaml
+reviews:
+  auto_review:
+    drafts: true
+    base_branches:
+      - main
