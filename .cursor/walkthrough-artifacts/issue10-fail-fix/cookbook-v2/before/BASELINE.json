@@ -1,0 +1,54 @@
+[
+  {
+    "page": "01",
+    "mae": 54.13,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/01-before-side.png",
+    "ref_size": [
+      1320,
+      2868
+    ],
+    "fig_size": [
+      416,
+      900
+    ]
+  },
+  {
+    "page": "02",
+    "mae": 33.54,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/02-before-side.png",
+    "ref_size": [
+      1320,
+      2868
+    ],
+    "fig_size": [
+      416,
+      900
+    ]
+  },
+  {
+    "page": "07",
+    "mae": 10.35,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/07-before-side.png",
+    "ref_size": [
+      1320,
+      2868
+    ],
+    "fig_size": [
+      416,
+      900
+    ]
+  },
+  {
+    "page": "11",
+    "mae": 65.86,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/11-before-side.png",
+    "ref_size": [
+      1320,
+      2868
+    ],
+    "fig_size": [
+      416,
+      900
+    ]
+  }
+]
