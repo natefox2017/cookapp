@@ -1,26 +1,32 @@
 # Docs SoT Re-audit — Issue #10 Acceptance honesty
 
-**Generated:** 2026-09-17T22:50Z  
-**Verdict:** **整包未过** — Acceptance row 1 stays **[ ]**; remaining **FAIL = 02** (**11** Discover + **41** Paywall → **PASS***); most prior FAIL pages now **PASS*** (chrome / photo / spacing residual)  
+**Generated:** 2026-09-17T23:15Z  
+**Verdict:** **整包未过** — Acceptance row 1 stays **[ ]**; **hard FAIL = 0** formal docs pages; prior structural FAIL **02 / 11 / 41** → **PASS***; remaining work = **PASS*** residuals + MISSING_REF  
 **Figma:** `FHbikS2jILAeMv8mote0vD` · page `37:2` · LIVE map `final-table.md`  
 **SoT rule:** prefer `docs/ui-screenshots/*.jpg`; ignore status bar / Dynamic Island / keyboard  
 **Evidence sides:** `/tmp/cookapp-figma-audit/reaudit-sides/*-side.png` + `.cursor/walkthrough-artifacts/issue10-docs-reaudit/`  
-**MAE JSON:** `/tmp/cookapp-figma-audit/reaudit-mae.json`
+**Post-fix evidence:** `issue10-fail-02/` · Discover re-fix comments · `issue10-paywall-41/`  
+**MAE JSON (22:50Z baseline):** `/tmp/cookapp-figma-audit/reaudit-mae.json` (stale for 02/11/41 post-fix MAE)
 
 **Do not** treat `/tmp/cookapp-shots/after/*`, walkthrough GM crops, or stale `refs-canonical/` as preferred refs for Acceptance.
 
 ---
 
-## 0. Re-audit summary (vs prior all-FAIL ledger)
+## 0. Summary (post structural clear)
 
 | Class | Count | Pages |
 |-------|------:|-------|
 | **PASS** | 1 | `43` |
-| **PASS*** | 14 | `01`/`20`, `05`, `06`, `07`, `11`, `25`, `26`, `27`, `29`, `30`, `33`, `34`, `39`, `41` |
-| **FAIL** | 1 | `02` |
+| **PASS*** | 15 | `01`/`20`, `02`, `05`, `06`, `07`, `11`, `25`, `26`, `27`, `29`, `30`, `33`, `34`, `39`, `41` |
+| **FAIL** | **0** | — |
 | **MISSING_REF / FIGMA_MISSING** | unchanged | see §6 |
 
-Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does not** support full Acceptance check. Remaining formal FAIL: **02**. **11** Discover fixed 2026-09-17T23:00Z → **PASS***. **41** Paywall fixed 2026-09-17T23:05Z → **PASS*** (hero PNG + footer dedupe; evidence `issue10-paywall-41/`).
+**Structural FAIL cleared (2026-09-17T23:00–23:12Z):**
+- **11** Discover — card gaps + ghost tab → **PASS*** (MAE≈15.9; tab chrome residual)
+- **41** Paywall — clean PNG hero + footer dedupe → **PASS*** (hero MAE≈8.3; full≈25.2)
+- **02** Recipe Detail — chrome stack + Notes + clean hero → **PASS*** (MAE≈38.6; dark vs light glass residual)
+
+**PASS\* ≠ full pass.** Acceptance row 1 stays unchecked; Issue #10 stays **OPEN**.
 
 ---
 
@@ -32,12 +38,12 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 
 ## 2. Docs → LIVE formal page map
 
-| Docs file | LIVE # | Name | frameId | Role (this re-audit) |
+| Docs file | LIVE # | Name | frameId | Role (this ledger) |
 |-----------|-------:|------|---------|----------------------|
 | `cookbook-grid.jpg` | **01** / **20** | Cookbook / Cookbook Populated | `115:18732` / `119:13141` | **PASS*** |
 | `cookbook-grid-layout-menu-open.jpg` | — | — | — | **FIGMA_MISSING** (overlay) |
 | `cookbook-grid-sort-menu-open.jpg` | — | — | — | **FIGMA_MISSING** (overlay) |
-| `recipe-detail-beef-bourguignon.jpg` | **02** | Recipe Detail | `116:18195` | **FAIL** |
+| `recipe-detail-beef-bourguignon.jpg` | **02** | Recipe Detail | `116:18195` | **PASS*** |
 | `recipe-detail-beef-bourguignon-menu-open.jpg` | **06** | Recipe Menu | `116:18396` | **PASS*** |
 | `create-timer.jpg` | **05** | Timer Form | `116:18318` | **PASS*** |
 | `add-to-meal-plan.jpg` | ≠03 | day-pick sheet | — | **FIGMA_MISSING** |
@@ -71,46 +77,54 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 
 ---
 
-## 3. Classification table (fresh LIVE · MAE @ ~440w · status/home cropped)
+## 3. Classification table (docs SoT · no hard FAIL)
 
-| # | Name | frameId | Ref | MAE | Class | Remaining deltas (docs = SoT) |
-|---|------|---------|-----|----:|-------|-------------------------------|
-| **01** | Cookbook | `115:18732` | `cookbook-grid.jpg` | **35.9** | **PASS*** | Grid photos + 6th Kale present. Residual: tab labels/outline icons vs docs fill+active-only; title glyph weight; high MAE partly photo encode |
-| **20** | Cookbook Populated | `119:13141` | same | — | **PASS*** | Lockstep with 01 (not re-exported this pass; treat as sibling) |
-| **02** | Recipe Detail | `116:18195` | `recipe-detail-*.jpg` | **43.0** | **FAIL** | Overlapping Back / broken Cart+Calendar+More chrome; missing `(Note n)` markers; Start Cooking / hero gap vs docs |
-| **05** | Timer Form | `116:18318` | `create-timer.jpg` | **10.4** | **PASS*** | Back/Start capsules · Untitled · segmented presets · Count OFF — structure OK. Residual: top padding / preset chrome / picker highlight |
-| **06** | Recipe Menu | `116:18396` | `*-menu-open.jpg` | **37.1** | **PASS*** | 8-item Edit→Delete + red trash present. Residual: host inherits 02; glass blur/scrim; Scale or Convert / Note text on host |
-| **07** | Folders | `115:19093` | `folders-home-expanded.jpg` | **9.4** | **PASS*** | Recently Added + expanded Categories/Cuisines + counts. Residual: Folder+ (docs has +) vs plain folder circle; divider length |
-| **11** | Discover | `130:14331` | `discover.jpg` | **15.9** | **PASS*** | No Filter; cards **184×408 @ y168/368/568/768 · gap 16** (docs ~15); clean docs crops (cleared fill overrides that baked gaps+nav). Residual: shared tab chrome (outline icons / white glass vs docs translucent) |
-| **25** | Groceries | `115:18854` | `groceries-list.jpg` | **14.0** | **PASS*** | List body / Note / green qty match. Residual: tab fill vs outline; search FAB size; bar glass |
-| **26** | List Menu | `119:11940` | `groceries-list-menu-open.jpg` | **49.4** | **PASS*** | Choose/Hide/Share/Clear + icons + red Clear. Residual: heavy dim scrim (inflates MAE); menu y; tab chrome |
-| **27** | Custom List | `119:12010` | `groceries-choose-list-menu-open.jpg` | **15.7** | **PASS*** | Choose List popover (家庭 / 每日任务 / Groceries / + New List). Residual: trailing ⋯ still visible (docs hides); tab chrome |
-| **29** | Meal Plan | `122:13366` | `meal-plan-empty.jpg` | **16.9** | **PASS*** | Past→Today day window + glass-over-food + household **5**. Residual: outline tab icons; row spacing; badge style |
-| **30** | Meal Plan Inline | `119:12354` | `meal-plan-with-recipe.jpg` | **42.4** | **PASS*** | Tomorrow Beef card + photo present. Residual: nav labels vs icon-only; Dinner hierarchy; photo encode MAE |
-| **33** | Settings | `117:9975` | `settings.jpg` | **11.7** | **PASS*** | Pro=Active; Chrome Extension; How To; Siri mic. Residual: General sun≠gear; How To book≠bookmark; extra Import row |
-| **34** | General | `117:10081` | `settings-general.jpg` | **13.6** | **PASS*** | App Icon thumb present; Timers ON; Auto-convert OFF. Residual: App Icon glyph ≠ pestle; search-engine selector chevron |
-| **39** | Account | `117:10235` | `account-settings.jpg` | **6.6** | **PASS*** | Divider + green copy control present. Residual: clipboard glyph ≠ overlapping-squares copy |
-| **41** | Trial / Paywall | `117:10305` | `join-pestle-pro.jpg` | **25.2** | **PASS*** | Hero PNG fidelity (hero MAE≈8.3) + single footer row. Residual: social laurel vectors / timeline icon fill / docs chrome. Evidence `issue10-paywall-41/` |
-| **43** | Household | `117:10383` | `household-settings.jpg` | **5.5** | **PASS** | Existing `ba d` manage (Rename / Owner / Delete) — IA fixed. Minor pill↔rect radius / spacing only |
+| # | Name | frameId | Ref | MAE | Class | Residuals (docs = SoT) |
+|---|------|---------|-----|----:|-------|------------------------|
+| **01** | Cookbook | `115:18732` | `cookbook-grid.jpg` | **35.9**† | **PASS*** | Tab labels/outline icons vs docs fill+active-only; title glyph weight; photo encode |
+| **20** | Cookbook Populated | `119:13141` | same | — | **PASS*** | Lockstep with 01 |
+| **02** | Recipe Detail | `116:18195` | `recipe-detail-*.jpg` | **≈38.6** | **PASS*** | Dark glass + white icons vs docs light frosted + black; hero crop framing; shared tab chrome |
+| **05** | Timer Form | `116:18318` | `create-timer.jpg` | **10.4**† | **PASS*** | Top padding / preset chrome / picker highlight |
+| **06** | Recipe Menu | `116:18396` | `*-menu-open.jpg` | **37.1**† | **PASS*** | Glass blur/scrim; Scale or Convert / Note text on host |
+| **07** | Folders | `115:19093` | `folders-home-expanded.jpg` | **9.4**† | **PASS*** | Folder+ (docs has +) vs plain folder circle; divider length |
+| **11** | Discover | `130:14331` | `discover.jpg` | **≈15.9** | **PASS*** | Shared tab chrome (outline / white glass); card gaps + ghost tab **cleared** |
+| **25** | Groceries | `115:18854` | `groceries-list.jpg` | **14.0**† | **PASS*** | Tab fill vs outline; search FAB size; bar glass |
+| **26** | List Menu | `119:11940` | `groceries-list-menu-open.jpg` | **49.4**† | **PASS*** | Heavy dim scrim (inflates MAE); menu y; tab chrome |
+| **27** | Custom List | `119:12010` | `groceries-choose-list-menu-open.jpg` | **15.7**† | **PASS*** | Trailing ⋯ still visible (docs hides); tab chrome |
+| **29** | Meal Plan | `122:13366` | `meal-plan-empty.jpg` | **16.9**† | **PASS*** | Outline tab icons; row spacing; badge style |
+| **30** | Meal Plan Inline | `119:12354` | `meal-plan-with-recipe.jpg` | **42.4**† | **PASS*** | Nav labels vs icon-only; Dinner hierarchy; photo encode |
+| **33** | Settings | `117:9975` | `settings.jpg` | **11.7**† | **PASS*** | General sun≠gear; How To book≠bookmark; extra Import row |
+| **34** | General | `117:10081` | `settings-general.jpg` | **13.6**† | **PASS*** | App Icon glyph ≠ pestle; search-engine selector chevron |
+| **39** | Account | `117:10235` | `account-settings.jpg` | **6.6**† | **PASS*** | Clipboard glyph ≠ overlapping-squares copy |
+| **41** | Trial / Paywall | `117:10305` | `join-pestle-pro.jpg` | hero **≈8.3** / full **≈25.2** | **PASS*** | Social/laurel + timeline icon fill; phone chrome/margins inflate full MAE |
+| **43** | Household | `117:10383` | `household-settings.jpg` | **5.5**† | **PASS** | Minor pill↔rect radius / spacing only |
 
-### Confirmed remaining FAIL count
+†22:50Z re-audit MAE (baseline). Post-fix MAE shown for **02 / 11 / 41**.
 
-**1 formal page** still FAIL vs docs:  
-`02`
+### Hard FAIL count
+
+**0** formal docs pages. Structural violations on **02 / 11 / 41** cleared; all three remain **PASS*** for residual chrome / photo / material deltas.
 
 ---
 
-## 4. Priority residual queue (single agent)
+## 4. Residual queue (no structural FAIL)
 
-1. **02** Recipe Detail — repair Back/Cart+/Calendar/More chrome; restore Note markers  
-2. Then polish **PASS*** chrome (shared tab icon set: fill vs outline; 01/11/25/29/30)
+Priority for human / polish (not Acceptance blockers as hard FAIL):
+
+1. **Dark vs light glass chrome** — esp. **02** Recipe Detail (intentional dark glass vs docs light frosted)
+2. **Shared tab chrome** — fill vs outline icons / glass across **01 / 11 / 25 / 29 / 30** (and siblings)
+3. **Cooking AA** — **04** wrap residual (docs MISSING_REF; recording GM)
+4. **Ack / Thanks** — **47** M18 blank kept · **48** Special Thanks MAE~11–12
+5. Other **PASS*** polish (Folder+, icon art, photo encode, scrim density)
+
+No large Figma redesigns unless a quick win.
 
 ---
 
 ## 5. Acceptance honesty rules (Issue #10)
 
-1. Acceptance row 1 stays **unchecked** until human signs 整包.  
-2. Checkboxes: only **PASS** or documented **PASS*** with residual listed — never check remaining **FAIL**.  
+1. Acceptance row 1 stays **unchecked** until human signs 整包 — **PASS\* ≠ full pass**.  
+2. Checkboxes: only **PASS** or documented **PASS*** with residual listed — never invent PASS for MISSING_REF.  
 3. Search **16–18** user JPG PASS — out of scope for this docs FAIL ledger.  
 4. Leave Issue **#10 OPEN**.
 
@@ -129,4 +143,4 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 - LIVE export: Figma MCP `get_screenshot` @ maxDimension 2048 → 442×958 PNG  
 - Docs crop: top ≈120/2868 status · bottom ≈68/2868 home indicator  
 - Compare: both resized to width 440; MAE = mean \|RGB\|  
-- MAE alone understates structural FAIL when chrome roughly aligns (historical 43); this pass **43** is true structural PASS; **02/11/41** fail structurally despite (or because of) high MAE  
+- High MAE alone does not imply structural FAIL when chrome/IA align; structural FAIL requires broken chrome, ghosted nav, corrupted assets, or duplicated strings — those are **cleared** for **02 / 11 / 41**
