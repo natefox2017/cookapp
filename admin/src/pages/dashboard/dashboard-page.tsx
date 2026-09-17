@@ -76,8 +76,8 @@ export function DashboardPage() {
                 <Area
                   type="monotone"
                   dataKey="users"
-                  stroke="var(--color-users)"
-                  fill="var(--color-users)"
+                  stroke="var(--chart-1)"
+                  fill="var(--chart-1)"
                   fillOpacity={0.18}
                   strokeWidth={2}
                 />
@@ -101,8 +101,8 @@ export function DashboardPage() {
                 <Area
                   type="monotone"
                   dataKey="recipes"
-                  stroke="var(--color-recipes)"
-                  fill="var(--color-recipes)"
+                  stroke="var(--chart-4)"
+                  fill="var(--chart-4)"
                   fillOpacity={0.18}
                   strokeWidth={2}
                 />
