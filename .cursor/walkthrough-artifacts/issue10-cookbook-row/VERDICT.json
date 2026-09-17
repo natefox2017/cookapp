@@ -44,7 +44,7 @@
       "residual": "heavier card shadows than docs; picker shows 2 rows below vs 3"
     },
     "06": {
-      "status": "DONE",
+      "status": "PARTIAL",
       "ref": "recipe-detail-beef-bourguignon-menu-open.jpg",
       "mae": 51.53,
       "fixes": [
@@ -52,7 +52,7 @@
         "background blur on menu",
         "host Trailing=More"
       ],
-      "residual": "MAE high (menu position/blur vs docs translucency); host inherits detail chrome differences"
+      "residual": "MAE high (menu position/blur vs docs translucency); host inherits detail chrome differences \u2014 Issue checkbox left unchecked"
     },
     "07": {
       "status": "DONE",
