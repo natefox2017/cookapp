@@ -1,0 +1,23 @@
+{
+  "page": 2,
+  "name": "Recipe Detail",
+  "frameId": "116:18195",
+  "verdict": "PASS*",
+  "mae": 38.56,
+  "prior_mae": 43.0,
+  "fixes": [
+    "Removed baked chrome from hero image (clean food crop)",
+    "Cart+/Calendar capsule w=90 + separate More at x=376 (no overlap)",
+    "CartPlusBadge absolute on cart",
+    "Cleared white-fill override on back chevron (double-back)",
+    "Dark glass fills on Leading/Trailing/More",
+    "Restored (Note 1)/(Note 2)/(Note 3) markers + quantity coloring",
+    "Hero h=350, nav y=16, Start Cooking y=286"
+  ],
+  "residuals": [
+    "Dark glass + white icons vs docs light frosted + black icons (intentional per request / hero contrast)",
+    "Hero photo crop framing ≠ docs pixel crop (food-only band)",
+    "Bottom tab fill/outline residual shared with other PASS* pages"
+  ],
+  "evidence": ".cursor/walkthrough-artifacts/issue10-fail-02/"
+}
