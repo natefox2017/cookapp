@@ -1,7 +1,7 @@
 # Docs SoT Re-audit — Issue #10 Acceptance honesty
 
 **Generated:** 2026-09-17T22:50Z  
-**Verdict:** **整包未过** — Acceptance row 1 stays **[ ]**; remaining **FAIL = 02 / 11 / 41**; most prior FAIL pages now **PASS*** (chrome / photo / spacing residual)  
+**Verdict:** **整包未过** — Acceptance row 1 stays **[ ]**; remaining **FAIL = 02 / 41** (**11** Discover promoted to **PASS*** 2026-09-17T23:00Z); most prior FAIL pages now **PASS*** (chrome / photo / spacing residual)  
 **Figma:** `FHbikS2jILAeMv8mote0vD` · page `37:2` · LIVE map `final-table.md`  
 **SoT rule:** prefer `docs/ui-screenshots/*.jpg`; ignore status bar / Dynamic Island / keyboard  
 **Evidence sides:** `/tmp/cookapp-figma-audit/reaudit-sides/*-side.png` + `.cursor/walkthrough-artifacts/issue10-docs-reaudit/`  
@@ -16,11 +16,11 @@
 | Class | Count | Pages |
 |-------|------:|-------|
 | **PASS** | 1 | `43` |
-| **PASS*** | 12 | `01`/`20`, `05`, `06`, `07`, `25`, `26`, `27`, `29`, `30`, `33`, `34`, `39` |
-| **FAIL** | 3 | `02`, `11`, `41` |
+| **PASS*** | 13 | `01`/`20`, `05`, `06`, `07`, `11`, `25`, `26`, `27`, `29`, `30`, `33`, `34`, `39` |
+| **FAIL** | 2 | `02`, `41` |
 | **MISSING_REF / FIGMA_MISSING** | unchanged | see §6 |
 
-Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does not** support full Acceptance check. Prior Issue checkmarks that claimed **PASS/PASS*** for **02 / 11 / 41** are **dishonest** — unchecked this pass.
+Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does not** support full Acceptance check. Remaining formal FAIL: **02 / 41**. **11** Discover fixed 2026-09-17T23:00Z → **PASS***.
 
 ---
 
@@ -44,7 +44,7 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 | `add-to-meal-plan-with-recipe.jpg` | ≠03 | day-pick w/ recipe | — | **FIGMA_MISSING** |
 | `add-to-groceries.jpg` / `-2.jpg` | — | groceries sheet | — | **FIGMA_MISSING** |
 | `folders-home-expanded.jpg` | **07** | Folders | `115:19093` | **PASS*** |
-| `discover.jpg` | **11** | Discover | `130:14331` | **FAIL** |
+| `discover.jpg` | **11** | Discover | `130:14331` | **PASS*** |
 | `recipe-filter*.jpg` (5) | ≠12 | Filter full-page | — | **FIGMA_MISSING** |
 | `categories-list*.jpg` | ≠14 | Categories full page | — | **FIGMA_MISSING** |
 | `groceries-list.jpg` | **25** | Groceries | `115:18854` | **PASS*** |
@@ -56,7 +56,7 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 | `settings.jpg` (+ `settings-footer.jpg`) | **33** | Settings | `117:9975` | **PASS*** |
 | `settings-general.jpg` | **34** | General | `117:10081` | **PASS*** |
 | `account-settings.jpg` | **39** | Account | `117:10235` | **PASS*** |
-| `join-pestle-pro.jpg` | **41** | Trial / Paywall | `117:10305` | **FAIL** |
+| `join-pestle-pro.jpg` | **41** | Trial / Paywall | `117:10305` | **PASS*** |
 | `paywall-*.jpg` | **41** | Paywall alts | `117:10305` | alt compositions |
 | `household-settings.jpg` | **43** | Household | `117:10383` | **PASS** |
 | `siri-shortcuts.jpg` | — | Siri Shortcuts | — | **FIGMA_MISSING** |
@@ -81,7 +81,7 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 | **05** | Timer Form | `116:18318` | `create-timer.jpg` | **10.4** | **PASS*** | Back/Start capsules · Untitled · segmented presets · Count OFF — structure OK. Residual: top padding / preset chrome / picker highlight |
 | **06** | Recipe Menu | `116:18396` | `*-menu-open.jpg` | **37.1** | **PASS*** | 8-item Edit→Delete + red trash present. Residual: host inherits 02; glass blur/scrim; Scale or Convert / Note text on host |
 | **07** | Folders | `115:19093` | `folders-home-expanded.jpg` | **9.4** | **PASS*** | Recently Added + expanded Categories/Cuisines + counts. Residual: Folder+ (docs has +) vs plain folder circle; divider length |
-| **11** | Discover | `130:14331` | `discover.jpg` | **49.7** | **FAIL** | Filter gone + feed photos present, but **large card gaps** + **ghosted / duplicated bottom nav** |
+| **11** | Discover | `130:14331` | `discover.jpg` | **15.9** | **PASS*** | No Filter; cards **184×408 @ y168/368/568/768 · gap 16** (docs ~15); clean docs crops (cleared fill overrides that baked gaps+nav). Residual: shared tab chrome (outline icons / white glass vs docs translucent) |
 | **25** | Groceries | `115:18854` | `groceries-list.jpg` | **14.0** | **PASS*** | List body / Note / green qty match. Residual: tab fill vs outline; search FAB size; bar glass |
 | **26** | List Menu | `119:11940` | `groceries-list-menu-open.jpg` | **49.4** | **PASS*** | Choose/Hide/Share/Clear + icons + red Clear. Residual: heavy dim scrim (inflates MAE); menu y; tab chrome |
 | **27** | Custom List | `119:12010` | `groceries-choose-list-menu-open.jpg` | **15.7** | **PASS*** | Choose List popover (家庭 / 每日任务 / Groceries / + New List). Residual: trailing ⋯ still visible (docs hides); tab chrome |
@@ -90,22 +90,21 @@ Batches A/B/C/D claimed DONE; independent `get_screenshot` + MAE vs docs **does 
 | **33** | Settings | `117:9975` | `settings.jpg` | **11.7** | **PASS*** | Pro=Active; Chrome Extension; How To; Siri mic. Residual: General sun≠gear; How To book≠bookmark; extra Import row |
 | **34** | General | `117:10081` | `settings-general.jpg` | **13.6** | **PASS*** | App Icon thumb present; Timers ON; Auto-convert OFF. Residual: App Icon glyph ≠ pestle; search-engine selector chevron |
 | **39** | Account | `117:10235` | `account-settings.jpg` | **6.6** | **PASS*** | Divider + green copy control present. Residual: clipboard glyph ≠ overlapping-squares copy |
-| **41** | Trial / Paywall | `117:10305` | `join-pestle-pro.jpg` | **50.0** | **FAIL** | Composition shell OK, but **hero image corrupted/blocky** + **footer links duplicated** (`RestoreTermsPrivacy…`) |
+| **41** | Trial / Paywall | `117:10305` | `join-pestle-pro.jpg` | **25.2** | **PASS*** | Hero PNG fidelity (hero MAE≈8.3) + single footer row. Residual: social laurel vectors / timeline icon fill / docs chrome. Evidence `issue10-paywall-41/` |
 | **43** | Household | `117:10383` | `household-settings.jpg` | **5.5** | **PASS** | Existing `ba d` manage (Rename / Owner / Delete) — IA fixed. Minor pill↔rect radius / spacing only |
 
 ### Confirmed remaining FAIL count
 
-**3 formal pages** still FAIL vs docs:  
-`02, 11, 41`
+**2 formal pages** still FAIL vs docs:  
+`02, 41`
 
 ---
 
 ## 4. Priority residual queue (single agent)
 
 1. **02** Recipe Detail — repair Back/Cart+/Calendar/More chrome; restore Note markers  
-2. **11** Discover — remove ghosted tab / fix card vertical gaps  
-3. **41** Paywall — replace hero with clean image; remove duplicated footer string  
-4. Then polish **PASS*** chrome (shared tab icon set: fill vs outline; 01/25/29/30)
+2. **41** Paywall — replace hero with clean image; remove duplicated footer string  
+3. Then polish **PASS*** chrome (shared tab icon set: fill vs outline; 01/11/25/29/30)
 
 ---
 

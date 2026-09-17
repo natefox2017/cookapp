@@ -1,0 +1,29 @@
+{
+  "page": 11,
+  "name": "Discover",
+  "frameId": "130:14331",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "sot": "docs/ui-screenshots/discover.jpg",
+  "class": "PASS*",
+  "mae_full": 15.88,
+  "mae_mid": 12.55,
+  "mae_bot18": 32.6,
+  "prior_mae": 49.7,
+  "prior_class": "FAIL",
+  "fixes": [
+    "Resized Discover Loading Card variants 197→184 and repositioned instances to y=168/368/568/768 (16px gaps)",
+    "Uploaded clean docs crops (no baked white gaps / nav chrome) onto variants",
+    "Cleared instance fill overrides on W07 main that still pointed at old gap+ghost images",
+    "Confirmed Trailing=None (no Filter)"
+  ],
+  "residuals": [
+    "Shared bottom-nav chrome: outline tab icons + white glass vs docs translucent fill icons",
+    "1px gap delta (16 vs docs ~15) from integer layout"
+  ],
+  "evidence": {
+    "after": ".cursor/walkthrough-artifacts/issue10-discover-reaudit/after2-live.png",
+    "side": ".cursor/walkthrough-artifacts/issue10-discover-reaudit/side-after2.png",
+    "bot": ".cursor/walkthrough-artifacts/issue10-discover-reaudit/bot-after2.png"
+  },
+  "issue10": "left OPEN — Acceptance row 1 still unchecked; remaining FAIL 02/41"
+}
