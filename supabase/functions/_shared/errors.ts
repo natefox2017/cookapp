@@ -1,6 +1,6 @@
 /** Structured JSON responses + AppError helpers. */
 
-import { corsHeaders } from "./cors.ts";
+import { publicCorsHeaders } from "./cors.ts";
 
 export type ErrorCode =
   | "unauthorized"
@@ -24,17 +24,24 @@ export class AppError extends Error {
   }
 }
 
-export function json(body: unknown, status = 200): Response {
+export function json(
+  body: unknown,
+  status = 200,
+  cors: Record<string, string> = publicCorsHeaders,
+): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
-      ...corsHeaders,
+      ...cors,
       "Content-Type": "application/json",
     },
   });
 }
 
-export function errorResponse(err: unknown): Response {
+export function errorResponse(
+  err: unknown,
+  cors: Record<string, string> = publicCorsHeaders,
+): Response {
   if (err instanceof AppError) {
     return json(
       {
@@ -45,6 +52,7 @@ export function errorResponse(err: unknown): Response {
         },
       },
       err.status,
+      cors,
     );
   }
   const message = err instanceof Error ? err.message : "unknown_error";
@@ -58,5 +66,6 @@ export function errorResponse(err: unknown): Response {
       },
     },
     500,
+    cors,
   );
 }
