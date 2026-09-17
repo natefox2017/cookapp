@@ -1,0 +1,26 @@
+[
+  {
+    "page": "01",
+    "mae_before": 54.13,
+    "mae_after": 54.38,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/01-final-side.png"
+  },
+  {
+    "page": "02",
+    "mae_before": 33.54,
+    "mae_after": 42.24,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/02-final-side.png"
+  },
+  {
+    "page": "07",
+    "mae_before": 10.35,
+    "mae_after": 10.52,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/07-final-side.png"
+  },
+  {
+    "page": "11",
+    "mae_before": 65.86,
+    "mae_after": 66.32,
+    "side": ".cursor/walkthrough-artifacts/issue10-fail-fix/cookbook-v2/compare/11-final-side.png"
+  }
+]
