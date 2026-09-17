@@ -1,0 +1,82 @@
+{
+  "scope": "Cookbook-row FAIL pages 01,02,05,06,07,11",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "pageId": "37:2",
+  "glassY": 62,
+  "docsSoT": "docs/ui-screenshots/",
+  "DOCS-SOT-FAIL.md": "not present",
+  "verdicts": {
+    "01": {
+      "status": "DONE",
+      "ref": "cookbook-grid.jpg",
+      "mae": 10.54,
+      "fixes": [
+        "real photo composites on 6 cards",
+        "Kale badge=4",
+        "green title",
+        "Discover tab speech icon already present"
+      ],
+      "residual": "bottom-nav icon stroke weight thinner than docs; no status bar (intentional)"
+    },
+    "02": {
+      "status": "DONE",
+      "ref": "recipe-detail-beef-bourguignon.jpg",
+      "mae": 35.25,
+      "fixes": [
+        "dark clear glass back + cart+/calendar capsule + more",
+        "Start Cooking flame already hidden",
+        "glass over hero"
+      ],
+      "residual": "ingredient Note annotations shorter than docs; MAE inflated by status bar / hero crop; chrome class matches FAIL notes"
+    },
+    "05": {
+      "status": "DONE",
+      "ref": "create-timer.jpg",
+      "mae": 13.46,
+      "fixes": [
+        "Back text capsule",
+        "Untitled Timer",
+        "segmented presets + 15 Min selected",
+        "toggle OFF",
+        "0h0m0s selection band",
+        "glassY=62"
+      ],
+      "residual": "heavier card shadows than docs; picker shows 2 rows below vs 3"
+    },
+    "06": {
+      "status": "DONE",
+      "ref": "recipe-detail-beef-bourguignon-menu-open.jpg",
+      "mae": 51.53,
+      "fixes": [
+        "full Edit\u2192Delete glass menu with red Delete",
+        "background blur on menu",
+        "host Trailing=More"
+      ],
+      "residual": "MAE high (menu position/blur vs docs translucency); host inherits detail chrome differences"
+    },
+    "07": {
+      "status": "DONE",
+      "ref": "folders-home-expanded.jpg",
+      "mae": 6.38,
+      "fixes": [
+        "Recently Added row un-overlapped (4 summary rows)",
+        "Folders disclosure ChevronDown",
+        "Categories/Cuisines expanded"
+      ],
+      "residual": "icon weight / active pill chrome minor"
+    },
+    "11": {
+      "status": "DONE",
+      "ref": "discover.jpg",
+      "mae": 25.23,
+      "fixes": [
+        "removed Filter trailing (Trailing=None)",
+        "photo fills restored (cleared solid gray overrides)",
+        "order Kale\u2192Mongolian\u2192Muffins\u2192Mayo",
+        "no status/keyboard"
+      ],
+      "residual": "card aspect slightly shorter; midMae~24 from status-bar alignment + bottom chrome"
+    }
+  },
+  "evidence": ".cursor/walkthrough-artifacts/issue10-cookbook-row/"
+}
