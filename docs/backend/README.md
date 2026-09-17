@@ -47,9 +47,9 @@ supabase/
 
 ## API documentation
 
-- OpenAPI: [`supabase/openapi/openapi.yaml`](../supabase/openapi/openapi.yaml)
+- OpenAPI: [`supabase/openapi/openapi.yaml`](../../supabase/openapi/openapi.yaml)
 - Live JSON: `GET /functions/v1/openapi` (no JWT)
-- Auth/IAP ops: [`AUTH_AND_IAP.md`](./AUTH_AND_IAP.md)
+- Auth/IAP ops: [`AUTH_AND_IAP.md`](../AUTH_AND_IAP.md)
 
 ### Spec path ↔ PostgREST
 
@@ -76,6 +76,9 @@ Authorization: Bearer <access_token>
 - Storage: private buckets; first path segment must equal `auth.uid()`
 - `SUPABASE_SERVICE_ROLE_KEY` used only inside Edge Functions / webhooks — never shipped to clients
 - Secrets: `REVENUECAT_WEBHOOK_SECRET`, OAuth provider secrets via Supabase Dashboard / `supabase secrets`
+- `profiles.email` is read-only for clients (synced from `auth.users`)
+- Authenticated Edge Functions CORS: set `CORS_ALLOWED_ORIGINS` (comma-separated); public `openapi` keeps `*`
+- Subscription upserts ignore duplicate `rc_event_id` and stale `event_timestamp_ms` (purchase_events still recorded)
 
 ## Edge Functions
 
