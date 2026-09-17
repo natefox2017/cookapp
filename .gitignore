@@ -7,3 +7,6 @@ ios/CookApp.xcodeproj/
 ios/CookApp.xcworkspace/
 .swiftpm/
 Build/
+admin/node_modules/
+admin/dist/
+admin/.env

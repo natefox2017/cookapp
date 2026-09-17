@@ -1,0 +1,396 @@
+import type {
+  AdminSettings,
+  AdminUser,
+  AdminUserDetail,
+  CollectionSummary,
+  DashboardData,
+  GroceryItem,
+  GroceryUser,
+  Ingredient,
+  MealPlanEntry,
+  PantryItem,
+  RecipeDetail,
+  RecipeSummary,
+  SubscriptionRecord,
+  TaxonomyItem,
+} from '@/types/admin'
+
+export const mockUsers: AdminUser[] = [
+  {
+    id: 'usr_01',
+    email: 'alex.chen@example.com',
+    displayName: 'Alex Chen',
+    avatarUrl: null,
+    subscription: 'pro',
+    recipeCount: 42,
+    favoriteCount: 18,
+    createdAt: '2025-11-12T10:00:00Z',
+    status: 'active',
+  },
+  {
+    id: 'usr_02',
+    email: 'maya.ross@example.com',
+    displayName: 'Maya Ross',
+    avatarUrl: null,
+    subscription: 'free',
+    recipeCount: 7,
+    favoriteCount: 23,
+    createdAt: '2026-01-04T15:30:00Z',
+    status: 'active',
+  },
+  {
+    id: 'usr_03',
+    email: 'jordan.lee@example.com',
+    displayName: 'Jordan Lee',
+    avatarUrl: null,
+    subscription: 'lifetime',
+    recipeCount: 128,
+    favoriteCount: 64,
+    createdAt: '2025-08-21T08:15:00Z',
+    status: 'active',
+  },
+  {
+    id: 'usr_04',
+    email: 'sam.park@example.com',
+    displayName: 'Sam Park',
+    avatarUrl: null,
+    subscription: 'pro',
+    recipeCount: 15,
+    favoriteCount: 9,
+    createdAt: '2026-02-18T12:00:00Z',
+    status: 'suspended',
+  },
+  {
+    id: 'usr_05',
+    email: 'nina.okada@example.com',
+    displayName: 'Nina Okada',
+    avatarUrl: null,
+    subscription: 'free',
+    recipeCount: 3,
+    favoriteCount: 11,
+    createdAt: '2026-03-02T19:45:00Z',
+    status: 'active',
+  },
+]
+
+export const mockUserDetails: Record<string, AdminUserDetail> = Object.fromEntries(
+  mockUsers.map((user) => [
+    user.id,
+    {
+      ...user,
+      lastLoginAt: '2026-03-15T09:20:00Z',
+      locale: 'en-US',
+      timezone: 'America/Los_Angeles',
+    },
+  ]),
+)
+
+export const mockRecipes: RecipeSummary[] = [
+  {
+    id: 'rcp_01',
+    title: 'Miso Butter Salmon',
+    coverUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=640&q=80',
+    cuisine: 'Japanese',
+    category: 'Dinner',
+    tags: ['seafood', 'weeknight', 'high-protein'],
+    createdAt: '2026-02-10T14:00:00Z',
+    ownerEmail: 'alex.chen@example.com',
+  },
+  {
+    id: 'rcp_02',
+    title: 'Herbed Farro Bowl',
+    coverUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=640&q=80',
+    cuisine: 'Mediterranean',
+    category: 'Lunch',
+    tags: ['vegetarian', 'meal-prep'],
+    createdAt: '2026-02-22T11:20:00Z',
+    ownerEmail: 'maya.ross@example.com',
+  },
+  {
+    id: 'rcp_03',
+    title: 'Citrus Yogurt Pancakes',
+    coverUrl: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=640&q=80',
+    cuisine: 'American',
+    category: 'Breakfast',
+    tags: ['brunch', 'kid-friendly'],
+    createdAt: '2026-03-01T08:00:00Z',
+    ownerEmail: 'jordan.lee@example.com',
+  },
+  {
+    id: 'rcp_04',
+    title: 'Spicy Peanut Noodles',
+    coverUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+    cuisine: 'Thai',
+    category: 'Dinner',
+    tags: ['noodles', 'quick'],
+    createdAt: '2026-03-08T17:40:00Z',
+    ownerEmail: 'nina.okada@example.com',
+  },
+  {
+    id: 'rcp_05',
+    title: 'Roasted Cauliflower Tacos',
+    coverUrl: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=640&q=80',
+    cuisine: 'Mexican',
+    category: 'Dinner',
+    tags: ['vegetarian', 'tacos'],
+    createdAt: '2026-03-12T13:10:00Z',
+    ownerEmail: 'sam.park@example.com',
+  },
+  {
+    id: 'rcp_06',
+    title: 'Tomato Basil Soup',
+    coverUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=640&q=80',
+    cuisine: 'Italian',
+    category: 'Lunch',
+    tags: ['soup', 'comfort'],
+    createdAt: '2026-03-14T16:00:00Z',
+    ownerEmail: 'alex.chen@example.com',
+  },
+]
+
+export const mockRecipeDetails: Record<string, RecipeDetail> = Object.fromEntries(
+  mockRecipes.map((recipe) => [
+    recipe.id,
+    {
+      ...recipe,
+      servings: 4,
+      updatedAt: recipe.createdAt,
+      ingredients: [
+        { name: 'Main ingredient', quantity: '2', unit: 'cups' },
+        { name: 'Olive oil', quantity: '2', unit: 'tbsp' },
+        { name: 'Salt', quantity: '1', unit: 'tsp' },
+      ],
+      steps: [
+        { order: 1, instruction: 'Prep ingredients and preheat equipment as needed.' },
+        { order: 2, instruction: 'Cook the primary component until done.' },
+        { order: 3, instruction: 'Assemble, season, and serve.' },
+      ],
+      nutrition: {
+        calories: 420,
+        proteinG: 24,
+        carbsG: 32,
+        fatG: 18,
+      },
+      notes: 'Mock detail payload aligned with GET /admin/recipes/:id.',
+    },
+  ]),
+)
+
+export const mockCollections: CollectionSummary[] = [
+  {
+    id: 'col_01',
+    name: 'Weeknight Staples',
+    coverUrl: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=640&q=80',
+    recipeCount: 14,
+    owner: { id: 'usr_01', displayName: 'Alex Chen', avatarUrl: null },
+    createdAt: '2026-01-20T10:00:00Z',
+    isPublic: true,
+  },
+  {
+    id: 'col_02',
+    name: 'Meal Prep Sundays',
+    coverUrl: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=640&q=80',
+    recipeCount: 9,
+    owner: { id: 'usr_02', displayName: 'Maya Ross', avatarUrl: null },
+    createdAt: '2026-02-05T12:00:00Z',
+    isPublic: false,
+  },
+  {
+    id: 'col_03',
+    name: 'Holiday Baking',
+    coverUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=640&q=80',
+    recipeCount: 21,
+    owner: { id: 'usr_03', displayName: 'Jordan Lee', avatarUrl: null },
+    createdAt: '2025-12-01T09:00:00Z',
+    isPublic: true,
+  },
+  {
+    id: 'col_04',
+    name: 'Plant Forward',
+    coverUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=640&q=80',
+    recipeCount: 17,
+    owner: { id: 'usr_05', displayName: 'Nina Okada', avatarUrl: null },
+    createdAt: '2026-03-03T18:00:00Z',
+    isPublic: true,
+  },
+]
+
+export const mockIngredients: Ingredient[] = [
+  { id: 'ing_01', name: 'Chicken Thigh', category: 'Protein', unit: 'g', alternativeName: 'Boneless thigh' },
+  { id: 'ing_02', name: 'Extra Virgin Olive Oil', category: 'Pantry', unit: 'ml', alternativeName: 'EVOO' },
+  { id: 'ing_03', name: 'Garlic', category: 'Produce', unit: 'clove', alternativeName: null },
+  { id: 'ing_04', name: 'Soy Sauce', category: 'Condiment', unit: 'ml', alternativeName: 'Shoyu' },
+  { id: 'ing_05', name: 'Basmati Rice', category: 'Grain', unit: 'g', alternativeName: null },
+  { id: 'ing_06', name: 'Greek Yogurt', category: 'Dairy', unit: 'g', alternativeName: 'Strained yogurt' },
+]
+
+export const mockGroceryUsers: GroceryUser[] = [
+  { id: 'usr_01', displayName: 'Alex Chen', email: 'alex.chen@example.com', itemCount: 8, completedCount: 3 },
+  { id: 'usr_02', displayName: 'Maya Ross', email: 'maya.ross@example.com', itemCount: 5, completedCount: 5 },
+  { id: 'usr_03', displayName: 'Jordan Lee', email: 'jordan.lee@example.com', itemCount: 12, completedCount: 4 },
+]
+
+export const mockGroceryItems: GroceryItem[] = [
+  { id: 'grc_01', userId: 'usr_01', ingredient: 'Spinach', quantity: '200 g', category: 'Produce', completed: true },
+  { id: 'grc_02', userId: 'usr_01', ingredient: 'Salmon fillet', quantity: '400 g', category: 'Protein', completed: false },
+  { id: 'grc_03', userId: 'usr_01', ingredient: 'Lemon', quantity: '2', category: 'Produce', completed: false },
+  { id: 'grc_04', userId: 'usr_01', ingredient: 'Butter', quantity: '100 g', category: 'Dairy', completed: true },
+  { id: 'grc_05', userId: 'usr_01', ingredient: 'Miso paste', quantity: '1 jar', category: 'Pantry', completed: false },
+  { id: 'grc_06', userId: 'usr_02', ingredient: 'Chickpeas', quantity: '2 cans', category: 'Pantry', completed: true },
+  { id: 'grc_07', userId: 'usr_02', ingredient: 'Cucumber', quantity: '3', category: 'Produce', completed: true },
+  { id: 'grc_08', userId: 'usr_03', ingredient: 'Eggs', quantity: '12', category: 'Dairy', completed: false },
+  { id: 'grc_09', userId: 'usr_03', ingredient: 'Flour', quantity: '1 kg', category: 'Pantry', completed: true },
+  { id: 'grc_10', userId: 'usr_03', ingredient: 'Blueberries', quantity: '250 g', category: 'Produce', completed: false },
+]
+
+export const mockMealPlans: MealPlanEntry[] = [
+  { date: '2026-03-16', breakfast: 'Citrus Yogurt Pancakes', lunch: 'Herbed Farro Bowl', dinner: 'Miso Butter Salmon' },
+  { date: '2026-03-17', breakfast: 'Greek Yogurt + Fruit', lunch: 'Tomato Basil Soup', dinner: 'Spicy Peanut Noodles' },
+  { date: '2026-03-18', breakfast: null, lunch: 'Leftover Noodles', dinner: 'Roasted Cauliflower Tacos' },
+  { date: '2026-03-19', breakfast: 'Toast + Eggs', lunch: null, dinner: 'Miso Butter Salmon' },
+  { date: '2026-03-20', breakfast: 'Overnight Oats', lunch: 'Herbed Farro Bowl', dinner: null },
+  { date: '2026-03-21', breakfast: 'Citrus Yogurt Pancakes', lunch: 'Tomato Basil Soup', dinner: 'Spicy Peanut Noodles' },
+  { date: '2026-03-22', breakfast: null, lunch: null, dinner: 'Roasted Cauliflower Tacos' },
+]
+
+export const mockPantry: PantryItem[] = [
+  { id: 'pnt_01', ingredient: 'Olive Oil', quantity: 450, unit: 'ml', expirationDate: '2026-12-01', freshnessPercent: 88 },
+  { id: 'pnt_02', ingredient: 'Chicken Stock', quantity: 2, unit: 'cartons', expirationDate: '2026-04-02', freshnessPercent: 35 },
+  { id: 'pnt_03', ingredient: 'Arborio Rice', quantity: 800, unit: 'g', expirationDate: '2027-01-15', freshnessPercent: 92 },
+  { id: 'pnt_04', ingredient: 'Parmesan', quantity: 180, unit: 'g', expirationDate: '2026-03-28', freshnessPercent: 18 },
+  { id: 'pnt_05', ingredient: 'Canned Tomatoes', quantity: 6, unit: 'cans', expirationDate: '2027-06-01', freshnessPercent: 95 },
+  { id: 'pnt_06', ingredient: 'Eggs', quantity: 8, unit: 'count', expirationDate: '2026-03-25', freshnessPercent: 42 },
+]
+
+export const mockCuisines: TaxonomyItem[] = [
+  { id: 'cui_01', name: 'Japanese', slug: 'japanese', usageCount: 48 },
+  { id: 'cui_02', name: 'Italian', slug: 'italian', usageCount: 61 },
+  { id: 'cui_03', name: 'Mexican', slug: 'mexican', usageCount: 39 },
+  { id: 'cui_04', name: 'Thai', slug: 'thai', usageCount: 27 },
+]
+
+export const mockCategories: TaxonomyItem[] = [
+  { id: 'cat_01', name: 'Breakfast', slug: 'breakfast', usageCount: 34 },
+  { id: 'cat_02', name: 'Lunch', slug: 'lunch', usageCount: 52 },
+  { id: 'cat_03', name: 'Dinner', slug: 'dinner', usageCount: 88 },
+  { id: 'cat_04', name: 'Dessert', slug: 'dessert', usageCount: 19 },
+]
+
+export const mockTags: TaxonomyItem[] = [
+  { id: 'tag_01', name: 'weeknight', slug: 'weeknight', usageCount: 73 },
+  { id: 'tag_02', name: 'vegetarian', slug: 'vegetarian', usageCount: 55 },
+  { id: 'tag_03', name: 'meal-prep', slug: 'meal-prep', usageCount: 41 },
+  { id: 'tag_04', name: 'high-protein', slug: 'high-protein', usageCount: 36 },
+]
+
+export const mockSubscriptions: SubscriptionRecord[] = [
+  {
+    id: 'sub_01',
+    user: { id: 'usr_01', displayName: 'Alex Chen', email: 'alex.chen@example.com' },
+    plan: 'pro',
+    status: 'active',
+    startDate: '2025-12-01',
+    expirationDate: '2026-12-01',
+  },
+  {
+    id: 'sub_02',
+    user: { id: 'usr_03', displayName: 'Jordan Lee', email: 'jordan.lee@example.com' },
+    plan: 'lifetime',
+    status: 'active',
+    startDate: '2025-09-15',
+    expirationDate: null,
+  },
+  {
+    id: 'sub_03',
+    user: { id: 'usr_04', displayName: 'Sam Park', email: 'sam.park@example.com' },
+    plan: 'pro',
+    status: 'cancelled',
+    startDate: '2026-01-01',
+    expirationDate: '2026-04-01',
+  },
+  {
+    id: 'sub_04',
+    user: { id: 'usr_02', displayName: 'Maya Ross', email: 'maya.ross@example.com' },
+    plan: 'free',
+    status: 'active',
+    startDate: '2026-01-04',
+    expirationDate: null,
+  },
+  {
+    id: 'sub_05',
+    user: { id: 'usr_05', displayName: 'Nina Okada', email: 'nina.okada@example.com' },
+    plan: 'pro',
+    status: 'trialing',
+    startDate: '2026-03-10',
+    expirationDate: '2026-03-24',
+  },
+]
+
+export const mockDashboard: DashboardData = {
+  stats: {
+    totalUsers: mockUsers.length,
+    totalRecipes: mockRecipes.length,
+    collections: mockCollections.length,
+    favorites: mockUsers.reduce((sum, user) => sum + user.favoriteCount, 0),
+  },
+  growth: [
+    { month: 'Oct', users: 12, recipes: 18 },
+    { month: 'Nov', users: 28, recipes: 41 },
+    { month: 'Dec', users: 45, recipes: 67 },
+    { month: 'Jan', users: 62, recipes: 94 },
+    { month: 'Feb', users: 81, recipes: 128 },
+    { month: 'Mar', users: 104, recipes: 156 },
+  ],
+  recent: [
+    {
+      id: 'act_01',
+      type: 'recipe',
+      title: 'Tomato Basil Soup',
+      subtitle: 'Recipe created by alex.chen@example.com',
+      createdAt: '2026-03-14T16:00:00Z',
+    },
+    {
+      id: 'act_02',
+      type: 'user',
+      title: 'Nina Okada joined',
+      subtitle: 'nina.okada@example.com',
+      createdAt: '2026-03-02T19:45:00Z',
+    },
+    {
+      id: 'act_03',
+      type: 'subscription',
+      title: 'Pro trial started',
+      subtitle: 'Nina Okada',
+      createdAt: '2026-03-10T10:00:00Z',
+    },
+    {
+      id: 'act_04',
+      type: 'collection',
+      title: 'Plant Forward',
+      subtitle: 'Collection created by Nina Okada',
+      createdAt: '2026-03-03T18:00:00Z',
+    },
+  ],
+}
+
+export const mockSettings: AdminSettings = {
+  general: {
+    appName: 'CookApp',
+    supportEmail: 'support@cookapp.local',
+    defaultLocale: 'en-US',
+    maintenanceMode: false,
+  },
+  units: {
+    measurementSystem: 'metric',
+    temperatureUnit: 'celsius',
+  },
+  categories: {
+    allowUserTags: true,
+    requireCuisine: true,
+  },
+  system: {
+    mockMode: true,
+    apiBaseUrl: import.meta.env.VITE_ADMIN_API_BASE_URL ?? 'http://localhost:54321',
+    logLevel: 'info',
+  },
+}

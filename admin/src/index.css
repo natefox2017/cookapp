@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #f3f6f4;
+  --foreground: #14241c;
+  --card: #ffffff;
+  --card-foreground: #14241c;
+  --popover: #ffffff;
+  --popover-foreground: #14241c;
+  --primary: #1b7a4e;
+  --primary-foreground: #f4fbf7;
+  --secondary: #e4eee8;
+  --secondary-foreground: #1f3d2d;
+  --muted: #e8eee9;
+  --muted-foreground: #5b6f64;
+  --accent: #dff0e6;
+  --accent-foreground: #155c3a;
+  --destructive: #c43c3c;
+  --border: #d5e0d9;
+  --input: #d5e0d9;
+  --ring: #1b7a4e;
+  --sidebar: #0f1f17;
+  --sidebar-foreground: #d7e6dd;
+  --sidebar-accent: #1a3327;
+  --sidebar-border: #24382d;
+  --chart-1: #1b7a4e;
+  --chart-2: #3a9d6e;
+  --chart-3: #7bbf97;
+  --chart-4: #c4a35a;
+  --chart-5: #4a6fa5;
+}
+
+.dark {
+  --background: #0c1410;
+  --foreground: #e8f0eb;
+  --card: #14201a;
+  --card-foreground: #e8f0eb;
+  --popover: #14201a;
+  --popover-foreground: #e8f0eb;
+  --primary: #3a9d6e;
+  --primary-foreground: #06140c;
+  --secondary: #1a2a21;
+  --secondary-foreground: #d7e6dd;
+  --muted: #1a2a21;
+  --muted-foreground: #93a89b;
+  --accent: #1f3a2c;
+  --accent-foreground: #b8e0c8;
+  --destructive: #e25a5a;
+  --border: #2a3d33;
+  --input: #2a3d33;
+  --ring: #3a9d6e;
+  --sidebar: #080f0c;
+  --sidebar-foreground: #d7e6dd;
+  --sidebar-accent: #15241c;
+  --sidebar-border: #1c2d24;
+  --chart-1: #3a9d6e;
+  --chart-2: #7bbf97;
+  --chart-3: #1b7a4e;
+  --chart-4: #d4b56a;
+  --chart-5: #6b8fc4;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a {
+    @apply transition-colors duration-150;
+  }
+}
