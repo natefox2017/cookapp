@@ -34,7 +34,7 @@
 | Supabase Apple Client IDs（含 Bundle ID / Services ID） | todo | | |
 | （如用 Services ID）Key ID / Team ID / 私钥已配到 Supabase | todo | | |
 
-说明见 `docs/AUTH_AND_IAP.md` §1。
+说明见 `docs/AUTH_AND_IAP.md` → Flows → Apple。
 
 ---
 
