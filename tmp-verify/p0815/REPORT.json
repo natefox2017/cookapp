@@ -1,0 +1,51 @@
+{
+  "agent": "bc-66843953 Fix pages 8-15 compare shots",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "glassY": 62,
+  "pages": {
+    "08": {
+      "frame": "119:12665",
+      "status": "DONE",
+      "mse": 2.51,
+      "note": "1 Beef; glassY62"
+    },
+    "09": {
+      "frame": "119:12726",
+      "status": "DONE",
+      "mse": 1.09,
+      "note": "1 Beef; glassY62"
+    },
+    "11": {
+      "frame": "130:14331",
+      "status": "DONE",
+      "mse": 1.72,
+      "note": "w07 chrome; glassY62"
+    },
+    "13": {
+      "frame": "119:12180",
+      "status": "DONE",
+      "mse": 1.52,
+      "note": "Complete checkmark @62"
+    },
+    "14": {
+      "frame": "119:12208",
+      "status": "DONE",
+      "mse": 3.67,
+      "fix": "host y -110\u2192-90",
+      "main": "118:10840"
+    },
+    "15": {
+      "frame": "119:12241",
+      "status": "DONE",
+      "mse": 2.08,
+      "fix": "host y -110\u2192-90",
+      "main": "118:10871",
+      "french": true
+    }
+  },
+  "checklist": "/tmp/cookapp-figma-audit/PAGE-FIX-CHECKLIST.md",
+  "mutated": [
+    "160:25399",
+    "160:25594"
+  ]
+}
