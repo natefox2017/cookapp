@@ -25,16 +25,29 @@ export async function httpRequest<T>(
   init?: RequestInit,
 ): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
     headers: {
       'Content-Type': 'application/json',
       ...(init?.headers ?? {}),
     },
-    ...init,
   })
 
   if (!response.ok) {
-    const text = await response.text()
-    throw new ApiError(text || response.statusText, response.status)
+    let message = response.statusText
+    try {
+      const payload = (await response.json()) as {
+        error?: { message?: string }
+        message?: string
+      }
+      message = payload.error?.message || payload.message || message
+    } catch {
+      try {
+        message = (await response.text()) || message
+      } catch {
+        // keep statusText
+      }
+    }
+    throw new ApiError(message, response.status)
   }
 
   if (response.status === 204) {

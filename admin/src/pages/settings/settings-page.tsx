@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getSettings, updateSettings } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
+import { authErrorMessage, useAuth } from '@/auth/auth-context'
 import type { AdminSettings } from '@/types/admin'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,9 +20,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export function SettingsPage() {
   const { data, loading, error, reload } = useAsyncData(() => getSettings(), [])
+  const { admin, changePassword } = useAuth()
   const [draft, setDraft] = useState<AdminSettings | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   useEffect(() => {
     if (data) setDraft(structuredClone(data))
@@ -40,6 +48,31 @@ export function SettingsPage() {
       window.alert(err instanceof Error ? err.message : 'Save failed')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function onChangePassword() {
+    setPasswordMessage(null)
+    setPasswordError(null)
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New password and confirmation do not match')
+      return
+    }
+    if (newPassword.length < 4) {
+      setPasswordError('New password must be at least 4 characters')
+      return
+    }
+    setPasswordSaving(true)
+    try {
+      await changePassword(currentPassword, newPassword)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setPasswordMessage('Password updated. Your session was refreshed.')
+    } catch (err) {
+      setPasswordError(authErrorMessage(err))
+    } finally {
+      setPasswordSaving(false)
     }
   }
 
@@ -71,6 +104,7 @@ export function SettingsPage() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
@@ -244,6 +278,62 @@ export function SettingsPage() {
                     })
                   }
                 />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>
+                Change the admin console password for{' '}
+                <span className="font-mono">{admin?.username ?? 'admin'}</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid max-w-xl gap-4">
+              <div className="grid gap-1.5">
+                <Label htmlFor="currentPassword">Current password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="newPassword">New password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="confirmPassword">Confirm new password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+              </div>
+              {passwordError ? <p className="text-sm text-destructive">{passwordError}</p> : null}
+              {passwordMessage ? <p className="text-sm text-muted-foreground">{passwordMessage}</p> : null}
+              <div>
+                <Button
+                  type="button"
+                  loading={passwordSaving}
+                  disabled={!currentPassword || !newPassword || !confirmPassword}
+                  onClick={() => void onChangePassword()}
+                >
+                  Update password
+                </Button>
               </div>
             </CardContent>
           </Card>

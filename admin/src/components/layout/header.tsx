@@ -1,10 +1,12 @@
-import { Menu, Moon, RefreshCw, Sun } from 'lucide-react'
+import { LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, RefreshCw, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { pageTitleForPath } from '@/components/layout/nav'
 import { SidebarNav } from '@/components/layout/sidebar'
+import { useSidebar } from '@/components/layout/sidebar-context'
+import { useAuth } from '@/auth/auth-context'
 import { isMockMode } from '@/api'
 import {
   Sheet,
@@ -16,9 +18,13 @@ import {
 
 export function Header({ onRefresh }: { onRefresh?: () => void }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const title = pageTitleForPath(location.pathname)
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { collapsed, toggle } = useSidebar()
+  const { admin, logout } = useAuth()
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -27,6 +33,16 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
+
+  async function onLogout() {
+    setLoggingOut(true)
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-card/90 px-4 backdrop-blur sm:px-5">
@@ -40,6 +56,15 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
         >
           <Menu />
         </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="hidden md:inline-flex"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          onClick={toggle}
+        >
+          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+        </Button>
         <h2 className="truncate text-sm font-semibold">{title}</h2>
         {isMockMode() ? (
           <Badge variant="warning" className="hidden sm:inline-flex">
@@ -48,6 +73,9 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
         ) : null}
       </div>
       <div className="flex items-center gap-2">
+        {admin ? (
+          <span className="hidden text-xs text-muted-foreground sm:inline">{admin.username}</span>
+        ) : null}
         {onRefresh ? (
           <Button variant="outline" size="sm" onClick={onRefresh} aria-label="Refresh data">
             <RefreshCw className="h-3.5 w-3.5" />
@@ -61,6 +89,16 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
           onClick={() => setDark((value) => !value)}
         >
           {dark ? <Sun /> : <Moon />}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          loading={loggingOut}
+          onClick={() => void onLogout()}
+          aria-label="Log out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Log out</span>
         </Button>
       </div>
 
