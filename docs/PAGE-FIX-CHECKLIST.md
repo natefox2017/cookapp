@@ -101,22 +101,22 @@
 | 30 | Meal Plan Inline | `119:12354` | inherits **29** / `after/39-mealplan.png` | PENDING | Sync header+list after 29 class decision. |
 | 31 | Add Menu | `119:12435` | `/tmp/cookapp-shots/after/40-add-menu.png` | PENDING | Header sync to 29; menu vs 40-add-menu. |
 | 32 | Add Section Menu | `119:12521` | `/tmp/cookapp-shots/after/41-add-section.png` | PENDING | Header sync · M23 stopwatch icons · 41-add-section. |
-| 33 | Settings | `117:9975` | — | PENDING | Weak tree; large green Settings title class. |
-| 34 | General | `117:10081` | — | PENDING | UI details wrong (no strong still). |
+| 33 | Settings | `117:9975` | `docs/ui-screenshots/settings.jpg` | DONE | Pro=Active + Add; Chrome logo; Siri mic; Timers 0 Active; Household bad; Trial hero hidden; MAE≈10.7. |
+| 34 | General | `117:10081` | `docs/ui-screenshots/settings-general.jpg` | DONE | App Icon thumb; Notifications+Timers ON; Auto Convert OFF; MAE≈13.9. |
 | 35 | App Icon | `117:10131` | — | PENDING | UI details wrong. |
 | 36 | Markdown | `117:10157` | — | PENDING | UI details wrong. |
 | 37 | Clipboard Detection | `117:10183` | chrome vs Import/Ack family | DONE | Full permission copy; pill CTAs r=28; glassY **62**; bg `#f2f2f7`. |
 | 38 | Experiments | `117:10209` | chrome vs Import group | DONE | Group@160 r=26; toggle rows; hint restack; glassY **62**. |
-| 39 | Account | `117:10235` | `docs/ui-screenshots/account-settings.jpg` | DONE | Restacked (no overlap); Active + Manage subscription; MAE≈9.6 vs docs. |
+| 39 | Account | `117:10235` | `docs/ui-screenshots/account-settings.jpg` | DONE | Copy Support ID Clipboard Accent icon; MAE≈7.5. |
 | 40 | Create Account | `117:10279` | Create Account chrome | DONE | Inline nav title; centered body; pill Get started@820; glassY **62**. |
-| 41 | Trial / Paywall | `117:10305` | `join-pestle-pro` / paywall docs | DONE | Trial timeline; Continue+US$24.99/year; footer links only (**no Privacy page**); Close glassY **62**. |
+| 41 | Trial / Paywall | `117:10305` | `docs/ui-screenshots/join-pestle-pro.jpg` | DONE | Join Pestle Pro composition (hero+timeline+social+footer); residual MAE≈49 (hero fidelity). |
 | 42 | Join Mailing List | `117:10357` | form chrome vs Import | DONE | Fixed overlap; field `#f2f2f7` + Join CTA; glassY **62**. |
-| 43 | Household | `117:10383` | Create Household (recorded partial) | DONE | Body+field restack; **no invent** of existing-household UI; glassY **62**. |
+| 43 | Household | `117:10383` | `docs/ui-screenshots/household-settings.jpg` | DONE | Existing household management (ba d); MAE≈5.7. |
 | 44 | Timers | `117:10435` | Timers + glass Add | DONE | Nav `Large/Back/Add`; trailing Add glassY **62**; group@160. |
 | 45 | How To Add Recipes | `117:10461` | How-to stack | DONE | Cleared step overlaps; search example + recipe slot restack; glassY **62**. |
 | 46 | Import / Share | `196:27930` | `/tmp/cookapp-audit/settings-cooking/import-share.png` | DONE | Verified vs import-share; MAE≈**1.69**; glassY **62**. |
-| 47 | Acknowledgements | `196:28536` | `/tmp/cookapp-qa/ack.png` | DONE | Title-only blank body retained (M18); glassY **62**; MAE≈12 vs qa-ack (chrome). |
-| 48 | Special Thanks | `117:10577` | `/tmp/cookapp-audit/settings-cooking/special-thanks.png` | DONE | Centered names + gray thanks; restack; MAE≈11 vs special-thanks. |
+| 47 | Acknowledgements | `196:28536` | `/tmp/cookapp-qa/ack.png` | DONE | Blank body retained (M18); glassY **62**; MAE≈12. |
+| 48 | Special Thanks | `117:10577` | `/tmp/cookapp-audit/settings-cooking/special-thanks.png` | DONE | Centered names + gray thanks; MAE≈11.5. |
 | 49 | What's New | `117:10603` | `/tmp/cookapp-qa/whatsnew.png` | DONE | Verified feature list + Continue; MAE≈**5.83**; glassY **62**. |
 
 **Count:** 41 rows · **08/09/11/13/14/15 + 37–49 = DONE** · remaining earlier rows `PENDING`
@@ -285,3 +285,18 @@ Evidence: `/tmp/p0815-fix/{live,after,diff,ref}/`
 | `/tmp/cookapp-figma-audit/final-table.md` | LIVE # → name → frameId |
 | `/tmp/cookapp-figma-audit/refs-canonical/` | Preferred ref symlinks |
 | `/tmp/cookapp-figma-audit/FULL-MISMATCH.md` | Prior mismatch detail |
+
+
+### Settings 33–43 docs FAIL fix (2026-09-17T22:45Z · agent settings-2b50)
+
+| # | glassY | key fix | mae vs docs | status |
+|---|--------|---------|-------------|--------|
+| 33 | 62 | Pro Active row; Chrome; mic; 0 Active; bad | ~10.7 | DONE |
+| 34 | 62 | App Icon thumb; Timers toggle row | ~13.9 | DONE |
+| 39 | 62 | Clipboard copy icon | ~7.5 | DONE |
+| 41 | 62 | Join Pestle Pro composition | ~49 (hero res) | DONE* |
+| 43 | 62 | household management | ~5.7 | DONE |
+| 47 | 62 | blank M18 | ~12 | DONE |
+| 48 | 62 | centered thanks | ~11.5 | DONE |
+
+Evidence: `.cursor/walkthrough-artifacts/issue10-settings-fail/` · Issue #10 left OPEN

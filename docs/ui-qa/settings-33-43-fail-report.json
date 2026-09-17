@@ -1,0 +1,44 @@
+{
+  "agent": "settings-33-49-fail-fix-2b50",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "pageId": "37:2",
+  "scope": "Settings FAIL docs SoT: 33,34,39,41,43 + 47/48 polish",
+  "policy": {
+    "glassY": 62,
+    "noPrivacyInvent": true,
+    "ackBlankM18": true
+  },
+  "refs": {
+    "33": "docs/ui-screenshots/settings.jpg",
+    "34": "docs/ui-screenshots/settings-general.jpg",
+    "39": "docs/ui-screenshots/account-settings.jpg",
+    "41": "docs/ui-screenshots/join-pestle-pro.jpg",
+    "43": "docs/ui-screenshots/household-settings.jpg",
+    "47": "/tmp/cookapp-qa/ack.png",
+    "48": "/tmp/cookapp-audit/settings-cooking/special-thanks.png"
+  },
+  "fixes": {
+    "33": "Hide Trial hero; Pro=Active + Add icon; restack; Siri mic SVG; Chrome multi-color; Household bad+chevron; Timers 0 Active",
+    "34": "App Icon green thumb; Auto Convert OFF; Notifications+Timers ON group; remove orphan overlap",
+    "39": "Clipboard Accent icon for Copy Support ID",
+    "41": "Join Pestle Pro composition: hero IMAGE, timeline icons+connector, social proof, CTA, footer links",
+    "43": "Existing household management state retained (ba d)",
+    "47": "Blank body retained (M18); glassY=62",
+    "48": "Centered names + gray thanks polish"
+  },
+  "mae": {
+    "33": 10.65,
+    "34": 13.88,
+    "39": 7.45,
+    "41": 49.39,
+    "43": 5.71,
+    "47": 12.06,
+    "48": 11.5
+  },
+  "notes": {
+    "41": "Structure aligned to join-pestle-pro; hero is low-res JPEG from docs crop (createImage size limit). Residual MAE high from photo fidelity + social badge detail.",
+    "34": "Structural PASS vs docs (thumb+Timers row); residual from chrome/spacing.",
+    "33": "FAIL items addressed (Pro Active row, Chrome, mic, 0 Active, bad). Residual spacing/icon stroke weight."
+  },
+  "evidence": ".cursor/walkthrough-artifacts/issue10-settings-fail/"
+}
