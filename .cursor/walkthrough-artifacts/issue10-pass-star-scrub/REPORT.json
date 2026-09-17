@@ -1,0 +1,38 @@
+{
+  "mae": {
+    "02": {
+      "full": 35.26,
+      "chrome": 67.35,
+      "bot": 21.73,
+      "h": 902
+    },
+    "01": {
+      "full": 55.43,
+      "chrome": 8.08,
+      "bot": 14.31,
+      "h": 902
+    },
+    "07": {
+      "full": 10.41,
+      "chrome": 6.56,
+      "bot": 19.17,
+      "h": 902
+    },
+    "11": {
+      "full": 57.82,
+      "chrome": 6.93,
+      "bot": 55.58,
+      "h": 902
+    }
+  },
+  "notes": {
+    "02": "light frosted glass + clean hero upload",
+    "tab": "unified green selected pill + glass across Bottom NAV; icons still outline",
+    "07": "FolderAdd icon rebuilt with badge +",
+    "missing_ref_record": [
+      "04 Cooking AA",
+      "47 Ack M18",
+      "48 Thanks"
+    ]
+  }
+}
