@@ -81,7 +81,7 @@
 | 03 | Meal Plan Prompt | `116:18239` | — | PENDING | No strong still. Rebuild prompt/sheet chrome; strip orphan scrap text. |
 | 04 | Cooking Steps | `116:18290` | `/tmp/cookapp-qa/cooking-final.png` | DONE | Instruction wrap fixed (forced breaks + fs **26**); MAE **9.28→7.98**; glassY **52**; Next **52**. |
 | 05 | Timer Form | `116:18318` | `/tmp/cookapp-qa/timer-final.png` | PENDING | ≈ref; glassY polish; picker selection band; Start green. |
-| 06 | Recipe Menu | `116:18396` | `/tmp/cursor/artifacts/w03_back_more_glass_after.png` | PENDING | Weak ref (inherits Detail). Menu overlay vs host Detail. |
+| 06 | Recipe Menu | `116:18396` | `docs/ui-screenshots/recipe-detail-beef-bourguignon-menu-open.jpg` | DONE | MAE **51.5→30.8** PASS*; Edit→Delete + red trash; glass blur50/op~0.48 @ y=88; host CartCalendarMore. |
 | 08 | Recently Added | `119:12665` | `/tmp/cookapp-shots/after/10-recent.png` | DONE | Single Beef @ y188; glassY **62** (header60+lead2); MSE≈2.5 vs `10-recent`. |
 | 09 | Main | `119:12726` | `/tmp/cookapp-shots/after/11-main.png` | DONE | Single Beef @ y188; glassY **62**; MSE≈1.1 vs `11-main`. |
 | 11 | Discover | `130:14331` | `/tmp/cursor/artifacts/w07_back_filter_glass_after.png` | DONE | Back+Filter glassY **62**; title 34@y58; feed matches w07; MSE≈1.7. |
