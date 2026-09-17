@@ -1,0 +1,22 @@
+---
+description: UI reference from screenshots — ignore chrome noise
+alwaysApply: true
+---
+
+# UI Reference Rules (cookapp)
+
+## Prefer screenshots over recordings
+
+- Design and implementation reference lives in `docs/ui-screenshots/`.
+- Prefer reading those still screenshots over screen recordings / video when reconstructing UI.
+- Do not ask to re-watch recordings if the needed screen already exists as a screenshot.
+
+## Ignore device chrome (never recreate)
+
+When reading screenshots for layout, styling, or implementation, **always ignore**:
+
+1. **Status bar** — time, signal, Wi‑Fi, battery, etc.
+2. **Dynamic Island / notch** — the pill or cutout at the top of the phone.
+3. **Keyboard** — system or app keyboard overlays; they are not part of the screen design.
+
+Do not implement, style, or account for these elements in the app UI. Treat content below the status bar / Dynamic Island and above any keyboard as the actual design surface.

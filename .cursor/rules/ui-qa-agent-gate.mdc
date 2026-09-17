@@ -1,0 +1,62 @@
+---
+description: Mandatory UI QA agent — fail rejects and forces redo
+alwaysApply: true
+---
+
+# Automatic UI QA Agent Gate (cookapp) — HARD RULES
+
+Any task that **adds or changes UI** is unfinished until a **separate QA agent** passes. The implementer must not self-approve.
+
+## When to run (mandatory)
+
+After implementing or editing a screen/component, **before** claiming done / final commit message as complete / merge-ready:
+
+1. Commit WIP if needed (so QA has a ref).
+2. Dispatch a **fresh** subagent (no implementer chat history) — prefer `computerUse` when the app can run; otherwise `generalPurpose` with screenshot + code paths.
+3. QA returns **PASS** or **FAIL** with a concrete violation list.
+4. On **FAIL**: treat as rejected — fix or revert the UI delta, then re-run QA. Loop until PASS.
+5. On **PASS**: only then mark the UI task complete.
+
+Do **not** skip QA because “it looks fine,” time pressure, or small diffs. No UI change is too small.
+
+## QA agent brief (required prompt contents)
+
+Give the QA agent:
+
+- Screen name(s) and paths to matching files in `docs/ui-screenshots/`
+- Paths to changed UI code / running URL if available
+- Rules to enforce:
+  - `.cursor/rules/ui-screenshots.mdc` (ignore status bar, Dynamic Island, keyboard)
+  - `.cursor/rules/ui-fidelity.mdc` (1:1 screenshot)
+  - `.cursor/rules/ui-consistency-lock.mdc` (tokens + shared kit, no forks)
+  - `.cursor/rules/liquid-glass.mdc` (Liquid Glass chrome only on nav layer; light+dark; control states)
+
+Ask for this exact verdict shape:
+
+```
+VERDICT: PASS | FAIL
+Screenshot fidelity: ...
+Liquid Glass: ...
+Consistency (shared chrome/tokens): ...
+Control states: ...
+Violations: (numbered, actionable)
+Required redo: (what to change or revert)
+```
+
+## Reject / redo policy
+
+- **FAIL** ⇒ UI is **not accepted**. Either:
+  - **Redo**: patch to satisfy every violation, or
+  - **Withdraw**: `git revert` / restore prior good UI for the offending files, then redo cleanly.
+- Do not merge “temporary” UI that failed QA.
+- Do not open new feature UI work on top of a failed screen.
+- Re-run the same QA brief after fixes until **PASS**.
+
+## Parallelism
+
+- Implementer agent ≠ QA agent (always separate Task/subagent).
+- For multiple screens, one QA pass per screen (or batched with per-screen verdicts); any single FAIL blocks completion of that screen.
+
+## Evidence
+
+QA should compare live UI (or captured frames) to `docs/ui-screenshots/`, ignoring device chrome. If the app cannot run yet, QA reviews code + static composition against screenshots and Liquid Glass rules and still returns PASS/FAIL (FAIL if insufficient evidence of glass/tokens/shared kit).

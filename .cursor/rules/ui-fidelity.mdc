@@ -1,0 +1,33 @@
+---
+description: Enforce 1:1 UI fidelity against docs/ui-screenshots
+alwaysApply: true
+---
+
+# 1:1 Screenshot Fidelity (cookapp)
+
+Works with `ui-consistency-lock.mdc` (shared tokens/components) and `ui-screenshots.mdc` (ignore device chrome).
+
+## Source of truth
+
+1. Named file in `docs/ui-screenshots/` for that screen/state.
+2. Missing state → do not invent UI; request a screenshot or reuse the closest existing state.
+3. Shared look comes from tokens + kit — screenshots define layout; they do not justify forking a shared control.
+
+## Before coding a screen
+
+1. Open matching screenshot(s), including menu-open / empty / filled variants.
+2. Inventory hierarchy, components, copy, icons, states — only what is on screen.
+3. Map every element to an **existing** kit component or token; if missing, add to the kit/tokens first (global), then use it.
+4. Do not add elements absent from the screenshot.
+
+## Done only when visually verified
+
+| Check | Pass criteria |
+|-------|----------------|
+| Structure | Same sections/order/density — nothing extra/missing |
+| Spacing | Edges/gaps/rows within ~2–4px at phone width |
+| Type / color | Same token roles (green title, green qty, etc.) |
+| Shared chrome | Tab bar/buttons/menus identical to other screens |
+| Overlays | Match `*-menu-open` (or equivalent) screenshot |
+
+Method: run at iPhone-like width → capture UI (no status bar / Dynamic Island / keyboard) → side-by-side with `docs/ui-screenshots/<name>.jpg` → fix until match. “Close enough” is a fail.

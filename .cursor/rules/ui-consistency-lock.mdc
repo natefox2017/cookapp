@@ -1,0 +1,67 @@
+---
+description: Hard ban on cross-screen UI inconsistency
+alwaysApply: true
+---
+
+# UI Consistency Lock (cookapp) — HARD RULES
+
+These rules are **non-negotiable**. Violations must be fixed before commit/PR/“done.”
+
+## Single source of visual truth
+
+1. **Screenshots**: `docs/ui-screenshots/` — layout & states.
+2. **Tokens**: one shared theme module only (e.g. `theme/tokens` or CSS variables in one file). No second palette.
+3. **Components**: one shared UI kit. Screens compose kit components; they do **not** restyle them per page.
+
+If screenshot and token conflict on a shared control (tab bar, green, button shape), update the **token/component** once so **all** screens stay aligned — never fork styles per screen.
+
+## Forbidden (causes inconsistency)
+
+- Hardcoding colors / font sizes / radii / shadows **outside** the token file
+- Duplicating TabBar, icon button, checkbox, list row, recipe card, menu, modal with local tweaks
+- Same control looking different across Cookbook / Groceries / Meal Plan / Discover / Settings
+- “Close enough” greens, greys, paddings, or corner radii that differ by screen
+- AI-default themes (purple gradients, cream+serif+terracotta, generic SaaS cards)
+- Inventing UI not present in the matching screenshot
+- Recreating status bar / Dynamic Island / keyboard
+
+## Required shared chrome (must be identical everywhere)
+
+Use **one** implementation of each:
+
+| Control | Must match across all screens |
+|---------|-------------------------------|
+| Floating tab bar + search circle | Size, blur, active green pill, icons, labels |
+| Circular icon buttons | Diameter, border, press state |
+| Page title (green large) | Same type role/token |
+| Primary CTA (green pill) | Same height, radius, type |
+| List row + green quantity | Same checkbox, divider, quantity color |
+| Recipe image card | Same radius, servings pill, title scrim |
+| Popover / context menu | Same glass, row height, destructive red |
+| Settings grouped card | Same radius, divider, chevron |
+
+Changing any of the above = change the **shared component**, then re-check every screen that uses it.
+
+## Implementation constraints
+
+1. **Tokens only** — screens and features import theme tokens; no raw `#hex` / magic spacing in feature code (exception: one-off screenshot-measured values must be promoted into tokens in the same PR).
+2. **Compose, don’t restyle** — prefer props/variants on kit components over page-level CSS overrides. Overrides that change shared look are banned.
+3. **One variant system** — button/input/tab states: default / hover / active / disabled / loading, defined once.
+4. **New screen checklist** (all required):
+   - [ ] Matching screenshot(s) identified
+   - [ ] Uses only shared tokens + kit components
+   - [ ] Shared chrome unchanged vs other tabs
+   - [ ] Side-by-side vs screenshot pass (ignore status bar / Dynamic Island / keyboard)
+   - [ ] No new one-off color/radius/type introduced without adding to tokens
+
+## Done / merge gate
+
+Do **not** mark complete, commit as finished UI, or merge if:
+
+- Any shared control differs between two screens, or
+- Screenshot side-by-side fails, or
+- Feature code introduces local visual constants, or
+- Liquid Glass rules fail (see `liquid-glass.mdc`), or
+- UI QA agent has not returned **PASS** (see `ui-qa-agent-gate.mdc`)
+
+Fix by aligning to tokens + kit + screenshot + Liquid Glass — not by adding another special case. On QA **FAIL**, redo or revert; do not self-approve.
