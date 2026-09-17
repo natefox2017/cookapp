@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-09-17T22:37Z",
+  "scope": [
+    "05 Timer Form",
+    "06 Recipe Menu"
+  ],
+  "figma": {
+    "fileKey": "FHbikS2jILAeMv8mote0vD",
+    "page": "37:2",
+    "timerNode": "116:18318",
+    "menuNode": "116:18396",
+    "timerSrc": "116:8985",
+    "menuSrc": "115:19220"
+  },
+  "pages": {
+    "05_Timer": {
+      "ref": "docs/ui-screenshots/create-timer.jpg",
+      "verdict": "PASS_CLOSE",
+      "mae_full": 10.17,
+      "mae_picker_crop": 5.62,
+      "changed": [
+        "picker rows 0\u20134 denser ROW_H=32",
+        "selection band top",
+        "white gradient fade overlay",
+        "softer 15 Min chip",
+        "compact form Y spacing",
+        "softer Back/Start shadows"
+      ],
+      "residuals": [
+        "column x still slightly tight vs ref",
+        "preset selected chip shade still a hair darker",
+        "card shadow soft residual"
+      ]
+    },
+    "06_Recipe_Menu": {
+      "ref": "docs/ui-screenshots/recipe-detail-beef-bourguignon-menu-open.jpg",
+      "verdict": "PASS_CLOSE",
+      "mae_full": 55.08,
+      "mae_menu_crop": 46.68,
+      "changed": [
+        "Edit pencil SVG",
+        "Start Minicook play.circle SVG",
+        "Visit Source compass SVG",
+        "Reimport docs+arrow SVG",
+        "Delete trash red SVG",
+        "Folders folder.badge.plus SVG",
+        "aligned icon size 22"
+      ],
+      "residuals": [
+        "full-frame MAE dominated by hero photo / chrome parity not menu glyphs",
+        "Reimport twin-square SF fidelity still approximate",
+        "menu glass y/width vs ref micro-offset"
+      ]
+    }
+  },
+  "issue": 10,
+  "do_not_close_issue": true
+}
