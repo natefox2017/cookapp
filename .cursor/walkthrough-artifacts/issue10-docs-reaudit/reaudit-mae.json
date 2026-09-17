@@ -1,0 +1,98 @@
+[
+  {
+    "page": "01",
+    "docs": "cookbook-grid.jpg",
+    "mae": 35.9,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/01-side.png"
+  },
+  {
+    "page": "02",
+    "docs": "recipe-detail-beef-bourguignon.jpg",
+    "mae": 43.01,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/02-side.png"
+  },
+  {
+    "page": "05",
+    "docs": "create-timer.jpg",
+    "mae": 10.36,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/05-side.png"
+  },
+  {
+    "page": "06",
+    "docs": "recipe-detail-beef-bourguignon-menu-open.jpg",
+    "mae": 37.14,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/06-side.png"
+  },
+  {
+    "page": "07",
+    "docs": "folders-home-expanded.jpg",
+    "mae": 9.41,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/07-side.png"
+  },
+  {
+    "page": "11",
+    "docs": "discover.jpg",
+    "mae": 49.72,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/11-side.png"
+  },
+  {
+    "page": "25",
+    "docs": "groceries-list.jpg",
+    "mae": 14.01,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/25-side.png"
+  },
+  {
+    "page": "26",
+    "docs": "groceries-list-menu-open.jpg",
+    "mae": 49.39,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/26-side.png"
+  },
+  {
+    "page": "27",
+    "docs": "groceries-choose-list-menu-open.jpg",
+    "mae": 15.66,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/27-side.png"
+  },
+  {
+    "page": "29",
+    "docs": "meal-plan-empty.jpg",
+    "mae": 16.94,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/29-side.png"
+  },
+  {
+    "page": "30",
+    "docs": "meal-plan-with-recipe.jpg",
+    "mae": 42.45,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/30-side.png"
+  },
+  {
+    "page": "33",
+    "docs": "settings.jpg",
+    "mae": 11.7,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/33-side.png"
+  },
+  {
+    "page": "34",
+    "docs": "settings-general.jpg",
+    "mae": 13.63,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/34-side.png"
+  },
+  {
+    "page": "39",
+    "docs": "account-settings.jpg",
+    "mae": 6.6,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/39-side.png"
+  },
+  {
+    "page": "41",
+    "docs": "join-pestle-pro.jpg",
+    "mae": 50.04,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/41-side.png"
+  },
+  {
+    "page": "43",
+    "docs": "household-settings.jpg",
+    "mae": 5.47,
+    "side": "/tmp/cookapp-figma-audit/reaudit-sides/43-side.png"
+  }
+]
