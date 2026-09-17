@@ -59,3 +59,10 @@ Sign in (Apple/Google)
   → RC webhook → Supabase subscriptions + purchase_events
   → app refreshes serverSubscription (source of truth for Pro)
 ```
+
+## 6. Backend modules (Issue #11)
+
+Full cloud schema, RLS, storage, OpenAPI, and Edge Functions:
+[`docs/backend/README.md`](./backend/README.md).
+
+Account delete: `POST /functions/v1/delete-account` (JWT required).

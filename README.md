@@ -19,8 +19,9 @@ AI 菜谱 App（Phase 1：技术基础框架）。
 
 - iOS：[`ios/README.md`](ios/README.md)（`xcodegen generate` 后用 Xcode 打开）
 - Backend：`supabase/`（项目 ref：`semsjyrqjnumpvanibip`）
+- Backend 文档：[`docs/backend/README.md`](docs/backend/README.md) · OpenAPI：`supabase/openapi/openapi.yaml`
 - Auth + IAP 配置：[`docs/AUTH_AND_IAP.md`](docs/AUTH_AND_IAP.md)
-- Issue：[#8 Auth + IAP](https://github.com/natefox2017/cookapp/issues/8)
+- Issues：[#8 Auth + IAP](https://github.com/natefox2017/cookapp/issues/8) · [#11 Cloud Backend](https://github.com/natefox2017/cookapp/issues/11)
 
 ## Bundle
 

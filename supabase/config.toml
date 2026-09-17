@@ -44,3 +44,15 @@ file_size_limit = "50MiB"
 
 [functions]
 verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.health]
+verify_jwt = true
+
+[functions.openapi]
+verify_jwt = false
+
+[functions.revenuecat-webhook]
+verify_jwt = false
