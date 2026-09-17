@@ -292,49 +292,58 @@ export function SettingsPage() {
                 <span className="font-mono">{admin?.username ?? 'admin'}</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid max-w-xl gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="currentPassword">Current password</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  value={currentPassword}
-                  onChange={(event) => setCurrentPassword(event.target.value)}
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="newPassword">New password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(event) => setNewPassword(event.target.value)}
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="confirmPassword">Confirm new password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                />
-              </div>
-              {passwordError ? <p className="text-sm text-destructive">{passwordError}</p> : null}
-              {passwordMessage ? <p className="text-sm text-muted-foreground">{passwordMessage}</p> : null}
-              <div>
-                <Button
-                  type="button"
-                  loading={passwordSaving}
-                  disabled={!currentPassword || !newPassword || !confirmPassword}
-                  onClick={() => void onChangePassword()}
-                >
-                  Update password
-                </Button>
-              </div>
+            <CardContent>
+              <form
+                className="grid max-w-xl gap-4"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void onChangePassword()
+                }}
+              >
+                <div className="grid gap-1.5">
+                  <Label htmlFor="currentPassword">Current password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(event) => setCurrentPassword(event.target.value)}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="newPassword">New password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="confirmPassword">Confirm new password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                  />
+                </div>
+                {passwordError ? <p className="text-sm text-destructive">{passwordError}</p> : null}
+                {passwordMessage ? (
+                  <p className="text-sm text-muted-foreground">{passwordMessage}</p>
+                ) : null}
+                <div>
+                  <Button
+                    type="submit"
+                    loading={passwordSaving}
+                    disabled={!currentPassword || !newPassword || !confirmPassword}
+                  >
+                    Update password
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
