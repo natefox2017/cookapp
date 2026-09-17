@@ -26,3 +26,29 @@ struct ThemeModeTests {
         #expect(AppThemeMode.dark.preferredColorScheme == .dark)
     }
 }
+
+struct ServerSubscriptionTests {
+    @Test func activeWithoutExpiryIsPro() {
+        let sub = ServerSubscription(
+            userID: "u",
+            status: "active",
+            productID: "pro_monthly",
+            entitlementID: "pro",
+            expiresAt: nil,
+            willRenew: true
+        )
+        #expect(sub.isProActive)
+    }
+
+    @Test func expiredStatusIsNotPro() {
+        let sub = ServerSubscription(
+            userID: "u",
+            status: "expired",
+            productID: "pro_monthly",
+            entitlementID: "pro",
+            expiresAt: Date().addingTimeInterval(3600),
+            willRenew: false
+        )
+        #expect(!sub.isProActive)
+    }
+}
