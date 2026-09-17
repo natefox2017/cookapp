@@ -5,7 +5,7 @@ import { useAsyncData } from '@/hooks/use-async-data'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { formatDate, formatNumber } from '@/lib/utils'
 
 const chartConfig = {
@@ -19,14 +19,10 @@ export function DashboardPage() {
   if (loading) return <LoadingBlock label="Loading dashboard…" />
   if (error || !data) {
     return (
-      <EmptyState
+      <ErrorState
         title="Dashboard unavailable"
         description={error ?? 'No dashboard payload returned.'}
-        action={
-          <button className="text-sm font-medium text-primary hover:underline" onClick={reload}>
-            Retry
-          </button>
-        }
+        onRetry={reload}
       />
     )
   }

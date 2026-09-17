@@ -12,7 +12,9 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <CookingPot className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold tracking-tight text-white">CookApp Admin</div>
+          <div className="truncate text-sm font-semibold tracking-tight text-sidebar-primary-foreground">
+            CookApp Admin
+          </div>
           <div className="text-xs text-sidebar-foreground/70">Local ops console</div>
         </div>
       </div>
@@ -28,8 +30,8 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white',
-                  isActive && 'bg-sidebar-accent text-white',
+                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground active:bg-sidebar-accent/80',
+                  isActive && 'bg-sidebar-accent text-sidebar-primary-foreground',
                 )
               }
             >

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Select,
   SelectContent,
@@ -32,7 +32,7 @@ export function RecipesPage() {
     [q, cuisine, category],
   )
 
-  const { data, loading, error } = useAsyncData(() => listRecipes(params), [params])
+  const { data, loading, error, reload } = useAsyncData(() => listRecipes(params), [params])
 
   return (
     <div>
@@ -76,7 +76,9 @@ export function RecipesPage() {
       </div>
 
       {loading ? <LoadingBlock label="Loading recipes…" /> : null}
-      {error ? <EmptyState title="Could not load recipes" description={error} /> : null}
+      {error ? (
+        <ErrorState title="Could not load recipes" description={error} onRetry={reload} />
+      ) : null}
       {!loading && !error && data?.length === 0 ? (
         <EmptyState title="No recipes" description="No recipes match the current filters." />
       ) : null}
@@ -144,15 +146,18 @@ export function RecipeDetailPage() {
   if (loading) return <LoadingBlock label="Loading recipe…" />
   if (error || !data) {
     return (
-      <EmptyState
-        title="Recipe not found"
-        description={error ?? 'Missing recipe payload.'}
-        action={
+      <div>
+        <ErrorState
+          title="Recipe not found"
+          description={error ?? 'Missing recipe payload.'}
+          onRetry={reload}
+        />
+        <div className="mt-3 flex justify-center">
           <Button variant="outline" onClick={() => navigate('/recipes')}>
             Back to recipes
           </Button>
-        }
-      />
+        </div>
+      </div>
     )
   }
 

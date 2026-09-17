@@ -14,12 +14,12 @@ import { listMealPlans } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
 
 export function MealPlansPage() {
   const [cursor, setCursor] = useState(() => startOfMonth(new Date('2026-03-01')))
-  const { data, loading, error } = useAsyncData(() => listMealPlans(), [])
+  const { data, loading, error, reload } = useAsyncData(() => listMealPlans(), [])
 
   const byDate = useMemo(() => {
     const map = new Map(data?.map((entry) => [entry.date, entry]) ?? [])
@@ -63,7 +63,15 @@ export function MealPlansPage() {
       />
 
       {loading ? <LoadingBlock label="Loading meal plans…" /> : null}
-      {error ? <EmptyState title="Could not load meal plans" description={error} /> : null}
+      {error ? (
+        <ErrorState title="Could not load meal plans" description={error} onRetry={reload} />
+      ) : null}
+      {!loading && !error && data?.length === 0 ? (
+        <EmptyState
+          title="No meal plan entries"
+          description="Calendar stays available; meal slots will fill when plan data exists."
+        />
+      ) : null}
 
       {!loading && !error ? (
         <Card>

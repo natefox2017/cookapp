@@ -3,11 +3,11 @@ import { useAsyncData } from '@/hooks/use-async-data'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { formatDate } from '@/lib/utils'
 
 export function CollectionsPage() {
-  const { data, loading, error } = useAsyncData(() => listCollections(), [])
+  const { data, loading, error, reload } = useAsyncData(() => listCollections(), [])
 
   return (
     <div>
@@ -17,9 +17,14 @@ export function CollectionsPage() {
       />
 
       {loading ? <LoadingBlock label="Loading collections…" /> : null}
-      {error ? <EmptyState title="Could not load collections" description={error} /> : null}
+      {error ? (
+        <ErrorState title="Could not load collections" description={error} onRetry={reload} />
+      ) : null}
       {!loading && !error && data?.length === 0 ? (
-        <EmptyState title="No collections" description="No recipe collections were returned." />
+        <EmptyState
+          title="No collections yet"
+          description="Collections will appear here when users create them."
+        />
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

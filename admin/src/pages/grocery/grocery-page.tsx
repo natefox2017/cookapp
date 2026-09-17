@@ -3,7 +3,7 @@ import { listGroceryItems, listGroceryUsers } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Table,
   TableBody,
@@ -40,7 +40,11 @@ export function GroceryPage() {
         <div className="rounded-xl border bg-card">
           <div className="border-b px-4 py-3 text-sm font-medium">Users</div>
           {users.loading ? <div className="p-4 text-sm text-muted-foreground">Loading…</div> : null}
-          {users.error ? <div className="p-4 text-sm text-destructive">{users.error}</div> : null}
+          {users.error ? (
+            <div className="p-3">
+              <ErrorState title="Could not load users" description={users.error} onRetry={users.reload} />
+            </div>
+          ) : null}
           {!users.loading && !users.error && users.data?.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground">No grocery users available.</div>
           ) : null}
@@ -51,7 +55,7 @@ export function GroceryPage() {
                 type="button"
                 onClick={() => setSelectedUserId(user.id)}
                 className={cn(
-                  'flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-muted/60',
+                  'flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-muted/60 active:bg-muted',
                   selectedUserId === user.id && 'bg-accent',
                 )}
               >
@@ -66,9 +70,16 @@ export function GroceryPage() {
         </div>
 
         <div className="rounded-xl border bg-card">
-          <div className="border-b px-4 py-3 text-sm font-medium">Shopping items</div>
+          <div className="border-b px-4 py-3">
+            <div className="text-sm font-medium">Shopping items</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Completion is read-only here — Admin API does not expose grocery write endpoints yet.
+            </p>
+          </div>
           {items.loading ? <LoadingBlock label="Loading items…" /> : null}
-          {items.error ? <EmptyState title="Could not load items" description={items.error} /> : null}
+          {items.error ? (
+            <ErrorState title="Could not load items" description={items.error} onRetry={items.reload} />
+          ) : null}
           {!items.loading && !items.error && items.data?.length === 0 ? (
             <EmptyState
               title="No grocery items"
@@ -94,7 +105,12 @@ export function GroceryPage() {
                 {items.data.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <Checkbox checked={item.completed} disabled aria-label={`${item.ingredient} completed`} />
+                      <Checkbox
+                        checked={item.completed}
+                        disabled
+                        aria-label={`${item.ingredient} completed (read-only)`}
+                        title="Read-only until Admin grocery write API exists"
+                      />
                     </TableCell>
                     <TableCell className="font-medium">{item.ingredient}</TableCell>
                     <TableCell className="tabular-nums text-primary">{item.quantity}</TableCell>

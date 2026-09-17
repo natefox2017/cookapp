@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Table,
   TableBody,
@@ -108,11 +108,13 @@ export function IngredientsPage() {
       />
 
       {loading ? <LoadingBlock label="Loading ingredients…" /> : null}
-      {error ? <EmptyState title="Could not load ingredients" description={error} /> : null}
+      {error ? (
+        <ErrorState title="Could not load ingredients" description={error} onRetry={reload} />
+      ) : null}
       {!loading && !error && data?.length === 0 ? (
         <EmptyState
           title="No ingredients"
-          description="Create an ingredient to populate the catalog."
+          description="Create the first catalog ingredient to get started."
           action={
             <Button onClick={openCreate}>
               <Plus />

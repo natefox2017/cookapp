@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Select,
   SelectContent,
@@ -106,7 +106,7 @@ export function UsersPage() {
 
       {list.loading ? <LoadingBlock label="Loading users…" /> : null}
       {list.error ? (
-        <EmptyState title="Could not load users" description={list.error} />
+        <ErrorState title="Could not load users" description={list.error} onRetry={list.reload} />
       ) : null}
       {!list.loading && !list.error && list.data?.data.length === 0 ? (
         <EmptyState
@@ -171,7 +171,9 @@ export function UsersPage() {
             <SheetDescription>GET /admin/users/:id</SheetDescription>
           </SheetHeader>
           {detail.loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {detail.error ? <p className="text-sm text-destructive">{detail.error}</p> : null}
+          {detail.error ? (
+            <ErrorState title="Could not load user" description={detail.error} onRetry={detail.reload} />
+          ) : null}
           {detail.data ? (
             <div className="mt-4 space-y-4">
               <div className="flex items-center gap-3">

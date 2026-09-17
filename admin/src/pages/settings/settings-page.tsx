@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Select,
   SelectContent,
@@ -45,7 +45,13 @@ export function SettingsPage() {
 
   if (loading) return <LoadingBlock label="Loading settings…" />
   if (error || !draft) {
-    return <EmptyState title="Could not load settings" description={error ?? 'Missing settings'} />
+    return (
+      <ErrorState
+        title="Could not load settings"
+        description={error ?? 'Missing settings'}
+        onRetry={reload}
+      />
+    )
   }
 
   return (

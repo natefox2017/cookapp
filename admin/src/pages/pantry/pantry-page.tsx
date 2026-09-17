@@ -3,11 +3,11 @@ import { useAsyncData } from '@/hooks/use-async-data'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { formatDate } from '@/lib/utils'
 
 export function PantryPage() {
-  const { data, loading, error } = useAsyncData(() => listPantry(), [])
+  const { data, loading, error, reload } = useAsyncData(() => listPantry(), [])
 
   return (
     <div>
@@ -17,9 +17,14 @@ export function PantryPage() {
       />
 
       {loading ? <LoadingBlock label="Loading pantry…" /> : null}
-      {error ? <EmptyState title="Could not load pantry" description={error} /> : null}
+      {error ? (
+        <ErrorState title="Could not load pantry" description={error} onRetry={reload} />
+      ) : null}
       {!loading && !error && data?.length === 0 ? (
-        <EmptyState title="Pantry is empty" description="No pantry stock records were returned." />
+        <EmptyState
+          title="Pantry is empty"
+          description="No pantry items are available from the Admin API yet."
+        />
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

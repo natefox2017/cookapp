@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { EmptyState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import {
   Table,
   TableBody,
@@ -90,11 +90,11 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
       </div>
 
       {loading ? <LoadingBlock label="Loading…" /> : null}
-      {error ? <EmptyState title="Load failed" description={error} /> : null}
+      {error ? <ErrorState title="Load failed" description={error} onRetry={reload} /> : null}
       {!loading && !error && data?.length === 0 ? (
         <EmptyState
           title={`No ${kind} items`}
-          description="Create an item to populate this taxonomy."
+          description="Create the first item to populate this taxonomy."
           action={
             <Button size="sm" onClick={openCreate}>
               <Plus />
