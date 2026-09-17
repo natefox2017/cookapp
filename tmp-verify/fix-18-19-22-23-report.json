@@ -1,0 +1,38 @@
+{
+  "agent": "fix-18-19-22-23-overlap",
+  "fileKey": "FHbikS2jILAeMv8mote0vD",
+  "pageId": "37:2",
+  "finalTable": {
+    "18": {"name": "Search Results", "tree": "115:18812", "main": "115:8090"},
+    "19": {"name": "Scope Filter", "tree": "119:12608", "main": "118:11228"},
+    "22": {"name": "New Recipe", "tree": "119:13349", "main": "118:11949"},
+    "23": {"name": "Cookbook Return", "tree": "119:13397", "main": "118:11993"}
+  },
+  "coverOn23": {
+    "found": "Missing Source Evidence section 196:25740",
+    "was": {"x": 14336, "y": 0, "w": 1200, "h": 1136},
+    "fix": "Moved to x=15168 (right of interaction tree); phone 23 + Label/23 brought to front"
+  },
+  "fixes": {
+    "18": [
+      "Replaced burned-in card IMAGE fills with clean v4 food fills",
+      "Restored layered Matches Ingredient frosted tags + carrot PNG + title overlays",
+      "List button cornerRadius 14→28 (circular per USER ref)"
+    ],
+    "19": [
+      "Confirmed populated host + Include menu vs after/43-scope",
+      "Menu frost fill opacity 0.92; z-order appended above grid"
+    ],
+    "22": [
+      "Complete Control icon opacity 1→0 (blank glass per new-recipe ref)",
+      "Merged Description+Time into one 112px card; hid separate Time rect",
+      "Add Time fill → #00BD56"
+    ],
+    "23": [
+      "Uncovered from Missing Source Evidence overlap",
+      "Label '23 · Cookbook Return' verified visible"
+    ]
+  },
+  "checklistUpdates": ["201:7185 intro", "201:7201 M16", "201:7206 M21", "201:7209 M24", "201:7211 M26"],
+  "evidence": "/tmp/fix-18-23/"
+}
