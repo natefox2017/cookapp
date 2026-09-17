@@ -76,25 +76,9 @@ jobs:
               assert actual == source, f"{name} is out of date"
 
           text = pathlib.Path("supabase/functions/openapi/index.ts").read_text()
-          marker = "const OPENAPI_JSON = "
-          start = text.index(marker) + len(marker)
-          # OPENAPI_JSON is a JSON-encoded string literal ending at first ";\n after start
-          if text[start] != '"':
-              raise AssertionError("OPENAPI_JSON must be a string literal")
-          end = start + 1
-          while end < len(text):
-              ch = text[end]
-              if ch == "\\":
-                  end += 2
-                  continue
-              if ch == '"':
-                  break
-              end += 1
-          else:
-              raise AssertionError("Unterminated OPENAPI_JSON string")
-          encoded = text[start : end + 1]
-          served = json.loads(json.loads(encoded))
-          assert served == source, "OPENAPI_JSON is out of date"
+          assert 'from "./spec.json"' in text or "from './spec.json'" in text, (
+              "openapi Edge Function must import ./spec.json"
+          )
           print("OpenAPI representations match")
           PY
       - name: Migration filenames are ordered SQL
