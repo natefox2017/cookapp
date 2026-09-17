@@ -1,0 +1,33 @@
+{
+  "verified_at": "2026-09-17T14:56Z",
+  "search_16": {
+    "node": "115:19051",
+    "user": "D58BE5F6-A8C1-4D5D-A1BB-E07D8723AE89_L0_001.jpg",
+    "mae_content": 5.48,
+    "verdict": "PASS close enough",
+    "note": "minor enter-bar left icon fill variance (user solid black vs Figma outlined)"
+  },
+  "search_17": {
+    "node": "219:6885",
+    "user": "8D01AAA6-87B8-4C43-BCFF-7CAE672202D0_L0_001.jpg",
+    "mae_above_keyboard": 6.24,
+    "full_frame_mae": 15.88,
+    "verdict": "PASS",
+    "note": "keyboard intentionally absent in Figma; cursor+X+empty state match"
+  },
+  "numbering": {
+    "page": "37:2",
+    "range": "01-49",
+    "gaps": [],
+    "dups": [],
+    "rows": {
+      "Cookbook": "01-23 y168",
+      "Groceries": "24-28 y1337",
+      "MealPlan": "29-32 y2477",
+      "Settings": "33-49 y3617"
+    },
+    "verdict": "PASS"
+  },
+  "notion": "当前开放问题 updated to long-term conclusion",
+  "issue10": "Search + numbering Acceptance checked; issue left OPEN"
+}

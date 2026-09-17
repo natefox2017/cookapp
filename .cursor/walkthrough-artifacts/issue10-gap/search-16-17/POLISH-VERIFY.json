@@ -1,0 +1,38 @@
+{
+  "at": "2026-09-17T22:15Z",
+  "search_16": {
+    "mae": 5.29,
+    "verdict": "PASS polish",
+    "fixes": [
+      "scope cornerRadius 26 circle",
+      "solid stacked-docs list SVG",
+      "bar fill flatter"
+    ]
+  },
+  "search_17": {
+    "mae_above_kb": 6.389,
+    "empty_y": 400,
+    "verdict": "PASS polish",
+    "fixes": [
+      "empty y 180\u2192400 above bar no overlap",
+      "bar/close near-white fill"
+    ]
+  },
+  "cooking_04": {
+    "mae": 8.39,
+    "verdict": "RESIDUAL AA wrap",
+    "docs": "MISSING_REF",
+    "note": "line breaks already forced; chrome better than cooking-final clipped Next"
+  },
+  "ack_47": {
+    "mae": 11.79,
+    "verdict": "M18 blank body kept",
+    "docs": "MISSING_REF"
+  },
+  "thanks_48": {
+    "mae": 11.58,
+    "verdict": "RESIDUAL chrome MAE~12",
+    "docs": "MISSING_REF"
+  },
+  "acceptance": "package REJECT vs docs/ui-screenshots \u2014 Issue stays OPEN"
+}
