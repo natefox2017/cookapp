@@ -1,0 +1,26 @@
+---
+description: Native iOS Liquid Glass interaction and component rules
+alwaysApply: true
+---
+
+# iOS Liquid Glass
+
+For native app UI, follow Apple Human Interface Guidelines and use SwiftUI system
+navigation, tab, sheet, and modal patterns. Load `ios-design-system` before
+designing or implementing an iOS screen.
+
+- Use `NavigationStack`, system `.sheet`, and a bottom `TabView`; do not imitate
+  Android Material, Bootstrap, or admin-dashboard conventions.
+- Use SF Symbols and semantic system colors. Support both light and dark modes. In reference-locked recreation, use SF Symbols only when they visibly match the source; otherwise use a matching vector asset.
+- Reserve translucent Liquid Glass for chrome such as navigation, toolbars, tab
+  bars, floating actions, and sheets. Keep recipe content surfaces solid.
+- Keep separators low contrast, respect a 44pt minimum touch target, and use
+  natural system-style transitions and springs.
+- Product controls must define default, pointer hover where applicable, pressed,
+  disabled, loading, and error or success feedback where relevant. In a
+  reference-locked reproduction, draw only source-visible or explicitly required
+  states and document all other states as unknown.
+- After UI work, verify layout alignment, spacing, text hierarchy, icon
+  placement, page transitions, and theme consistency against the chosen Apple,
+  Figma, or Mobbin reference. When supplied sources are authoritative, they
+  override these references and must pass the native-viewport fidelity protocol.

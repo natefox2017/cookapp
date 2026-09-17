@@ -1,0 +1,20 @@
+---
+description: Project design system — load DESIGN.md and the matching Design Skill before any UI work
+alwaysApply: true
+---
+
+# Design
+
+Before generating or changing UI, read `DESIGN.md`.
+
+Then load the matching project skill from `.cursor/skills/`:
+
+- `frontend-design` — new web UI
+- `design-critique` — review existing UI
+- `ios-design-system` — iOS / Liquid Glass
+- `motion-design` — motion / spring / gesture
+- `vercel-web-design-guidelines` — web a11y, responsive, type
+
+Follow DESIGN.md verbatim: real-app references, no SaaS template, no meaningless card stacks, and a consistent system. Product components define default / hover / active / disabled / loading. For a supplied recording or screenshot recreation, also load `reference-fidelity.mdc`: only source-visible or explicitly required states may be drawn, and its authorized-source boundary and native-viewport QA gate are mandatory.
+
+Direction: iOS 26 Liquid Glass, light and dark, translucent chrome, low-contrast borders, tight spacing, high-quality animation.

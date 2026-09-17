@@ -1,0 +1,19 @@
+---
+description: Mandatory protocol for recreating authorized recordings and screenshots
+alwaysApply: true
+---
+
+# Reference-locked fidelity
+
+Apply whenever a task asks to reproduce supplied recordings, screenshots, or a named final reference.
+
+1. **Lock the source.** List the authorized files before work. Only those files determine visual choices; ignore conflicting prior designs, libraries, references, and assumptions.
+2. **Inspect natively.** Review every supplied still at native resolution and extract video frames at source resolution. Create no state, label, interaction, or flow not visibly supported by those sources.
+3. **Measure before building.** For each viewport, document: artboard/viewbox and safe area; left/right insets and vertical anchors; image x/y/w/h, aspect ratio, radius, and crop focal point; text baselines, wrap, size, weight, and line height; icon/control bounds, optical centers, stroke/weight; color, mask, opacity, blur, and shadow.
+4. **Constrain the build.** Use Figma Auto Layout and constraints for repeated rows and navigation. Use reusable component instances. Do not manually place recurring elements. Place every icon and its label on a declared shared center axis.
+5. **Match actual icons.** Use a source-matching vector asset. An SF Symbol is allowed only after visual silhouette, weight, and geometry match. Never leave a blank icon slot or substitute a generic glyph.
+6. **Separate structure.** Keep source reference frames apart from reproduction frames. Keep reproduction frames in a compact grid. Do not edit pages explicitly marked protected.
+7. **Verify twice at 100%.** Capture each result at the exact source viewport—not a zoomed-out Figma canvas. Compare it side-by-side with every matching source, then use an overlay, pixel-difference, or measurable guide check. Any visible offset in margins, image crop, icon, control, or text baseline fails.
+8. **Report evidence honestly.** State source-to-frame mapping, exact frame IDs, native-size screenshot evidence, and remaining differences. Do not claim “1:1”, “complete”, or compliance without verified evidence.
+
+For states, account for default, pressed, selected, empty, loading, and disabled only when visible or otherwise required; do not invent unobserved UI.
