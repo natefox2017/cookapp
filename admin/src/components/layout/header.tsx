@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { pageTitleForPath } from '@/components/layout/nav'
 import { SidebarNav } from '@/components/layout/sidebar'
+import { useTheme } from '@/hooks/use-theme'
 import { isMockMode } from '@/api'
 import {
   Sheet,
@@ -17,19 +18,15 @@ import {
 export function Header({ onRefresh }: { onRefresh?: () => void }) {
   const location = useLocation()
   const title = pageTitleForPath(location.pathname)
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const { isDark, toggle } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-  }, [dark])
 
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-card/90 px-4 backdrop-blur sm:px-5">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-5">
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <Button
           variant="outline"
@@ -42,7 +39,7 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
         </Button>
         <h2 className="truncate text-sm font-semibold">{title}</h2>
         {isMockMode() ? (
-          <Badge variant="warning" className="hidden sm:inline-flex">
+          <Badge variant="secondary" className="hidden sm:inline-flex">
             Mock data
           </Badge>
         ) : null}
@@ -57,10 +54,10 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
         <Button
           variant="outline"
           size="icon"
-          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          onClick={() => setDark((value) => !value)}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          onClick={toggle}
         >
-          {dark ? <Sun /> : <Moon />}
+          {isDark ? <Sun /> : <Moon />}
         </Button>
       </div>
 

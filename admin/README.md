@@ -5,9 +5,11 @@ Local ops console for CookApp. Talks to cloud Admin APIs through a typed API lay
 ## Stack
 
 - React + TypeScript + Vite
-- Tailwind CSS + shadcn/ui-style primitives
+- Tailwind CSS + shadcn/ui (default zinc / black theme)
 - Lucide Icons
 - Recharts
+
+Dark mode is the default. Toggle light/dark from the header; preference is stored in `localStorage` (`cookapp-admin-theme`).
 
 ## Run locally
 

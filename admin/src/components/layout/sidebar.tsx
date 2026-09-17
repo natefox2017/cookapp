@@ -8,14 +8,14 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       <div className="flex items-center gap-2.5 border-b border-sidebar-border px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <CookingPot className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold tracking-tight text-sidebar-primary-foreground">
+          <div className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
             CookApp Admin
           </div>
-          <div className="text-xs text-sidebar-foreground/70">Local ops console</div>
+          <div className="text-xs text-muted-foreground">Local ops console</div>
         </div>
       </div>
 
@@ -30,8 +30,8 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground active:bg-sidebar-accent/80',
-                  isActive && 'bg-sidebar-accent text-sidebar-primary-foreground',
+                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent/80',
+                  isActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
                 )
               }
             >
@@ -42,7 +42,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-foreground/60">
+      <div className="border-t border-sidebar-border px-4 py-3 text-xs text-muted-foreground">
         {isMockMode() ? 'Mock API mode' : 'Live API mode'}
       </div>
     </>
