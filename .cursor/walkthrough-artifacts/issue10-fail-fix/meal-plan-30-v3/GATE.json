@@ -1,0 +1,17 @@
+{
+  "30": {
+    "mae": 50.14,
+    "midMae": 91.08,
+    "botMae": 14.74
+  },
+  "baseline_session_start": {
+    "mae": 49.98,
+    "midMae": 91.08,
+    "botMae": 13.85
+  },
+  "pr26_v2": {
+    "mae": 50.6,
+    "midMae": 91.27,
+    "botMae": 14.89
+  }
+}
