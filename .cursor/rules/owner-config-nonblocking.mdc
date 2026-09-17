@@ -1,0 +1,19 @@
+---
+description: Never block development on missing owner secrets/config
+alwaysApply: true
+---
+
+# Owner Config — Non-Blocking Rule
+
+Fillable checklist: `docs/OWNER_CONFIG.md`
+
+## Rules
+
+1. **Do not stop development** because Apple/Google/RevenueCat/Supabase dashboard values are missing.
+2. If a feature needs owner config that is still `todo` in `OWNER_CONFIG.md`:
+   - keep placeholders / graceful `configuration` errors
+   - continue with other Issues / modules
+   - do not wait for the user to fill values mid-task
+3. When adding a new capability that needs human dashboard setup, **append a row to `docs/OWNER_CONFIG.md` in the same PR**.
+4. Real device auth/IAP verification happens only after the relevant rows are `done`.
+5. Do not ask the user to pause other work for secrets; point them to `OWNER_CONFIG.md` once.
