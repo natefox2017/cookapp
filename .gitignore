@@ -1,0 +1,9 @@
+ios/Config/Secrets.xcconfig
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
+ios/CookApp.xcodeproj/
+ios/CookApp.xcworkspace/
+.swiftpm/
+Build/

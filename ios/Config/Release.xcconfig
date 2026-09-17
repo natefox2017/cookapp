@@ -1,0 +1,5 @@
+#include "Base.xcconfig"
+#include? "Secrets.xcconfig"
+
+COOKAPP_ENVIRONMENT = production
+SWIFT_COMPILATION_MODE = wholemodule
