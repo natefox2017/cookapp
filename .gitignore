@@ -10,3 +10,5 @@ Build/
 admin/node_modules/
 admin/dist/
 admin/.env
+supabase/.tmp/
+supabase/.temp/

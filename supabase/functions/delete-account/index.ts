@@ -1,52 +1,67 @@
-// Phase 1 stub: privileged account deletion.
-// Deploy with: supabase functions deploy delete-account --project-ref semsjyrqjnumpvanibip
-// Implementation must verify JWT, delete auth user via service role, and never expose service key to clients.
+// Account deletion: verifies JWT, purges user storage, deletes auth user via service role.
+// Never expose SUPABASE_SERVICE_ROLE_KEY to clients.
+// Deploy: supabase functions deploy delete-account --project-ref semsjyrqjnumpvanibip
+// Closes: GitHub Issue #11
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { handleCors } from "../_shared/cors.ts";
+import { AppError, errorResponse, json } from "../_shared/errors.ts";
+import { requireUser, createServiceClient } from "../_shared/auth.ts";
+import { log } from "../_shared/logger.ts";
+
+const BUCKETS = ["avatars", "recipe-covers", "recipe-images"] as const;
+
+async function purgeUserStorage(
+  admin: ReturnType<typeof createServiceClient>,
+  userId: string,
+): Promise<void> {
+  for (const bucket of BUCKETS) {
+    const { data: entries, error: listError } = await admin.storage
+      .from(bucket)
+      .list(userId, { limit: 1000 });
+    if (listError) {
+      log("warn", "storage_list_failed", { bucket, message: listError.message });
+      continue;
+    }
+    if (!entries?.length) continue;
+    const paths = entries.map((e) => `${userId}/${e.name}`);
+    const { error: removeError } = await admin.storage.from(bucket).remove(paths);
+    if (removeError) {
+      log("warn", "storage_remove_failed", {
+        bucket,
+        message: removeError.message,
+        count: paths.length,
+      });
+    }
+  }
+}
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+  const cors = handleCors(req);
+  if (cors) return cors;
+
+  try {
+    if (req.method !== "POST") {
+      throw new AppError("method_not_allowed", "POST required", 405);
+    }
+
+    const { user } = await requireUser(req);
+    const admin = createServiceClient();
+
+    log("info", "account_delete_start", { user_id: user.id });
+
+    await purgeUserStorage(admin, user.id);
+
+    // Cascades: profiles, recipes, collections, grocery, meal_plans, pantry, subscriptions
+    const { error } = await admin.auth.admin.deleteUser(user.id);
+    if (error) {
+      log("error", "account_delete_failed", { message: error.message });
+      throw new AppError("internal_error", error.message, 500);
+    }
+
+    log("info", "account_delete_ok", { user_id: user.id });
+    return json({ ok: true });
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const {
-    data: { user },
-    error: userError,
-  } = await userClient.auth.getUser();
-
-  if (userError || !user) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const admin = createClient(supabaseUrl, serviceRole);
-  const { error } = await admin.auth.admin.deleteUser(user.id);
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: { "Content-Type": "application/json" },
-  });
 });

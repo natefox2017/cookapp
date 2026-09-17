@@ -35,3 +35,10 @@ Webhook：`https://semsjyrqjnumpvanibip.supabase.co/functions/v1/revenuecat-webh
 - `subscriptions`, `purchase_events`
 - RPC `upsert_subscription_from_revenuecat`
 - Function `revenuecat-webhook`（Bearer secret，`verify_jwt=false`）
+
+## Backend modules (Issue #11)
+
+Full cloud schema, RLS, storage, OpenAPI, and Edge Functions:
+[`docs/backend/README.md`](./backend/README.md).
+
+Account delete: `POST /functions/v1/delete-account` (JWT required).
