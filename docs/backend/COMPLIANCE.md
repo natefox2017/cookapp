@@ -18,7 +18,7 @@ Last reviewed: 2026-09-17 against `main` + live project `semsjyrqjnumpvanibip`.
 | Meal Plan | PASS | Spec `date` → column `plan_date` |
 | Pantry | PASS | |
 | Categories (10/6/5 seeds) | PASS | Live counts match |
-| Storage private + isolation | PASS | `avatars`, `recipe-covers`, `recipe-images` |
+| Storage private + isolation | PASS | `avatars`, `recipe-covers`, `recipe-images`; + `recipe-import-artifacts` (service_role / TTL, #54) |
 | Subscription + RevenueCat webhook | PASS | `plan`/`status`; `expire_date` via `subscription_status` view |
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
 | Engineering (migrations, OpenAPI, errors, logging) | PASS | |

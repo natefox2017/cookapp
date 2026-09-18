@@ -3,7 +3,7 @@
   "info": {
     "title": "CookApp Cloud Backend API",
     "version": "1.0.0",
-    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
+    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` \u00b7 Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
     "contact": {
       "name": "CookApp"
     }
@@ -44,6 +44,9 @@
     },
     {
       "name": "Storage"
+    },
+    {
+      "name": "Operations"
     },
     {
       "name": "Subscription"
@@ -816,7 +819,8 @@
               "avatars",
               "recipe-covers",
               "recipe-images"
-            ]
+            ],
+            "description": "User media buckets only. AI import artifacts use private\n`recipe-import-artifacts` via MediaStorageProvider (service_role);\nclients must not upload there directly.\n"
           }
         },
         {
@@ -870,6 +874,58 @@
           }
         }
       }
+    },
+    "/functions/v1/storage-cleanup-import-artifacts": {
+      "post": {
+        "tags": [
+          "Storage",
+          "Operations"
+        ],
+        "summary": "Cleanup expired recipe-import-artifacts",
+        "description": "Operational job type `storage_cleanup_import_artifacts`.\nDeletes Storage objects whose `recipe_import_artifact_objects.expires_at`\nhas passed and marks rows deleted. Server/cron only \u2014 auth via\n`Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.\nNever uses permanent signed URLs; never returns service_role secrets.\n",
+        "operationId": "storageCleanupImportArtifacts",
+        "security": [
+          {
+            "CleanupBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "default": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cleanup run result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageCleanupResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "description": "Misconfigured (missing STORAGE_CLEANUP_SECRET)"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -884,6 +940,11 @@
         "type": "http",
         "scheme": "bearer",
         "description": "REVENUECAT_WEBHOOK_SECRET"
+      },
+      "CleanupBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "STORAGE_CLEANUP_SECRET (cron / operations worker only)"
       },
       "Apikey": {
         "type": "apiKey",
@@ -1492,7 +1553,7 @@
       },
       "SubscriptionStatus": {
         "type": "object",
-        "description": "View `subscription_status` — matches Subscription Service contract.",
+        "description": "View `subscription_status` \u2014 matches Subscription Service contract.",
         "properties": {
           "user_id": {
             "type": "string",
@@ -1525,6 +1586,117 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "MediaObjectMetadata": {
+        "type": "object",
+        "description": "Postgres metadata pattern for object storage (never base64/blobs).\nUsed by MediaStorageProvider and recipe_import_artifact_objects.\n",
+        "required": [
+          "storage_provider",
+          "bucket",
+          "object_key",
+          "mime_type",
+          "size_bytes"
+        ],
+        "properties": {
+          "storage_provider": {
+            "type": "string",
+            "description": "Logical provider id (phase 1 `supabase`; future R2/Stream)",
+            "example": "supabase"
+          },
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "avatars",
+              "recipe-covers",
+              "recipe-images",
+              "recipe-import-artifacts"
+            ]
+          },
+          "object_key": {
+            "type": "string",
+            "description": "Provider-agnostic object key. Import artifacts use `{job_id}/\u2026`.\nUser media use `{user_id}/\u2026`.\n"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "checksum": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "StorageCleanupResult": {
+        "type": "object",
+        "required": [
+          "ok",
+          "job_type",
+          "scanned",
+          "deleted",
+          "failed",
+          "errors"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "job_type": {
+            "type": "string",
+            "enum": [
+              "storage_cleanup_import_artifacts"
+            ]
+          },
+          "scanned": {
+            "type": "integer"
+          },
+          "deleted": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object_key": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }

@@ -87,3 +87,11 @@ jobs:
           count=$(ls supabase/migrations/*.sql | wc -l)
           test "$count" -ge 2
           echo "migrations=$count"
+      - name: Media storage unit tests
+        run: |
+          set -euo pipefail
+          curl -fsSL https://deno.land/install.sh | sh
+          export DENO_INSTALL="$HOME/.deno"
+          export PATH="$DENO_INSTALL/bin:$PATH"
+          deno test supabase/functions/_shared/media-storage/
+          echo "Media storage tests OK"
