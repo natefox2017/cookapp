@@ -12,7 +12,9 @@ function forbidProductionMock(): Plugin {
     name: 'forbid-production-mock',
     configResolved(config) {
       if (config.command !== 'build') return
-      if (process.env.VITE_ADMIN_USE_MOCK === 'true') {
+      const fromProcess = process.env.VITE_ADMIN_USE_MOCK
+      const fromViteEnv = config.env?.VITE_ADMIN_USE_MOCK
+      if (fromProcess === 'true' || fromViteEnv === 'true') {
         throw new Error(
           'VITE_ADMIN_USE_MOCK=true is forbidden for production admin builds (Issue #51).',
         )

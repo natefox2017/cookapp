@@ -1190,6 +1190,54 @@
           }
         }
       },
+      "AdminIdentity": {
+        "type": "object",
+        "required": [
+          "id",
+          "username"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "operator",
+              "readonly"
+            ]
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminSessionPayload": {
+        "type": "object",
+        "required": [
+          "token",
+          "expiresAt",
+          "admin"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "admin": {
+            "$ref": "#/components/schemas/AdminIdentity"
+          }
+        }
+      },
       "UserProfile": {
         "type": "object",
         "required": [
