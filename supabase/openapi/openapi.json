@@ -480,6 +480,28 @@
             "description": "Created"
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Update own user ingredient",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Delete own user ingredient",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
       }
     },
     "/rest/v1/grocery_lists": {
@@ -490,7 +512,17 @@
         "summary": "GET Grocery Lists",
         "responses": {
           "200": {
-            "description": "Lists"
+            "description": "Lists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroceryList"
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -502,6 +534,28 @@
         "responses": {
           "201": {
             "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "UPDATE Grocery List",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "DELETE Grocery List",
+        "responses": {
+          "204": {
+            "description": "Deleted"
           }
         }
       }
@@ -709,9 +763,20 @@
           "Subscription"
         ],
         "summary": "Get own subscription row",
+        "description": "Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.",
         "responses": {
           "200": {
-            "description": "Subscription entitlement"
+            "description": "Subscription entitlement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionRow"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -724,7 +789,17 @@
         "summary": "Get subscription status (plan / status / expire_date)",
         "responses": {
           "200": {
-            "description": "Simplified subscription view"
+            "description": "Simplified subscription view matching Subscription Service contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionStatus"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1167,6 +1242,10 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1237,6 +1316,14 @@
           },
           "name": {
             "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1260,6 +1347,12 @@
               "null"
             ]
           },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "category": {
             "type": [
               "string",
@@ -1268,11 +1361,15 @@
           },
           "completed": {
             "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer"
           }
         }
       },
       "MealPlan": {
         "type": "object",
+        "description": "Spec field `date` is stored as `plan_date` (Postgres reserved-word safe).",
         "properties": {
           "id": {
             "type": "string",
@@ -1335,8 +1432,67 @@
           }
         }
       },
-      "Subscription": {
+      "SubscriptionRow": {
         "type": "object",
+        "description": "Raw `subscriptions` table row (PostgREST).",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entitlement_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "product_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "trialing",
+              "cancelled",
+              "expired",
+              "billing_issue",
+              "none"
+            ]
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "will_renew": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "latest_event_timestamp_ms": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "SubscriptionStatus": {
+        "type": "object",
+        "description": "View `subscription_status` — matches Subscription Service contract.",
         "properties": {
           "user_id": {
             "type": "string",
@@ -1364,6 +1520,10 @@
               "string",
               "null"
             ],
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
             "format": "date-time"
           }
         }
