@@ -103,15 +103,12 @@ jobs:
         run: |
           set -euo pipefail
           deno test --allow-env supabase/functions/_shared/media-storage/
-      - name: Recipe import pipeline unit tests
+      - name: Recipe import / queue unit tests
         run: |
           set -euo pipefail
           deno test --allow-env supabase/functions/_shared/recipe-import/
-      - name: Import queue / worker unit tests
+          test -f supabase/functions/recipe-import-worker/index.ts
+      - name: AI Platform unit tests
         run: |
           set -euo pipefail
-          deno test --allow-env supabase/functions/_shared/recipe-import/queue_test.ts
-          test -f supabase/functions/recipe-import-worker/index.ts
-          test -f docs/backend/IMPORT_QUEUE.md
-          test -f supabase/migrations/20260918060000_recipe_import_queue.sql
-          echo "Import queue worker paths OK"
+          deno test --allow-env supabase/functions/_shared/ai_platform_test.ts supabase/functions/_shared/ai_router_fallback_test.ts

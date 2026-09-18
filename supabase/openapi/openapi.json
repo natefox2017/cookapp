@@ -68,6 +68,9 @@
     },
     {
       "name": "Operations"
+    },
+    {
+      "name": "AdminAI"
     }
   ],
   "paths": {
@@ -2263,6 +2266,668 @@
           }
         }
       }
+    },
+    "/functions/v1/admin-ai/providers": {
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "List AI providers",
+        "description": "Admin bearer required. Returns providers with `secretConfigured` boolean only —\nnever plaintext API keys or secret_ref values.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiListProviders",
+        "responses": {
+          "200": {
+            "description": "Provider list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiProvider"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Create AI provider (Owner)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiCreateProvider",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiProviderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProvider"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/providers/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Get AI provider",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiGetProvider",
+        "responses": {
+          "200": {
+            "description": "Provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProvider"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Update AI provider (Owner)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiUpdateProvider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiProviderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProvider"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Delete AI provider (Owner)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiDeleteProvider",
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/providers/{id}/secret": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Set provider API key (Owner, write-only)",
+        "description": "Stores ciphertext in server-side `ai_secrets`. There is no read-full-secret API.\nResponse only confirms `secretConfigured: true`.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiSetProviderSecret",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "apiKey"
+                ],
+                "properties": {
+                  "apiKey": {
+                    "type": "string",
+                    "description": "Provider API key (never logged or returned)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secret stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "secretConfigured": {
+                      "type": "boolean"
+                    },
+                    "provider": {
+                      "$ref": "#/components/schemas/AiProvider"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/providers/{id}/test": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Test provider connection via Backend (Owner)",
+        "description": "Minimal low-cost probe. Admin browser never calls the provider directly.",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiTestProvider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "upstreamModelId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "latencyMs": {
+                      "type": "integer"
+                    },
+                    "model": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/models": {
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "List AI models",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiListModels",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Model list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Register AI model (Owner)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiCreateModel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiModelCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/models/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Update AI model (Owner)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiUpdateModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiModelUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Delete AI model (Owner)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiDeleteModel",
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/routes": {
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "List logical AI routes",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiListRoutes",
+        "responses": {
+          "200": {
+            "description": "Routes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiRoute"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/routes/{routeKey}": {
+      "parameters": [
+        {
+          "name": "routeKey",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "recipe_import_text",
+              "recipe_import_vision",
+              "recipe_quality_check",
+              "assistant_default",
+              "assistant_vision"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Get AI route",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiGetRoute",
+        "responses": {
+          "200": {
+            "description": "Route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiRoute"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Update AI route primary/fallback (Owner)",
+        "description": "At most 3 fallback model ids. Business code must use route_key only.",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiUpdateRoute",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiRouteUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiRoute"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/usage": {
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "AI usage summary + recent events",
+        "description": "Metadata only — full prompts/responses are not stored by default.",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiUsage",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "routeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage summary and events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiUsageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/health": {
+      "get": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "AI provider health",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiHealth",
+        "responses": {
+          "200": {
+            "description": "Health snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AiProviderHealth"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-ai/resolve": {
+      "post": {
+        "tags": [
+          "AdminAI"
+        ],
+        "summary": "Resolve route model chain (Owner, no provider call)",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiResolveRoute",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "routeKey"
+                ],
+                "properties": {
+                  "routeKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resolved chain (no secrets)"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3848,6 +4513,638 @@
                 }
               }
             }
+          }
+        }
+      },
+      "AiProvider": {
+        "type": "object",
+        "description": "AI provider registry row. `secretConfigured` indicates a server-side secret exists;\nplaintext keys and secret_ref are never returned.\n",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "openai_compatible"
+            ]
+          },
+          "baseUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "secretConfigured": {
+            "type": "boolean"
+          },
+          "secretRef": {
+            "type": "null",
+            "description": "Always null in API responses"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "requestTimeoutMs": {
+            "type": "integer"
+          },
+          "maxRetries": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "healthy",
+              "degraded",
+              "unhealthy"
+            ]
+          },
+          "lastHealthCheckAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "development",
+              "production"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AiProviderCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "baseUrl"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "openai_compatible"
+            ],
+            "default": "openai_compatible"
+          },
+          "baseUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "requestTimeoutMs": {
+            "type": "integer",
+            "default": 30000
+          },
+          "maxRetries": {
+            "type": "integer",
+            "default": 1
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "development",
+              "production"
+            ],
+            "default": "production"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "AiProviderUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "baseUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "requestTimeoutMs": {
+            "type": "integer"
+          },
+          "maxRetries": {
+            "type": "integer"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "development",
+              "production"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "AiModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "providerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "upstreamModelId": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "boolean"
+              },
+              "vision": {
+                "type": "boolean"
+              },
+              "structured_output": {
+                "type": "boolean"
+              },
+              "tool_calling": {
+                "type": "boolean"
+              }
+            }
+          },
+          "contextWindow": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "maxOutputTokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "costInputPer1m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "costOutputPer1m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AiModelCreate": {
+        "type": "object",
+        "required": [
+          "providerId",
+          "displayName",
+          "upstreamModelId"
+        ],
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "upstreamModelId": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "type": "object"
+          },
+          "contextWindow": {
+            "type": "integer"
+          },
+          "maxOutputTokens": {
+            "type": "integer"
+          },
+          "costInputPer1m": {
+            "type": "number"
+          },
+          "costOutputPer1m": {
+            "type": "number"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "AiModelUpdate": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "upstreamModelId": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "type": "object"
+          },
+          "contextWindow": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "maxOutputTokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "costInputPer1m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "costOutputPer1m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "AiRoute": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routeKey": {
+            "type": "string"
+          },
+          "primaryModelId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "fallbackModelIds": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "timeoutMs": {
+            "type": "integer"
+          },
+          "maxRetries": {
+            "type": "integer"
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "maxOutputTokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "structuredSchemaKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "reserved": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AiRouteUpdate": {
+        "type": "object",
+        "properties": {
+          "primaryModelId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "fallbackModelIds": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "timeoutMs": {
+            "type": "integer"
+          },
+          "maxRetries": {
+            "type": "integer",
+            "maximum": 3
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "maxOutputTokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "structuredSchemaKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AiUsageResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "object",
+            "properties": {
+              "requests": {
+                "type": "integer"
+              },
+              "successRate": {
+                "type": "number"
+              },
+              "errorRate": {
+                "type": "number"
+              },
+              "fallbackRate": {
+                "type": "number"
+              },
+              "p50LatencyMs": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p95LatencyMs": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "inputTokens": {
+                "type": "integer"
+              },
+              "outputTokens": {
+                "type": "integer"
+              },
+              "estimatedCost": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "byRoute": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              },
+              "byProvider": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              },
+              "byModel": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "requestId": {
+                  "type": "string"
+                },
+                "routeKey": {
+                  "type": "string"
+                },
+                "providerId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "modelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "finalModelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "latencyMs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "inputTokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "outputTokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "estimatedCost": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "retryCount": {
+                  "type": "integer"
+                },
+                "errorCode": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "attemptedModels": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AiProviderHealth": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "healthy",
+              "degraded",
+              "unhealthy"
+            ]
+          },
+          "lastHealthCheckAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastSuccessAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastErrorAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "consecutiveFailures": {
+            "type": "integer"
+          },
+          "circuitOpenUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       }
