@@ -133,6 +133,24 @@ struct GlassMenuPresenterTests {
             #expect(GlassMenuTransition.scale(for: phase, reduceMotion: true) == 1)
         }
     }
+
+    @Test func menuPanelHugsRowStackUntilCap() {
+        let twoRows = [
+            GlassMenuItem(id: "a", title: "A"),
+            GlassMenuItem(id: "b", title: "B"),
+        ]
+        #expect(GlassMenuLayout.panelHeight(for: twoRows) == DesignTokens.Chrome.menuItemHeight * 2 + DesignTokens.Spacing.xs * 2)
+        #expect(!GlassMenuLayout.needsScroll(for: twoRows))
+
+        let eightPlusSeparator = (1...8).map { GlassMenuItem(id: "\($0)", title: "Item \($0)") }
+            + [.separator(id: "s")]
+        #expect(GlassMenuLayout.panelHeight(for: eightPlusSeparator) == GlassMenuLayout.idealHeight(for: eightPlusSeparator))
+        #expect(!GlassMenuLayout.needsScroll(for: eightPlusSeparator))
+
+        let many = (1...12).map { GlassMenuItem(id: "\($0)", title: "Item \($0)") }
+        #expect(GlassMenuLayout.needsScroll(for: many))
+        #expect(GlassMenuLayout.panelHeight(for: many) == DesignTokens.Chrome.menuMaxHeight)
+    }
 }
 
 @MainActor

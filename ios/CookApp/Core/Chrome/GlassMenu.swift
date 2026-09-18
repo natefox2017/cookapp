@@ -31,6 +31,24 @@ struct GlassMenuItem: Identifiable, Equatable, Sendable {
     }
 }
 
+enum GlassMenuLayout {
+    static func idealHeight(for items: [GlassMenuItem]) -> CGFloat {
+        let rowCount = items.filter { $0.role != .separator }.count
+        let separatorCount = items.filter { $0.role == .separator }.count
+        return (CGFloat(rowCount) * DesignTokens.Chrome.menuItemHeight)
+            + (CGFloat(separatorCount) * DesignTokens.Chrome.hairlineWidth)
+            + (DesignTokens.Spacing.xs * 2)
+    }
+
+    static func panelHeight(for items: [GlassMenuItem]) -> CGFloat {
+        min(idealHeight(for: items), DesignTokens.Chrome.menuMaxHeight)
+    }
+
+    static func needsScroll(for items: [GlassMenuItem]) -> Bool {
+        idealHeight(for: items) > DesignTokens.Chrome.menuMaxHeight
+    }
+}
+
 enum GlassMenuTransition {
     static var duration: TimeInterval { DesignTokens.Motion.menu }
 
@@ -119,7 +137,7 @@ struct GlassMenuButton: View {
                     .onTapGesture { dismiss() }
             }
         }
-        .overlay(alignment: .topTrailing) {
+        .background(alignment: .topTrailing) {
             if presenter.phase.isVisible {
                 panel
                     .offset(y: DesignTokens.Chrome.headerButtonSize + DesignTokens.Chrome.menuAnchorGap)
@@ -130,15 +148,21 @@ struct GlassMenuButton: View {
     }
 
     private var panel: some View {
-        ViewThatFits(in: .vertical) {
-            menuStack
-            ScrollView {
+        let height = GlassMenuLayout.panelHeight(for: items)
+        let scrolling = GlassMenuLayout.needsScroll(for: items)
+
+        return Group {
+            if scrolling {
+                ScrollView {
+                    menuStack
+                }
+            } else {
                 menuStack
             }
-            .frame(maxHeight: DesignTokens.Chrome.menuMaxHeight)
         }
         .frame(minWidth: DesignTokens.Chrome.menuMinWidth)
-        .fixedSize(horizontal: true, vertical: false)
+        .frame(height: height)
+        .fixedSize(horizontal: true, vertical: true)
         .cookGlass(
             .regular,
             in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
