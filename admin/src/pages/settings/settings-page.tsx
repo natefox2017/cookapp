@@ -22,8 +22,9 @@ export function SettingsPage() {
   const { data, loading, error, reload } = useAsyncData(() => getSettings(), [])
   const { admin, changePassword } = useAuth()
   const [draft, setDraft] = useState<AdminSettings | null>(null)
+  const [baseline, setBaseline] = useState<AdminSettings | null>(null)
+  const [tab, setTab] = useState('general')
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,18 +33,23 @@ export function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (data) setDraft(structuredClone(data))
+    if (data) {
+      const next = structuredClone(data)
+      setDraft(next)
+      setBaseline(structuredClone(data))
+    }
   }, [data])
+
+  const dirty =
+    Boolean(draft && baseline) && JSON.stringify(draft) !== JSON.stringify(baseline)
 
   async function onSave() {
     if (!draft) return
     setSaving(true)
-    setSaved(false)
     try {
       const next = await updateSettings(draft)
-      setDraft(next)
-      setSaved(true)
-      reload()
+      setDraft(structuredClone(next))
+      setBaseline(structuredClone(next))
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Save failed')
     } finally {
@@ -76,8 +82,8 @@ export function SettingsPage() {
     }
   }
 
-  if (loading) return <LoadingBlock label="Loading settings…" />
-  if (error || !draft) {
+  if (loading && !draft) return <LoadingBlock label="Loading settings…" />
+  if ((error && !draft) || !draft) {
     return (
       <ErrorState
         title="Could not load settings"
@@ -87,19 +93,23 @@ export function SettingsPage() {
     )
   }
 
+  const showSettingsSave = tab !== 'security'
+
   return (
     <div>
       <PageHeader
         title="Settings"
         description="General, units, category policy, and system configuration."
         actions={
-          <Button loading={saving} onClick={onSave}>
-            {saved ? 'Saved' : 'Save changes'}
-          </Button>
+          showSettingsSave ? (
+            <Button loading={saving} onClick={onSave} disabled={!dirty && !saving}>
+              {dirty ? 'Save changes' : 'Saved'}
+            </Button>
+          ) : null
         }
       />
 
-      <Tabs defaultValue="general">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>
@@ -376,13 +386,12 @@ export function SettingsPage() {
                 <Input
                   id="apiBase"
                   value={draft.system.apiBaseUrl}
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, apiBaseUrl: event.target.value },
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground">
+                  Set via VITE_ADMIN_API_BASE_URL at build time (not editable at runtime).
+                </p>
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="log-level">Log level</Label>

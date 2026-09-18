@@ -8,15 +8,30 @@ import type {
 
 const TOKEN_KEY = 'cookapp-admin-token'
 const ADMIN_KEY = 'cookapp-admin-user'
+const MOCK_PASSWORD_KEY = 'cookapp-admin-mock-password'
 
-/** In-memory mock password store (resets on full page reload of module). */
-let mockPassword = 'admin'
 const mockAdmin: AdminIdentity = {
   id: 'adm_mock_01',
   username: 'admin',
 }
 
 const mockSessions = new Map<string, { adminId: string; expiresAt: number }>()
+
+function readMockPassword(): string {
+  try {
+    return localStorage.getItem(MOCK_PASSWORD_KEY) || 'admin'
+  } catch {
+    return 'admin'
+  }
+}
+
+function writeMockPassword(password: string) {
+  try {
+    localStorage.setItem(MOCK_PASSWORD_KEY, password)
+  } catch {
+    // ignore quota / private mode
+  }
+}
 
 function mockToken() {
   return `mock_${crypto.randomUUID().replace(/-/g, '')}`
@@ -56,7 +71,7 @@ export async function loginAdmin(
 ): Promise<AdminLoginResult> {
   if (isMockMode()) {
     return mockRequest(() => {
-      if (username.trim().toLowerCase() !== 'admin' || password !== mockPassword) {
+      if (username.trim().toLowerCase() !== 'admin' || password !== readMockPassword()) {
         throw new ApiError('Invalid username or password', 401)
       }
       const token = mockToken()
@@ -127,13 +142,13 @@ export async function changeAdminPassword(
 
   if (isMockMode()) {
     return mockRequest(() => {
-      if (currentPassword !== mockPassword) {
+      if (currentPassword !== readMockPassword()) {
         throw new ApiError('Current password is incorrect', 401)
       }
       if (newPassword.length < 4) {
         throw new ApiError('newPassword must be at least 4 characters', 400)
       }
-      mockPassword = newPassword
+      writeMockPassword(newPassword)
       mockSessions.clear()
       const next = mockToken()
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()

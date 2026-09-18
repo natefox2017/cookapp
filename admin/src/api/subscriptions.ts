@@ -20,17 +20,42 @@ function filterSeries(
   platform: StorePlatform | 'all',
 ): SubscriptionRevenueData {
   if (platform === 'all') return structuredClone(data)
+
   const series = data.series.map((point) => {
     const apple = platform === 'app_store' ? point.apple : 0
     const android = platform === 'play_store' ? point.android : 0
     return { month: point.month, apple, android, total: apple + android }
   })
+
+  const appleRevenue = Math.round(series.reduce((sum, point) => sum + point.apple, 0) * 100) / 100
+  const androidRevenue =
+    Math.round(series.reduce((sum, point) => sum + point.android, 0) * 100) / 100
+
+  const platformRecords = mockSubscriptions.filter((item) => item.platform === platform)
+  const activePaid = platformRecords.filter(
+    (item) =>
+      (item.status === 'active' || item.status === 'trialing') && item.plan !== 'free',
+  ).length
+
+  const mrr =
+    Math.round(
+      platformRecords
+        .filter((item) => item.status === 'active' && item.plan !== 'free')
+        .reduce((sum, item) => {
+          const plan = mockSubscriptionPlans.find((row) => row.productId === item.productId)
+          if (!plan) return sum + (item.amount ?? 0)
+          if (plan.billingPeriod === 'monthly') return sum + plan.price
+          if (plan.billingPeriod === 'yearly') return sum + plan.price / 12
+          return sum
+        }, 0) * 100,
+    ) / 100
+
   return {
     stats: {
-      ...data.stats,
-      appleRevenue: platform === 'app_store' ? data.stats.appleRevenue : 0,
-      androidRevenue: platform === 'play_store' ? data.stats.androidRevenue : 0,
-      mrr: platform === 'app_store' ? 44.98 : platform === 'play_store' ? 9.99 : data.stats.mrr,
+      mrr,
+      appleRevenue: platform === 'app_store' ? appleRevenue : 0,
+      androidRevenue: platform === 'play_store' ? androidRevenue : 0,
+      activePaid,
     },
     series,
   }
