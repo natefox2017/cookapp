@@ -80,10 +80,14 @@ Deno.serve(async (req) => {
     if (action === "logout" && method === "POST") {
       const session = await requireAdminSession(req);
       const admin = createServiceClient();
-      await admin
+      const { error } = await admin
         .from("admin_sessions")
         .update({ revoked_at: new Date().toISOString() })
         .eq("id", session.sessionId);
+      if (error) {
+        log("error", "admin_logout_failed", { message: error.message });
+        throw new AppError("internal_error", "Failed to revoke admin session", 500);
+      }
       log("info", "admin_logout_ok", { admin_id: session.adminId });
       return json({ ok: true }, 200, publicCorsHeaders);
     }

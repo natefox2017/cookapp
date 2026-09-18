@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Apple, MonitorSmartphone, Smartphone, TabletSmartphone } from 'lucide-react'
 import { getUser, getUserRegistrationStats, listUsers } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import type {
   AdminUser,
   AdminUserDetail,
@@ -77,17 +78,28 @@ function storeLabel(store: 'app_store' | 'play_store' | null) {
 
 export function UsersPage() {
   const [q, setQ] = useState('')
+  const debouncedQ = useDebouncedValue(q, 250)
   const [status, setStatus] = useState<UserStatus | 'all'>('all')
   const [subscription, setSubscription] = useState<SubscriptionPlan | 'all'>('all')
   const [registrationProvider, setRegistrationProvider] = useState<
     RegistrationProvider | 'all'
   >('all')
   const [deviceType, setDeviceType] = useState<DeviceType | 'all'>('all')
+  const [page, setPage] = useState(1)
+  const pageSize = 10
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const query = useMemo(
-    () => ({ q, status, subscription, registrationProvider, deviceType }),
-    [q, status, subscription, registrationProvider, deviceType],
+    () => ({
+      q: debouncedQ,
+      status,
+      subscription,
+      registrationProvider,
+      deviceType,
+      page,
+      pageSize,
+    }),
+    [debouncedQ, status, subscription, registrationProvider, deviceType, page, pageSize],
   )
 
   const stats = useAsyncData(() => getUserRegistrationStats(), [])
@@ -96,6 +108,14 @@ export function UsersPage() {
     () => (selectedId ? getUser(selectedId) : Promise.resolve(null)),
     [selectedId],
   )
+
+  const total = list.data?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+
+  function updateFilter<T>(setter: (value: T) => void, value: T) {
+    setter(value)
+    setPage(1)
+  }
 
   return (
     <div>
@@ -182,10 +202,16 @@ export function UsersPage() {
         <Input
           placeholder="Search email or name…"
           value={q}
-          onChange={(event) => setQ(event.target.value)}
+          onChange={(event) => {
+            setQ(event.target.value)
+            setPage(1)
+          }}
           className="lg:max-w-xs"
         />
-        <Select value={status} onValueChange={(value) => setStatus(value as UserStatus | 'all')}>
+        <Select
+          value={status}
+          onValueChange={(value) => updateFilter(setStatus, value as UserStatus | 'all')}
+        >
           <SelectTrigger className="lg:w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -198,7 +224,9 @@ export function UsersPage() {
         </Select>
         <Select
           value={subscription}
-          onValueChange={(value) => setSubscription(value as SubscriptionPlan | 'all')}
+          onValueChange={(value) =>
+            updateFilter(setSubscription, value as SubscriptionPlan | 'all')
+          }
         >
           <SelectTrigger className="lg:w-40">
             <SelectValue placeholder="Subscription" />
@@ -213,7 +241,7 @@ export function UsersPage() {
         <Select
           value={registrationProvider}
           onValueChange={(value) =>
-            setRegistrationProvider(value as RegistrationProvider | 'all')
+            updateFilter(setRegistrationProvider, value as RegistrationProvider | 'all')
           }
         >
           <SelectTrigger className="lg:w-40">
@@ -229,7 +257,7 @@ export function UsersPage() {
         </Select>
         <Select
           value={deviceType}
-          onValueChange={(value) => setDeviceType(value as DeviceType | 'all')}
+          onValueChange={(value) => updateFilter(setDeviceType, value as DeviceType | 'all')}
         >
           <SelectTrigger className="lg:w-40">
             <SelectValue placeholder="Device" />
@@ -256,60 +284,89 @@ export function UsersPage() {
       ) : null}
 
       {list.data && list.data.data.length > 0 ? (
-        <div className="rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Provider</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Subscription</TableHead>
-                <TableHead>Recipes</TableHead>
-                <TableHead>Favorites</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-28">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.data.data.map((user: AdminUser) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>{initials(user.displayName)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{user.displayName}</div>
-                        <div className="text-xs text-muted-foreground">{user.email}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{providerLabel(user.registrationProvider)}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{deviceLabel(user.deviceType)}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{user.subscription}</Badge>
-                  </TableCell>
-                  <TableCell className="tabular-nums">{user.recipeCount}</TableCell>
-                  <TableCell className="tabular-nums">{user.favoriteCount}</TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant(user.status)}>{user.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedId(user.id)}>
-                      View
-                    </Button>
-                  </TableCell>
+        <>
+          <div className="rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Subscription</TableHead>
+                  <TableHead>Recipes</TableHead>
+                  <TableHead>Favorites</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-28">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {list.data.data.map((user: AdminUser) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>{initials(user.displayName)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{user.displayName}</div>
+                          <div className="text-xs text-muted-foreground">{user.email}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{providerLabel(user.registrationProvider)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{deviceLabel(user.deviceType)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{user.subscription}</Badge>
+                    </TableCell>
+                    <TableCell className="tabular-nums">{user.recipeCount}</TableCell>
+                    <TableCell className="tabular-nums">{user.favoriteCount}</TableCell>
+                    <TableCell>{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant(user.status)}>{user.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedId(user.id)}>
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+            <span>
+              {total} user{total === 1 ? '' : 's'}
+              {list.refreshing ? ' · refreshing…' : ''}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                Previous
+              </Button>
+              <span className="tabular-nums">
+                Page {page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
       ) : null}
 
       <Sheet open={Boolean(selectedId)} onOpenChange={(open) => !open && setSelectedId(null)}>
