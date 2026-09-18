@@ -1,14 +1,36 @@
-const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK ?? 'true') === 'true'
+/** Admin API HTTP client. Mock is development-only (Issue #51). */
+
+function resolveMockFlag(): boolean {
+  const explicit = import.meta.env.VITE_ADMIN_USE_MOCK
+  const isProd = import.meta.env.MODE === 'production'
+
+  if (isProd) {
+    // Production builds never default to mock. Explicit true is still blocked at boot.
+    return explicit === 'true'
+  }
+
+  // Local/dev: default mock on unless explicitly disabled.
+  if (explicit === undefined || explicit === '') return true
+  return explicit === 'true'
+}
+
+const USE_MOCK = resolveMockFlag()
 const API_BASE = import.meta.env.VITE_ADMIN_API_BASE_URL ?? ''
 const ADMIN_TOKEN_KEY = 'cookapp-admin-token'
 
+/** True when a production build was incorrectly compiled with mock=true. */
+export const PRODUCTION_MOCK_BLOCKED =
+  import.meta.env.MODE === 'production' && USE_MOCK
+
 export class ApiError extends Error {
   status: number
+  code?: string
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.code = code
   }
 }
 
@@ -26,6 +48,12 @@ async function delay(ms = 220) {
 }
 
 export async function mockRequest<T>(factory: () => T | Promise<T>): Promise<T> {
+  if (PRODUCTION_MOCK_BLOCKED) {
+    throw new ApiError(
+      'Mock Admin API is forbidden in production builds (Issue #51).',
+      503,
+    )
+  }
   await delay()
   return factory()
 }
@@ -69,7 +97,7 @@ export async function httpRequest<T>(
 }
 
 export function isMockMode() {
-  return USE_MOCK
+  return USE_MOCK && !PRODUCTION_MOCK_BLOCKED
 }
 
 export { USE_MOCK, API_BASE }

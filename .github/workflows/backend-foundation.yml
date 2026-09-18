@@ -33,6 +33,10 @@ jobs:
           test -f supabase/functions/health/index.ts
           test -f supabase/functions/openapi/index.ts
           test -f supabase/functions/_shared/auth.ts
+          test -f supabase/functions/admin-recipe-import/index.ts
+          test -f supabase/functions/_shared/ai-router.ts
+          test -f supabase/functions/_shared/media-storage.ts
+          test -f supabase/functions/_shared/recipe-import/pipeline.ts
           echo "Backend foundation paths OK"
       - name: OpenAPI YAML parses
         run: |
@@ -87,21 +91,19 @@ jobs:
           count=$(ls supabase/migrations/*.sql | wc -l)
           test "$count" -ge 2
           echo "migrations=$count"
-      - name: AI Platform Deno unit tests
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Log redaction + request id tests
         run: |
           set -euo pipefail
-          curl -fsSL https://deno.land/install.sh | sh
-          export DENO_INSTALL="${HOME}/.deno"
-          export PATH="${DENO_INSTALL}/bin:${PATH}"
-          deno test --allow-env \
-            supabase/functions/_shared/ai_platform_test.ts \
-            supabase/functions/_shared/ai_router_fallback_test.ts
-      - name: AI Platform required paths
+          deno test --allow-env supabase/functions/_shared/logger_test.ts
+      - name: Recipe import pipeline unit tests
         run: |
           set -euo pipefail
-          test -f supabase/migrations/20260918100000_ai_platform_core.sql
-          test -f supabase/functions/admin-ai/index.ts
-          test -f supabase/functions/_shared/ai-router.ts
-          test -f supabase/functions/_shared/ai-secret-store.ts
-          grep -q 'admin-ai' supabase/config.toml
-          echo "AI Platform paths OK"
+          deno test --allow-env supabase/functions/_shared/recipe-import/
+      - name: AI Platform unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/ai_platform_test.ts supabase/functions/_shared/ai_router_fallback_test.ts

@@ -1,11 +1,15 @@
 # Cloud Backend Spec Compliance
 
-Audit against the Cloud Backend Development Specification (Issue #11).  
-Last reviewed: 2026-09-17 against `main` + live project `semsjyrqjnumpvanibip`.
+Audit against the Cloud Backend Development Specification (Issue #11)  
+plus Notion Backend/Admin V2 review (2026-09-18).
+
+Last reviewed: 2026-09-18 against `main` + live project `semsjyrqjnumpvanibip`.
 
 ## Verdict
 
-**Core cloud modules: PASS.** Remaining items are intentional aliases, documentation clarity, or out-of-scope product choices.
+**Phase 1 core cloud modules: PASS.**  
+**Backend/Admin overall: Foundation Complete / V2 Operational Expansion Required**  
+(Notion: [Backend & Admin V2](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242) · Master [#49](https://github.com/natefox2017/cookapp/issues/49)).
 
 | Module | Verdict | Notes |
 |--------|---------|-------|
@@ -22,7 +26,10 @@ Last reviewed: 2026-09-17 against `main` + live project `semsjyrqjnumpvanibip`.
 | Subscription + RevenueCat webhook | PASS | `plan`/`status`; `expire_date` via `subscription_status` view |
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
 | Engineering (migrations, OpenAPI, errors, logging) | PASS | |
-| No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI, mock/local first |
+| No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI |
+| Admin live API contract | PARTIAL | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md) (#52). Live: auth/users/dashboard/subscriptions. Missing domains return `501` in live Admin client |
+| Production mock / default credentials | IN PROGRESS | #51 / PR #62 |
+| AI Platform / AI Import / Audit / Media abstraction | NOT STARTED | #53–#57 · #54 |
 
 \* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.
 
@@ -38,14 +45,17 @@ Last reviewed: 2026-09-17 against `main` + live project `semsjyrqjnumpvanibip`.
 
 Primary: PostgREST `/rest/v1/*` with JWT + anon key.  
 Privileged: `/functions/v1/delete-account`, `/functions/v1/revenuecat-webhook`.  
-Contract: `supabase/openapi/openapi.yaml` (served by `/functions/v1/openapi`).
+Admin (custom bearer): `admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`.  
+Contract: `supabase/openapi/openapi.yaml` (served by `/functions/v1/openapi`).  
+Admin path matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md).
 
-## Explicit non-goals (this audit)
+## Explicit non-goals (Phase 1 audit)
 
 - Nested jsonb schema validation for recipe ingredients/steps (app-layer concern)
 - System ingredient seed catalog content
 - Auto-create default grocery list on signup (client can `POST /grocery_lists`)
 - Moving `admin/` to a separate git repository (product/repo layout decision)
+- Full V2 AI Platform / Import / Analytics in one PR (split via #49)
 
 ## How to re-verify
 

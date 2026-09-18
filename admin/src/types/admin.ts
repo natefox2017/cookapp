@@ -4,6 +4,10 @@ export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'trialing'
 /** Store platforms used for plan catalog + record filters. */
 export type StorePlatform = 'app_store' | 'play_store'
 export type BillingPeriod = 'monthly' | 'yearly' | 'lifetime'
+/** Auth registration provider (Sign in with Apple / Google / email). */
+export type RegistrationProvider = 'apple' | 'google' | 'email' | 'unknown'
+/** Client device class captured at registration / first session. */
+export type DeviceType = 'ios' | 'android' | 'web' | 'unknown'
 
 export interface AdminUser {
   id: string
@@ -15,12 +19,43 @@ export interface AdminUser {
   favoriteCount: number
   createdAt: string
   status: UserStatus
+  /** Auth provider used at signup. */
+  registrationProvider: RegistrationProvider
+  /** Device class recorded for the account. */
+  deviceType: DeviceType
+}
+
+export interface UserPaymentRecord {
+  id: string
+  eventType: string
+  productId: string | null
+  store: StorePlatform | null
+  amount: number | null
+  currency: string | null
+  environment: string | null
+  purchasedAt: string
 }
 
 export interface AdminUserDetail extends AdminUser {
   lastLoginAt: string | null
   locale: string
   timezone: string
+  /** Registration request IP when captured (null if unknown). */
+  registrationIp: string | null
+  /** Purchase / subscription timeline for this user. */
+  payments: UserPaymentRecord[]
+}
+
+export interface UserMixBucket<T extends string> {
+  key: T
+  label: string
+  count: number
+}
+
+export interface UserRegistrationStats {
+  total: number
+  byProvider: UserMixBucket<RegistrationProvider>[]
+  byDevice: UserMixBucket<DeviceType>[]
 }
 
 export interface RecipeSummary {
@@ -190,6 +225,18 @@ export interface DashboardStats {
   totalRecipes: number
   collections: number
   favorites: number
+  /** Users created in the current calendar month (UTC). */
+  newUsersThisMonth: number
+  activePaidUsers: number
+  suspendedUsers: number
+  revenueTotal: number
+  revenueMrr: number
+  revenueApple: number
+  revenueAndroid: number
+  paymentTransactions: number
+  downloadsTotal: number
+  downloadsIos: number
+  downloadsAndroid: number
 }
 
 export interface GrowthPoint {
@@ -198,9 +245,36 @@ export interface GrowthPoint {
   recipes: number
 }
 
+export interface DashboardSeriesPoint {
+  month: string
+  users: number
+  recipes: number
+  revenue: number
+  revenueApple: number
+  revenueAndroid: number
+  downloadsIos: number
+  downloadsAndroid: number
+}
+
+export interface DashboardBreakdownItem {
+  key: string
+  label: string
+  value: number
+}
+
+export interface DashboardRecentPayment {
+  id: string
+  userLabel: string
+  eventType: string
+  store: string
+  amount: number | null
+  currency: string | null
+  createdAt: string
+}
+
 export interface RecentActivity {
   id: string
-  type: 'user' | 'recipe' | 'collection' | 'subscription'
+  type: 'user' | 'recipe' | 'collection' | 'subscription' | 'payment' | 'download'
   title: string
   subtitle: string
   createdAt: string
@@ -209,7 +283,14 @@ export interface RecentActivity {
 export interface DashboardData {
   stats: DashboardStats
   growth: GrowthPoint[]
+  series: DashboardSeriesPoint[]
+  userBreakdown: {
+    byRegistrationType: DashboardBreakdownItem[]
+    byDeviceType: DashboardBreakdownItem[]
+    byPlan: DashboardBreakdownItem[]
+  }
   recent: RecentActivity[]
+  recentPayments: DashboardRecentPayment[]
 }
 
 export interface AdminSettings {
@@ -245,6 +326,8 @@ export interface ListUsersParams {
   q?: string
   status?: UserStatus | 'all'
   subscription?: SubscriptionPlan | 'all'
+  registrationProvider?: RegistrationProvider | 'all'
+  deviceType?: DeviceType | 'all'
   page?: number
   pageSize?: number
 }

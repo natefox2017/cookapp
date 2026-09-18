@@ -19,7 +19,7 @@ import {
 } from "../_shared/ai-secret-store.ts";
 import { validateAiBaseUrl } from "../_shared/ai-ssrf.ts";
 import { OpenAICompatibleAdapter } from "../_shared/ai-openai-adapter.ts";
-import { AIRouter, limitFallbackModelIds, MAX_FALLBACK_MODELS } from "../_shared/ai-router.ts";
+import { PlatformAIRouter, limitFallbackModelIds, MAX_FALLBACK_MODELS } from "../_shared/ai-router.ts";
 import { summarizeUsageEvents } from "../_shared/ai-usage.ts";
 
 function routeParts(req: Request): string[] {
@@ -774,7 +774,7 @@ Deno.serve(async (req) => {
       requireOwnerRole(session.role);
       const body = await readJson(req);
       const routeKey = String(body.routeKey ?? "").trim();
-      const router = new AIRouter(db);
+      const router = new PlatformAIRouter(db);
       const resolution = await router.resolveRoute(routeKey);
       return json(
         {

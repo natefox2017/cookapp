@@ -2,220 +2,456 @@ openapi: 3.1.0
 info:
   title: CookApp Cloud Backend API
   version: 1.0.0
-  description: |
-    Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)
+  description: 'Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)
+
     with Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).
 
+
     Authentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).
+
     Third-party OAuth tokens are never stored server-side.
 
+
     Project: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`
+
+    '
   contact:
     name: CookApp
 servers:
-  - url: https://semsjyrqjnumpvanibip.supabase.co
-    description: Supabase Cloud
+- url: https://semsjyrqjnumpvanibip.supabase.co
+  description: Supabase Cloud
 tags:
-  - name: Auth
-  - name: User
-  - name: Recipe
-  - name: Collection
-  - name: Ingredient
-  - name: Grocery
-  - name: MealPlan
-  - name: Pantry
-  - name: Category
-  - name: Storage
-  - name: Subscription
-  - name: System
-  - name: AdminAI
-
+- name: Auth
+- name: User
+- name: Recipe
+- name: Collection
+- name: Ingredient
+- name: Grocery
+- name: MealPlan
+- name: Pantry
+- name: Category
+- name: Storage
+- name: Subscription
+- name: System
+- name: AdminAuth
+- name: AdminUsers
+- name: AdminDashboard
+- name: AdminSubscriptions
+- name: AdminRecipeImport
+- name: AdminAI
 paths:
   /auth/v1/token:
     post:
-      tags: [Auth]
+      tags:
+      - Auth
       summary: Session token exchange / refresh
-      description: |
-        Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,
+      description: 'Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,
+
         Google OAuth, logout, and refresh. Documented for completeness.
+
+        '
       security: []
       responses:
-        "200":
+        '200':
           description: Session issued
-
   /functions/v1/delete-account:
     post:
-      tags: [Auth, User]
+      tags:
+      - Auth
+      - User
       summary: Delete account
       description: Purges user storage objects and deletes the auth user (cascades all owned rows).
       operationId: deleteAccount
       responses:
-        "200":
+        '200':
           description: Account deleted
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok: { type: boolean }
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /functions/v1/revenuecat-webhook:
     post:
-      tags: [Subscription]
+      tags:
+      - Subscription
       summary: RevenueCat webhook
-      description: |
-        Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
-        JWT verification disabled; service role used internally.
-      security:
-        - WebhookBearer: []
-      responses:
-        "200":
-          description: Event received
+      description: 'Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
 
+        JWT verification disabled; service role used internally.
+
+        '
+      security:
+      - WebhookBearer: []
+      responses:
+        '200':
+          description: Event received
+      parameters:
+      - $ref: '#/components/parameters/XJobId'
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/health:
     get:
-      tags: [System]
+      tags:
+      - System
       summary: Backend health / module probe
       responses:
-        "200":
+        '200':
           description: Healthy
+  /functions/v1/admin-auth/login:
+    post:
+      tags:
+      - AdminAuth
+      summary: Admin login
+      description: 'Issues a custom admin bearer session (not end-user JWT).
 
+        Production rejects default `admin`/`admin` credentials (Issue #51).
+
+        Set `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`
+
+        only for local/dev.
+
+        '
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - username
+              - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionPayload'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Default credentials blocked in production
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-auth/bootstrap:
+    post:
+      tags:
+      - AdminAuth
+      summary: Bootstrap Owner credentials
+      description: 'Replaces the default seed account with a strong Owner password.
+
+        Requires current default password when a seed row exists.
+
+        Production requires header `X-CookApp-Bootstrap-Token` matching
+
+        secret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).
+
+        Local/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.
+
+        '
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: X-CookApp-Bootstrap-Token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - newPassword
+              properties:
+                username:
+                  type: string
+                  default: admin
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 12
+                currentPassword:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Owner bootstrapped and session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionPayload'
+        '400':
+          description: Weak password or invalid bootstrap state
+        '401':
+          description: Current default password incorrect
+        '409':
+          description: Bootstrap not available
+  /functions/v1/admin-auth/logout:
+    post:
+      tags:
+      - AdminAuth
+      summary: Admin logout
+      description: Revokes the current admin bearer session.
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-auth/session:
+    get:
+      tags:
+      - AdminAuth
+      summary: Current admin session
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - admin
+                properties:
+                  admin:
+                    $ref: '#/components/schemas/AdminIdentity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-auth/change-password:
+    post:
+      tags:
+      - AdminAuth
+      summary: Change admin password
+      description: 'Requires strong password policy (min 12, upper, lower, digit).
+
+        Revokes all sessions for the account and returns a fresh token.
+
+        '
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - currentPassword
+              - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 12
+      responses:
+        '200':
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/AdminSessionPayload'
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+        '400':
+          description: Weak password
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /rest/v1/profiles:
     get:
-      tags: [User]
+      tags:
+      - User
       summary: GET User Profile
       operationId: getUserProfile
       parameters:
-        - $ref: "#/components/parameters/PreferReturn"
-        - name: id
-          in: query
-          schema: { type: string, format: uuid }
-          description: Filter `eq.<user_id>` (own id only under RLS)
+      - $ref: '#/components/parameters/PreferReturn'
+      - name: id
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Filter `eq.<user_id>` (own id only under RLS)
       responses:
-        "200":
+        '200':
           description: Profile rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/UserProfile"
+                  $ref: '#/components/schemas/UserProfile'
     patch:
-      tags: [User]
+      tags:
+      - User
       summary: UPDATE User Profile
       operationId: updateUserProfile
       parameters:
-        - $ref: "#/components/parameters/PreferReturn"
+      - $ref: '#/components/parameters/PreferReturn'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserProfileUpdate"
+              $ref: '#/components/schemas/UserProfileUpdate'
       responses:
-        "200":
+        '200':
           description: Updated profile
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/UserProfile"
-
+                  $ref: '#/components/schemas/UserProfile'
   /rest/v1/recipes:
     get:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Recipe List / Detail
-      description: |
-        List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
+      description: 'List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
+
         Update: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).
+
         Delete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).
+
+        '
       operationId: listRecipes
       parameters:
-        - name: id
-          in: query
-          description: Filter e.g. `eq.<uuid>` for single recipe
-          schema: { type: string }
-        - name: order
-          in: query
-          schema: { type: string, example: "created_at.desc" }
-        - name: select
-          in: query
-          schema: { type: string, example: "*" }
+      - name: id
+        in: query
+        description: Filter e.g. `eq.<uuid>` for single recipe
+        schema:
+          type: string
+      - name: order
+        in: query
+        schema:
+          type: string
+          example: created_at.desc
+      - name: select
+        in: query
+        schema:
+          type: string
+          example: '*'
       responses:
-        "200":
+        '200':
           description: Own recipes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Recipe"
+                  $ref: '#/components/schemas/Recipe'
     post:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Create Recipe
       operationId: createRecipe
       parameters:
-        - $ref: "#/components/parameters/PreferReturn"
+      - $ref: '#/components/parameters/PreferReturn'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecipeCreate"
+              $ref: '#/components/schemas/RecipeCreate'
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Update Recipe
       operationId: updateRecipe
       parameters:
-        - name: id
-          in: query
-          required: true
-          schema: { type: string, example: "eq.<uuid>" }
-        - $ref: "#/components/parameters/PreferReturn"
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: eq.<uuid>
+      - $ref: '#/components/parameters/PreferReturn'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecipeCreate"
+              $ref: '#/components/schemas/RecipeCreate'
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Delete Recipe
       operationId: deleteRecipe
       parameters:
-        - name: id
-          in: query
-          required: true
-          schema: { type: string, example: "eq.<uuid>" }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: eq.<uuid>
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/collections:
     get:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: GET Collections
       operationId: listCollections
       responses:
-        "200":
+        '200':
           description: Own collections
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Collection"
+                  $ref: '#/components/schemas/Collection'
     post:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: POST Collection
       operationId: createCollection
       requestBody:
@@ -223,399 +459,905 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CollectionCreate"
+              $ref: '#/components/schemas/CollectionCreate'
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: UPDATE Collection
       operationId: updateCollection
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: DELETE Collection
       operationId: deleteCollection
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/collection_recipes:
     get:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: List recipes in collections
       responses:
-        "200":
+        '200':
           description: Membership rows
     post:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: Add recipe to collection
       responses:
-        "201":
+        '201':
           description: Added
     delete:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: Remove recipe from collection
       responses:
-        "204":
+        '204':
           description: Removed
-
   /rest/v1/ingredients:
     get:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: List ingredients (system + own)
       responses:
-        "200":
+        '200':
           description: Ingredient catalog
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Ingredient"
+                  $ref: '#/components/schemas/Ingredient'
     post:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: Create user ingredient
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: Update own user ingredient
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: Delete own user ingredient
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/grocery_lists:
     get:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: GET Grocery Lists
       responses:
-        "200":
+        '200':
           description: Lists
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/GroceryList"
+                  $ref: '#/components/schemas/GroceryList'
     post:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: Create grocery list
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: UPDATE Grocery List
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: DELETE Grocery List
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/grocery_items:
     get:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: List grocery items
       responses:
-        "200":
+        '200':
           description: Items
     post:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: POST Item
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: UPDATE Item
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: DELETE Item
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/meal_plans:
     get:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: List meal plans
       responses:
-        "200":
+        '200':
           description: Meal plan entries
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/MealPlan"
+                  $ref: '#/components/schemas/MealPlan'
     post:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: Create meal plan entry
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: Update meal plan entry
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: Delete meal plan entry
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/pantry_items:
     get:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: List pantry items
       responses:
-        "200":
+        '200':
           description: Pantry
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PantryItem"
+                  $ref: '#/components/schemas/PantryItem'
     post:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: Create pantry item
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: Update pantry item
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: Delete pantry item
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/cuisines:
     get:
-      tags: [Category]
+      tags:
+      - Category
       summary: List cuisines
       responses:
-        "200":
+        '200':
           description: Cuisine catalog
-
   /rest/v1/meal_categories:
     get:
-      tags: [Category]
+      tags:
+      - Category
       summary: List meal categories
       responses:
-        "200":
+        '200':
           description: Meal category catalog
-
   /rest/v1/tags:
     get:
-      tags: [Category]
+      tags:
+      - Category
       summary: List tags
       responses:
-        "200":
+        '200':
           description: Tag catalog
-
   /rest/v1/subscriptions:
     get:
-      tags: [Subscription]
+      tags:
+      - Subscription
       summary: Get own subscription row
-      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.
+      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped
+        `expire_date`.
       responses:
-        "200":
+        '200':
           description: Subscription entitlement
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriptionRow"
-
+                  $ref: '#/components/schemas/SubscriptionRow'
   /rest/v1/subscription_status:
     get:
-      tags: [Subscription]
+      tags:
+      - Subscription
       summary: Get subscription status (plan / status / expire_date)
       responses:
-        "200":
+        '200':
           description: Simplified subscription view matching Subscription Service contract
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriptionStatus"
-
+                  $ref: '#/components/schemas/SubscriptionStatus'
   /storage/v1/object/{bucket}/{user_id}/{object}:
     parameters:
-      - name: bucket
+    - name: bucket
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - avatars
+        - recipe-covers
+        - recipe-images
+    - name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: object
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - Storage
+      summary: Upload object (private bucket, path must start with auth user id)
+      responses:
+        '200':
+          description: Uploaded
+    get:
+      tags:
+      - Storage
+      summary: Download / signed access to own object
+      responses:
+        '200':
+          description: Object bytes
+    delete:
+      tags:
+      - Storage
+      summary: Delete own object
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-users:
+    get:
+      tags:
+      - AdminUsers
+      summary: List users (paginated, filterable)
+      operationId: adminListUsers
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: subscription
+        in: query
+        schema:
+          type: string
+      - name: registrationProvider
+        in: query
+        schema:
+          type: string
+      - name: deviceType
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminUsers'
+  /functions/v1/admin-users/stats:
+    get:
+      tags:
+      - AdminUsers
+      summary: Registration mix stats
+      operationId: adminUserStats
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistrationStats'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-users/{id}:
+    get:
+      tags:
+      - AdminUsers
+      summary: User detail + payment timeline
+      operationId: adminGetUser
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
         in: path
         required: true
         schema:
           type: string
-          enum: [avatars, recipe-covers, recipe-images]
-      - name: user_id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
-      - name: object
-        in: path
-        required: true
-        schema: { type: string }
-    post:
-      tags: [Storage]
-      summary: Upload object (private bucket, path must start with auth user id)
+          format: uuid
       responses:
-        "200":
-          description: Uploaded
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserDetail'
+  /functions/v1/admin-dashboard:
     get:
-      tags: [Storage]
-      summary: Download / signed access to own object
+      tags:
+      - AdminDashboard
+      summary: Dashboard KPI aggregation
+      operationId: adminDashboard
+      security:
+      - AdminBearer: []
       responses:
-        "200":
-          description: Object bytes
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardData'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/plans:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription plan products
+      operationId: adminListPlans
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlanProduct'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+    post:
+      tags:
+      - AdminSubscriptions
+      summary: Create subscription plan product
+      operationId: adminCreatePlan
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPlanProduct'
+      responses:
+        '201':
+          description: Created
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/plans/{id}:
+    put:
+      tags:
+      - AdminSubscriptions
+      summary: Update subscription plan product
+      operationId: adminUpdatePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Updated
     delete:
-      tags: [Storage]
-      summary: Delete own object
+      tags:
+      - AdminSubscriptions
+      summary: Delete subscription plan product
+      operationId: adminDeletePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
-        "200":
+        '200':
           description: Deleted
+  /functions/v1/admin-subscriptions/records:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription records
+      operationId: adminListSubscriptionRecords
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/revenue:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: Subscription revenue series
+      operationId: adminSubscriptionRevenue
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-recipe-import/jobs:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: List recipe import jobs
+      operationId: adminListRecipeImportJobs
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - running
+          - imported
+          - needs_review
+          - failed
+          - rejected
+          - duplicate
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      responses:
+        '200':
+          description: Job list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Create single import job and run pipeline
+      description: 'Shared Backend AI Recipe Import pipeline (Issue #55).
 
+        Exact active source URL returns 409 DUPLICATE.
+
+        Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
+
+        '
+      operationId: adminCreateRecipeImportJob
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeImportCreateRequest'
+      responses:
+        '201':
+          description: Job created and pipeline executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  result:
+                    type: object
+                    additionalProperties: true
+        '409':
+          description: Exact URL duplicate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-recipe-import/jobs/{jobId}:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: Get import job detail
+      operationId: adminGetRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      responses:
+        '200':
+          description: Job + result + artifact metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  result:
+                    oneOf:
+                    - $ref: '#/components/schemas/RecipeImportResult'
+                    - type: 'null'
+                  artifacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportArtifact'
+        '404':
+          description: Not found
+  /functions/v1/admin-recipe-import/jobs/{jobId}/retry:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Retry job from a pipeline stage
+      operationId: adminRetryRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromStage:
+                  $ref: '#/components/schemas/RecipeImportStage'
+      responses:
+        '200':
+          description: Retry result
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reparse:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Re-run AI parse from parse stage
+      operationId: adminReparseRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      responses:
+        '200':
+          description: Reparse result
+  /functions/v1/admin-recipe-import/jobs/{jobId}/approve:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Approve needs-review job and import
+      operationId: adminApproveRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destinationUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Approve / import result
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reject:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Reject import job
+      operationId: adminRejectRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Rejected job
+  /functions/v1/admin-recipe-import/batches:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Create batch import (jobs pending; queue worker
+      operationId: adminCreateRecipeImportBatch
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - urls
+              properties:
+                urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                destinationUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Batch created with pending jobs
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-recipe-import/batches/{batchId}:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: Get batch summary + jobs
+      operationId: adminGetRecipeImportBatch
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: batchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Batch summary
   /functions/v1/admin-ai/providers:
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: List AI providers
-      description: |
-        Admin bearer required. Returns providers with `secretConfigured` boolean only —
+      description: 'Admin bearer required. Returns providers with `secretConfigured` boolean only —
+
         never plaintext API keys or secret_ref values.
+
+        '
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiListProviders
       responses:
-        "200":
+        '200':
           description: Provider list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AiProvider"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                  $ref: '#/components/schemas/AiProvider'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Create AI provider (Owner)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiCreateProvider
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AiProviderCreate"
+              $ref: '#/components/schemas/AiProviderCreate'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiProvider"
-        "403":
+                $ref: '#/components/schemas/AiProvider'
+        '403':
           description: Owner role required
-
   /functions/v1/admin-ai/providers/{id}:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Get AI provider
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiGetProvider
       responses:
-        "200":
+        '200':
           description: Provider
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiProvider"
-        "404":
+                $ref: '#/components/schemas/AiProvider'
+        '404':
           description: Not found
     put:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Update AI provider (Owner)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiUpdateProvider
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AiProviderUpdate"
+              $ref: '#/components/schemas/AiProviderUpdate'
       responses:
-        "200":
+        '200':
           description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiProvider"
+                $ref: '#/components/schemas/AiProvider'
     delete:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Delete AI provider (Owner)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiDeleteProvider
       responses:
-        "200":
+        '200':
           description: Deleted
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok: { type: boolean }
-
+                  ok:
+                    type: boolean
   /functions/v1/admin-ai/providers/{id}/secret:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     put:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Set provider API key (Owner, write-only)
-      description: |
-        Stores ciphertext in server-side `ai_secrets`. There is no read-full-secret API.
+      description: 'Stores ciphertext in server-side `ai_secrets`. There is no read-full-secret API.
+
         Response only confirms `secretConfigured: true`.
+
+        '
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiSetProviderSecret
       requestBody:
         required: true
@@ -623,36 +1365,41 @@ paths:
           application/json:
             schema:
               type: object
-              required: [apiKey]
+              required:
+              - apiKey
               properties:
                 apiKey:
                   type: string
                   description: Provider API key (never logged or returned)
       responses:
-        "200":
+        '200':
           description: Secret stored
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok: { type: boolean }
-                  secretConfigured: { type: boolean }
+                  ok:
+                    type: boolean
+                  secretConfigured:
+                    type: boolean
                   provider:
-                    $ref: "#/components/schemas/AiProvider"
-
+                    $ref: '#/components/schemas/AiProvider'
   /functions/v1/admin-ai/providers/{id}/test:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     post:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Test provider connection via Backend (Owner)
       description: Minimal low-cost probe. Admin browser never calls the provider directly.
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiTestProvider
       requestBody:
         content:
@@ -660,188 +1407,204 @@ paths:
             schema:
               type: object
               properties:
-                upstreamModelId: { type: string }
+                upstreamModelId:
+                  type: string
       responses:
-        "200":
+        '200':
           description: Healthy
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok: { type: boolean }
-                  latencyMs: { type: integer }
-                  model: { type: string }
-
+                  ok:
+                    type: boolean
+                  latencyMs:
+                    type: integer
+                  model:
+                    type: string
   /functions/v1/admin-ai/models:
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: List AI models
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiListModels
       parameters:
-        - name: providerId
-          in: query
-          schema: { type: string, format: uuid }
+      - name: providerId
+        in: query
+        schema:
+          type: string
+          format: uuid
       responses:
-        "200":
+        '200':
           description: Model list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AiModel"
+                  $ref: '#/components/schemas/AiModel'
     post:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Register AI model (Owner)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiCreateModel
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AiModelCreate"
+              $ref: '#/components/schemas/AiModelCreate'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiModel"
-
+                $ref: '#/components/schemas/AiModel'
   /functions/v1/admin-ai/models/{id}:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     put:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Update AI model (Owner)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiUpdateModel
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AiModelUpdate"
+              $ref: '#/components/schemas/AiModelUpdate'
       responses:
-        "200":
+        '200':
           description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiModel"
+                $ref: '#/components/schemas/AiModel'
     delete:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Delete AI model (Owner)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiDeleteModel
       responses:
-        "200":
+        '200':
           description: Deleted
-
   /functions/v1/admin-ai/routes:
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: List logical AI routes
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiListRoutes
       responses:
-        "200":
+        '200':
           description: Routes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AiRoute"
-
+                  $ref: '#/components/schemas/AiRoute'
   /functions/v1/admin-ai/routes/{routeKey}:
     parameters:
-      - name: routeKey
-        in: path
-        required: true
-        schema:
-          type: string
-          enum:
-            - recipe_import_text
-            - recipe_import_vision
-            - recipe_quality_check
-            - assistant_default
-            - assistant_vision
+    - name: routeKey
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - recipe_import_text
+        - recipe_import_vision
+        - recipe_quality_check
+        - assistant_default
+        - assistant_vision
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Get AI route
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiGetRoute
       responses:
-        "200":
+        '200':
           description: Route
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiRoute"
+                $ref: '#/components/schemas/AiRoute'
     put:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Update AI route primary/fallback (Owner)
       description: At most 3 fallback model ids. Business code must use route_key only.
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiUpdateRoute
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AiRouteUpdate"
+              $ref: '#/components/schemas/AiRouteUpdate'
       responses:
-        "200":
+        '200':
           description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiRoute"
-
+                $ref: '#/components/schemas/AiRoute'
   /functions/v1/admin-ai/usage:
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: AI usage summary + recent events
       description: Metadata only — full prompts/responses are not stored by default.
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiUsage
       parameters:
-        - name: limit
-          in: query
-          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
-        - name: routeKey
-          in: query
-          schema: { type: string }
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+      - name: routeKey
+        in: query
+        schema:
+          type: string
       responses:
-        "200":
+        '200':
           description: Usage summary and events
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AiUsageResponse"
-
+                $ref: '#/components/schemas/AiUsageResponse'
   /functions/v1/admin-ai/health:
     get:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: AI provider health
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiHealth
       responses:
-        "200":
+        '200':
           description: Health snapshot
           content:
             application/json:
@@ -851,14 +1614,14 @@ paths:
                   providers:
                     type: array
                     items:
-                      $ref: "#/components/schemas/AiProviderHealth"
-
+                      $ref: '#/components/schemas/AiProviderHealth'
   /functions/v1/admin-ai/resolve:
     post:
-      tags: [AdminAI]
+      tags:
+      - AdminAI
       summary: Resolve route model chain (Owner, no provider call)
       security:
-        - AdminBearer: []
+      - AdminBearer: []
       operationId: adminAiResolveRoute
       requestBody:
         required: true
@@ -866,13 +1629,14 @@ paths:
           application/json:
             schema:
               type: object
-              required: [routeKey]
+              required:
+              - routeKey
               properties:
-                routeKey: { type: string }
+                routeKey:
+                  type: string
       responses:
-        "200":
+        '200':
           description: Resolved chain (no secrets)
-
 components:
   securitySchemes:
     BearerAuth:
@@ -880,10 +1644,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Supabase Auth access token
-    AdminBearer:
-      type: http
-      scheme: bearer
-      description: Admin dashboard session token from admin-auth/login
     WebhookBearer:
       type: http
       scheme: bearer
@@ -893,7 +1653,11 @@ components:
       in: header
       name: apikey
       description: Supabase anon key (required alongside JWT for PostgREST)
-
+    AdminBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Admin Dashboard session token from admin-auth/login (not end-user JWT)
   parameters:
     PreferReturn:
       name: Prefer
@@ -901,15 +1665,73 @@ components:
       schema:
         type: string
         example: return=representation
+    RecipeImportJobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: 'Client-supplied request id. When omitted, the server generates a UUID.
 
+        Echoed on every Admin / webhook response and included in structured logs
+
+        and `admin_audit_logs.request_id`.
+
+        '
+      schema:
+        type: string
+        maxLength: 128
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: 'Cross-service correlation id. Defaults to `X-Request-Id` when omitted.
+
+        '
+      schema:
+        type: string
+        maxLength: 128
+    XJobId:
+      name: X-Job-Id
+      in: header
+      required: false
+      description: 'Optional async job / sync run id (import jobs, provider syncs, webhook
+
+        event id). Stored on audit rows and structured logs when present.
+
+        '
+      schema:
+        type: string
+        maxLength: 128
   responses:
     Unauthorized:
       description: Missing or invalid session
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ErrorBody"
+            $ref: '#/components/schemas/ErrorBody'
+    ErrorEnvelope:
+      description: 'Unified Edge Function error body. Always includes `request_id` (may be
 
+        null only on legacy paths that predate Issue #57). Secrets are never
+
+        returned in `details`.
+
+        '
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        X-Correlation-Id:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
   schemas:
     ErrorBody:
       type: object
@@ -917,410 +1739,1373 @@ components:
         error:
           type: object
           properties:
-            code: { type: string }
-            message: { type: string }
+            code:
+              type: string
+            message:
+              type: string
             details: {}
-
+    AdminIdentity:
+      type: object
+      required:
+      - id
+      - username
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+          enum:
+          - owner
+          - admin
+          - operator
+          - readonly
+        mustChangePassword:
+          type: boolean
+    AdminSessionPayload:
+      type: object
+      required:
+      - token
+      - expiresAt
+      - admin
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        admin:
+          $ref: '#/components/schemas/AdminIdentity'
+    AdminAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+          description: 'Present after #51 hardening migration'
+    AdminLoginRequest:
+      type: object
+      required:
+      - username
+      - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    AdminLoginResponse:
+      type: object
+      required:
+      - token
+      - expiresAt
+      - admin
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        admin:
+          $ref: '#/components/schemas/AdminAccount'
+    AdminChangePasswordRequest:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        displayName:
+          type: string
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - deleted
+        subscription:
+          type: string
+          enum:
+          - free
+          - pro
+          - lifetime
+        registrationProvider:
+          type: string
+          enum:
+          - apple
+          - google
+          - email
+          - unknown
+        deviceType:
+          type: string
+          enum:
+          - ios
+          - android
+          - web
+          - unknown
+        createdAt:
+          type: string
+          format: date-time
+        favoriteCount:
+          type: integer
+    AdminUserDetail:
+      allOf:
+      - $ref: '#/components/schemas/AdminUser'
+      - type: object
+        properties:
+          registrationIp:
+            type:
+            - string
+            - 'null'
+          payments:
+            type: array
+            items:
+              type: object
+    PaginatedAdminUsers:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUser'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+    UserRegistrationStats:
+      type: object
+      properties:
+        byProvider:
+          type: array
+          items:
+            type: object
+        byDevice:
+          type: array
+          items:
+            type: object
+    DashboardData:
+      type: object
+      description: Ops aggregation from admin-dashboard (#47). Source labels should be preserved by clients.
+      additionalProperties: true
+    SubscriptionPlanProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        planKey:
+          type: string
+        displayName:
+          type: string
+        platform:
+          type: string
+          enum:
+          - app_store
+          - play_store
+        productId:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        billingPeriod:
+          type: string
+          enum:
+          - monthly
+          - yearly
+          - lifetime
+        active:
+          type: boolean
+        description:
+          type:
+          - string
+          - 'null'
+        updatedAt:
+          type: string
+          format: date-time
     UserProfile:
       type: object
-      required: [id, created_at, updated_at]
+      required:
+      - id
+      - created_at
+      - updated_at
       properties:
-        id: { type: string, format: uuid }
-        email: { type: [string, "null"], format: email }
-        avatar: { type: [string, "null"] }
-        display_name: { type: [string, "null"] }
-        locale: { type: [string, "null"] }
-        timezone: { type: [string, "null"] }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+        id:
+          type: string
+          format: uuid
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+        avatar:
+          type:
+          - string
+          - 'null'
+        display_name:
+          type:
+          - string
+          - 'null'
+        locale:
+          type:
+          - string
+          - 'null'
+        timezone:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     UserProfileUpdate:
       type: object
       properties:
-        display_name: { type: string }
-        avatar: { type: string }
-        locale: { type: string }
-        timezone: { type: string }
-
+        display_name:
+          type: string
+        avatar:
+          type: string
+        locale:
+          type: string
+        timezone:
+          type: string
     RecipeIngredient:
       type: object
       properties:
-        name: { type: string }
-        amount: { type: [number, "null"] }
-        unit: { type: [string, "null"] }
-        note: { type: [string, "null"] }
-
+        name:
+          type: string
+        amount:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        note:
+          type:
+          - string
+          - 'null'
     RecipeStep:
       type: object
       properties:
-        order: { type: integer }
-        description: { type: string }
-        image: { type: [string, "null"] }
-        timer: { type: [integer, "null"], description: Seconds }
-
+        order:
+          type: integer
+        description:
+          type: string
+        image:
+          type:
+          - string
+          - 'null'
+        timer:
+          type:
+          - integer
+          - 'null'
+          description: Seconds
     Nutrition:
       type: object
       properties:
-        calories: { type: [number, "null"] }
-        protein: { type: [number, "null"] }
-        fat: { type: [number, "null"] }
-        carbohydrates: { type: [number, "null"] }
-
+        calories:
+          type:
+          - number
+          - 'null'
+        protein:
+          type:
+          - number
+          - 'null'
+        fat:
+          type:
+          - number
+          - 'null'
+        carbohydrates:
+          type:
+          - number
+          - 'null'
     Recipe:
       type: object
-      required: [id, user_id, title, created_at, updated_at]
+      required:
+      - id
+      - user_id
+      - title
+      - created_at
+      - updated_at
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        title: { type: string }
-        description: { type: [string, "null"] }
-        cover_image: { type: [string, "null"] }
-        cuisine: { type: [string, "null"] }
-        category: { type: [string, "null"] }
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        cover_image:
+          type:
+          - string
+          - 'null'
+        cuisine:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
         tags:
           type: array
-          items: { type: string }
+          items:
+            type: string
         ingredients:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeIngredient"
+            $ref: '#/components/schemas/RecipeIngredient'
         steps:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeStep"
+            $ref: '#/components/schemas/RecipeStep'
         nutrition:
-          $ref: "#/components/schemas/Nutrition"
-        cooking_time: { type: [integer, "null"] }
-        servings: { type: [integer, "null"] }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+          $ref: '#/components/schemas/Nutrition'
+        cooking_time:
+          type:
+          - integer
+          - 'null'
+        servings:
+          type:
+          - integer
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     RecipeCreate:
       type: object
-      required: [title]
+      required:
+      - title
       properties:
-        title: { type: string }
-        description: { type: string }
-        cover_image: { type: string }
-        cuisine: { type: string }
-        category: { type: string }
+        title:
+          type: string
+        description:
+          type: string
+        cover_image:
+          type: string
+        cuisine:
+          type: string
+        category:
+          type: string
         tags:
           type: array
-          items: { type: string }
+          items:
+            type: string
         ingredients:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeIngredient"
+            $ref: '#/components/schemas/RecipeIngredient'
         steps:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeStep"
+            $ref: '#/components/schemas/RecipeStep'
         nutrition:
-          $ref: "#/components/schemas/Nutrition"
-        cooking_time: { type: integer }
-        servings: { type: integer }
-
+          $ref: '#/components/schemas/Nutrition'
+        cooking_time:
+          type: integer
+        servings:
+          type: integer
     Collection:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        name: { type: string }
-        cover: { type: [string, "null"] }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        cover:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     CollectionCreate:
       type: object
-      required: [name]
+      required:
+      - name
       properties:
-        name: { type: string }
-        cover: { type: string }
-
+        name:
+          type: string
+        cover:
+          type: string
     Ingredient:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        name: { type: string }
-        category: { type: [string, "null"] }
-        unit: { type: [string, "null"] }
-        alternative_name: { type: [string, "null"] }
-        user_id: { type: [string, "null"], format: uuid }
-        is_system: { type: boolean }
-
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type:
+          - string
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        alternative_name:
+          type:
+          - string
+          - 'null'
+        user_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        is_system:
+          type: boolean
     GroceryList:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        name: { type: string }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     GroceryItem:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        list_id: { type: string, format: uuid }
-        ingredient: { type: string }
-        quantity: { type: [number, "null"] }
-        unit: { type: [string, "null"] }
-        category: { type: [string, "null"] }
-        completed: { type: boolean }
-        sort_order: { type: integer }
-
+        id:
+          type: string
+          format: uuid
+        list_id:
+          type: string
+          format: uuid
+        ingredient:
+          type: string
+        quantity:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
+        completed:
+          type: boolean
+        sort_order:
+          type: integer
     MealPlan:
       type: object
       description: Spec field `date` is stored as `plan_date` (Postgres reserved-word safe).
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        plan_date: { type: string, format: date }
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        plan_date:
+          type: string
+          format: date
         meal_type:
           type: string
-          enum: [breakfast, lunch, dinner]
-        recipe_id: { type: string, format: uuid }
-
+          enum:
+          - breakfast
+          - lunch
+          - dinner
+        recipe_id:
+          type: string
+          format: uuid
     PantryItem:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        ingredient: { type: string }
-        quantity: { type: [number, "null"] }
-        unit: { type: [string, "null"] }
-        expiration_date: { type: [string, "null"], format: date }
-
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        ingredient:
+          type: string
+        quantity:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        expiration_date:
+          type:
+          - string
+          - 'null'
+          format: date
     SubscriptionRow:
       type: object
       description: Raw `subscriptions` table row (PostgREST).
       properties:
-        user_id: { type: string, format: uuid }
-        plan: { type: [string, "null"] }
-        entitlement_id: { type: [string, "null"] }
-        product_id: { type: [string, "null"] }
+        user_id:
+          type: string
+          format: uuid
+        plan:
+          type:
+          - string
+          - 'null'
+        entitlement_id:
+          type:
+          - string
+          - 'null'
+        product_id:
+          type:
+          - string
+          - 'null'
         status:
           type: string
-          enum: [active, trialing, cancelled, expired, billing_issue, none]
-        expires_at: { type: [string, "null"], format: date-time }
-        will_renew: { type: [boolean, "null"] }
-        latest_event_timestamp_ms: { type: [integer, "null"] }
-
+          enum:
+          - active
+          - trialing
+          - cancelled
+          - expired
+          - billing_issue
+          - none
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        will_renew:
+          type:
+          - boolean
+          - 'null'
+        latest_event_timestamp_ms:
+          type:
+          - integer
+          - 'null'
     SubscriptionStatus:
       type: object
       description: View `subscription_status` — matches Subscription Service contract.
       properties:
-        user_id: { type: string, format: uuid }
-        plan: { type: [string, "null"] }
+        user_id:
+          type: string
+          format: uuid
+        plan:
+          type:
+          - string
+          - 'null'
         status:
           type: string
-          enum: [active, trialing, cancelled, expired, billing_issue, none]
-        expire_date: { type: [string, "null"], format: date-time }
-        updated_at: { type: string, format: date-time }
+          enum:
+          - active
+          - trialing
+          - cancelled
+          - expired
+          - billing_issue
+          - none
+        expire_date:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    RecipeImportStage:
+      type: string
+      enum:
+      - resolve
+      - extract
+      - normalize
+      - parse
+      - validate
+      - quality
+      - duplicate
+      - import
+      - done
+    RecipeImportErrorCode:
+      type: string
+      enum:
+      - RESOLVE_FAILED
+      - FETCH_FAILED
+      - EXTRACT_FAILED
+      - AI_PARSE_FAILED
+      - SCHEMA_INVALID
+      - QUALITY_VALIDATION_FAILED
+      - DUPLICATE
+      - IMPORT_FAILED
+      - SSRF_BLOCKED
+      - SOURCE_UNSUPPORTED
+      - MISSING_DESTINATION
+    RecipeImportCreateRequest:
+      type: object
+      properties:
+        sourceUrl:
+          type: string
+          format: uri
+        sourceText:
+          type: string
+        destinationUserId:
+          type: string
+          format: uuid
+      description: Provide sourceUrl and/or sourceText (text paste fallback).
+    RecipeImportJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        batchId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        sourceType:
+          type: string
+          enum:
+          - web
+          - tiktok
+          - instagram
+          - youtube
+          - xiaohongshu
+          - text
+        sourceUrl:
+          type:
+          - string
+          - 'null'
+        canonicalUrl:
+          type:
+          - string
+          - 'null'
+        sourceExternalId:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - imported
+          - needs_review
+          - failed
+          - rejected
+          - duplicate
+        stage:
+          $ref: '#/components/schemas/RecipeImportStage'
+        confidence:
+          type:
+          - number
+          - 'null'
+        duplicateStatus:
+          type: string
+          enum:
+          - none
+          - exact
+          - similar
+          - marked
+        recipeId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        errorCode:
+          oneOf:
+          - $ref: '#/components/schemas/RecipeImportErrorCode'
+          - type: 'null'
+        errorMessage:
+          type:
+          - string
+          - 'null'
+        retryCount:
+          type: integer
+        routeKey:
+          type:
+          - string
+          - 'null'
+        aiProvider:
+          type:
+          - string
+          - 'null'
+        aiModel:
+          type:
+          - string
+          - 'null'
+        promptVersion:
+          type:
+          - string
+          - 'null'
+        schemaVersion:
+          type: string
+        destinationUserId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        startedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    RecipeImportResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        job_id:
+          type: string
+          format: uuid
+        schema_version:
+          type: string
+        structured_recipe:
+          type: object
+          additionalProperties: true
+        validation_result:
+          type: object
+          additionalProperties: true
+        confidence:
+          type: object
+          additionalProperties: true
+        evidence:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+    RecipeImportArtifact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        artifact_type:
+          type: string
+        storage_provider:
+          type:
+          - string
+          - 'null'
+        bucket:
+          type:
+          - string
+          - 'null'
+        object_key:
+          type:
+          - string
+          - 'null'
+        mime_type:
+          type:
+          - string
+          - 'null'
+        size_bytes:
+          type:
+          - integer
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      - request_id
+      description: 'Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).
 
+        '
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable code (e.g. unauthorized, validation_error)
+            message:
+              type: string
+            details:
+              description: Optional non-secret details (never passwords/tokens/keys)
+              type:
+              - object
+              - 'null'
+              - array
+              - string
+              - number
+              - boolean
+        request_id:
+          type:
+          - string
+          - 'null'
+          description: Same value as `X-Request-Id` response header
+    AdminAuditLog:
+      type: object
+      description: 'Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        actor_admin_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        actor_username:
+          type:
+          - string
+          - 'null'
+        action:
+          type: string
+          description: 'e.g. admin.login, subscription_plan.update, ai.provider.update,
+
+            recipe.delete, user.admin_action, integration.config_update
+
+            '
+        object_type:
+          type: string
+        object_id:
+          type:
+          - string
+          - 'null'
+        before_diff:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        after_diff:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        request_id:
+          type:
+          - string
+          - 'null'
+        correlation_id:
+          type:
+          - string
+          - 'null'
+        job_id:
+          type:
+          - string
+          - 'null'
+        ip:
+          type:
+          - string
+          - 'null'
+        user_agent:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
     AiProvider:
       type: object
-      description: |
-        AI provider registry row. `secretConfigured` indicates a server-side secret exists;
+      description: 'AI provider registry row. `secretConfigured` indicates a server-side secret exists;
+
         plaintext keys and secret_ref are never returned.
+
+        '
       properties:
-        id: { type: string, format: uuid }
-        name: { type: string }
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
         protocol:
           type: string
-          enum: [openai_compatible]
-        baseUrl: { type: string, format: uri }
-        secretConfigured: { type: boolean }
+          enum:
+          - openai_compatible
+        baseUrl:
+          type: string
+          format: uri
+        secretConfigured:
+          type: boolean
         secretRef:
-          type: "null"
+          type: 'null'
           description: Always null in API responses
-        enabled: { type: boolean }
-        requestTimeoutMs: { type: integer }
-        maxRetries: { type: integer }
+        enabled:
+          type: boolean
+        requestTimeoutMs:
+          type: integer
+        maxRetries:
+          type: integer
         status:
           type: string
-          enum: [unknown, healthy, degraded, unhealthy]
-        lastHealthCheckAt: { type: [string, "null"], format: date-time }
+          enum:
+          - unknown
+          - healthy
+          - degraded
+          - unhealthy
+        lastHealthCheckAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
         environment:
           type: string
-          enum: [development, production]
-        metadata: { type: object }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-
+          enum:
+          - development
+          - production
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     AiProviderCreate:
       type: object
-      required: [name, baseUrl]
+      required:
+      - name
+      - baseUrl
       properties:
-        name: { type: string }
+        name:
+          type: string
         protocol:
           type: string
-          enum: [openai_compatible]
+          enum:
+          - openai_compatible
           default: openai_compatible
-        baseUrl: { type: string, format: uri }
-        enabled: { type: boolean, default: true }
-        requestTimeoutMs: { type: integer, default: 30000 }
-        maxRetries: { type: integer, default: 1 }
+        baseUrl:
+          type: string
+          format: uri
+        enabled:
+          type: boolean
+          default: true
+        requestTimeoutMs:
+          type: integer
+          default: 30000
+        maxRetries:
+          type: integer
+          default: 1
         environment:
           type: string
-          enum: [development, production]
+          enum:
+          - development
+          - production
           default: production
-        metadata: { type: object }
-
+        metadata:
+          type: object
     AiProviderUpdate:
       type: object
       properties:
-        name: { type: string }
-        baseUrl: { type: string, format: uri }
-        enabled: { type: boolean }
-        requestTimeoutMs: { type: integer }
-        maxRetries: { type: integer }
+        name:
+          type: string
+        baseUrl:
+          type: string
+          format: uri
+        enabled:
+          type: boolean
+        requestTimeoutMs:
+          type: integer
+        maxRetries:
+          type: integer
         environment:
           type: string
-          enum: [development, production]
-        metadata: { type: object }
-
+          enum:
+          - development
+          - production
+        metadata:
+          type: object
     AiModel:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        providerId: { type: string, format: uuid }
-        displayName: { type: string }
-        upstreamModelId: { type: string }
-        enabled: { type: boolean }
+        id:
+          type: string
+          format: uuid
+        providerId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        upstreamModelId:
+          type: string
+        enabled:
+          type: boolean
         capabilities:
           type: object
           properties:
-            text: { type: boolean }
-            vision: { type: boolean }
-            structured_output: { type: boolean }
-            tool_calling: { type: boolean }
-        contextWindow: { type: [integer, "null"] }
-        maxOutputTokens: { type: [integer, "null"] }
-        costInputPer1m: { type: [number, "null"] }
-        costOutputPer1m: { type: [number, "null"] }
-        metadata: { type: object }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-
+            text:
+              type: boolean
+            vision:
+              type: boolean
+            structured_output:
+              type: boolean
+            tool_calling:
+              type: boolean
+        contextWindow:
+          type:
+          - integer
+          - 'null'
+        maxOutputTokens:
+          type:
+          - integer
+          - 'null'
+        costInputPer1m:
+          type:
+          - number
+          - 'null'
+        costOutputPer1m:
+          type:
+          - number
+          - 'null'
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     AiModelCreate:
       type: object
-      required: [providerId, displayName, upstreamModelId]
+      required:
+      - providerId
+      - displayName
+      - upstreamModelId
       properties:
-        providerId: { type: string, format: uuid }
-        displayName: { type: string }
-        upstreamModelId: { type: string }
-        enabled: { type: boolean }
-        capabilities: { type: object }
-        contextWindow: { type: integer }
-        maxOutputTokens: { type: integer }
-        costInputPer1m: { type: number }
-        costOutputPer1m: { type: number }
-        metadata: { type: object }
-
+        providerId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        upstreamModelId:
+          type: string
+        enabled:
+          type: boolean
+        capabilities:
+          type: object
+        contextWindow:
+          type: integer
+        maxOutputTokens:
+          type: integer
+        costInputPer1m:
+          type: number
+        costOutputPer1m:
+          type: number
+        metadata:
+          type: object
     AiModelUpdate:
       type: object
       properties:
-        displayName: { type: string }
-        upstreamModelId: { type: string }
-        enabled: { type: boolean }
-        capabilities: { type: object }
-        contextWindow: { type: [integer, "null"] }
-        maxOutputTokens: { type: [integer, "null"] }
-        costInputPer1m: { type: [number, "null"] }
-        costOutputPer1m: { type: [number, "null"] }
-        metadata: { type: object }
-
+        displayName:
+          type: string
+        upstreamModelId:
+          type: string
+        enabled:
+          type: boolean
+        capabilities:
+          type: object
+        contextWindow:
+          type:
+          - integer
+          - 'null'
+        maxOutputTokens:
+          type:
+          - integer
+          - 'null'
+        costInputPer1m:
+          type:
+          - number
+          - 'null'
+        costOutputPer1m:
+          type:
+          - number
+          - 'null'
+        metadata:
+          type: object
     AiRoute:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        routeKey: { type: string }
-        primaryModelId: { type: [string, "null"], format: uuid }
+        id:
+          type: string
+          format: uuid
+        routeKey:
+          type: string
+        primaryModelId:
+          type:
+          - string
+          - 'null'
+          format: uuid
         fallbackModelIds:
           type: array
           maxItems: 3
-          items: { type: string, format: uuid }
-        timeoutMs: { type: integer }
-        maxRetries: { type: integer }
-        temperature: { type: [number, "null"] }
-        maxOutputTokens: { type: [integer, "null"] }
-        structuredSchemaKey: { type: [string, "null"] }
-        enabled: { type: boolean }
-        reserved: { type: boolean }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-
+          items:
+            type: string
+            format: uuid
+        timeoutMs:
+          type: integer
+        maxRetries:
+          type: integer
+        temperature:
+          type:
+          - number
+          - 'null'
+        maxOutputTokens:
+          type:
+          - integer
+          - 'null'
+        structuredSchemaKey:
+          type:
+          - string
+          - 'null'
+        enabled:
+          type: boolean
+        reserved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     AiRouteUpdate:
       type: object
       properties:
-        primaryModelId: { type: [string, "null"], format: uuid }
+        primaryModelId:
+          type:
+          - string
+          - 'null'
+          format: uuid
         fallbackModelIds:
           type: array
           maxItems: 3
-          items: { type: string, format: uuid }
-        timeoutMs: { type: integer }
-        maxRetries: { type: integer, maximum: 3 }
-        temperature: { type: [number, "null"] }
-        maxOutputTokens: { type: [integer, "null"] }
-        structuredSchemaKey: { type: [string, "null"] }
-        enabled: { type: boolean }
-
+          items:
+            type: string
+            format: uuid
+        timeoutMs:
+          type: integer
+        maxRetries:
+          type: integer
+          maximum: 3
+        temperature:
+          type:
+          - number
+          - 'null'
+        maxOutputTokens:
+          type:
+          - integer
+          - 'null'
+        structuredSchemaKey:
+          type:
+          - string
+          - 'null'
+        enabled:
+          type: boolean
     AiUsageResponse:
       type: object
       properties:
         summary:
           type: object
           properties:
-            requests: { type: integer }
-            successRate: { type: number }
-            errorRate: { type: number }
-            fallbackRate: { type: number }
-            p50LatencyMs: { type: [number, "null"] }
-            p95LatencyMs: { type: [number, "null"] }
-            inputTokens: { type: integer }
-            outputTokens: { type: integer }
-            estimatedCost: { type: [number, "null"] }
-            byRoute: { type: object, additionalProperties: { type: integer } }
-            byProvider: { type: object, additionalProperties: { type: integer } }
-            byModel: { type: object, additionalProperties: { type: integer } }
+            requests:
+              type: integer
+            successRate:
+              type: number
+            errorRate:
+              type: number
+            fallbackRate:
+              type: number
+            p50LatencyMs:
+              type:
+              - number
+              - 'null'
+            p95LatencyMs:
+              type:
+              - number
+              - 'null'
+            inputTokens:
+              type: integer
+            outputTokens:
+              type: integer
+            estimatedCost:
+              type:
+              - number
+              - 'null'
+            byRoute:
+              type: object
+              additionalProperties:
+                type: integer
+            byProvider:
+              type: object
+              additionalProperties:
+                type: integer
+            byModel:
+              type: object
+              additionalProperties:
+                type: integer
         events:
           type: array
           items:
             type: object
             properties:
-              id: { type: string, format: uuid }
-              requestId: { type: string }
-              routeKey: { type: string }
-              providerId: { type: [string, "null"], format: uuid }
-              modelId: { type: [string, "null"], format: uuid }
-              finalModelId: { type: [string, "null"], format: uuid }
-              status: { type: string }
-              latencyMs: { type: [integer, "null"] }
-              inputTokens: { type: [integer, "null"] }
-              outputTokens: { type: [integer, "null"] }
-              estimatedCost: { type: [number, "null"] }
-              retryCount: { type: integer }
-              errorCode: { type: [string, "null"] }
-              attemptedModels: { type: array, items: { type: object } }
-              createdAt: { type: string, format: date-time }
-
+              id:
+                type: string
+                format: uuid
+              requestId:
+                type: string
+              routeKey:
+                type: string
+              providerId:
+                type:
+                - string
+                - 'null'
+                format: uuid
+              modelId:
+                type:
+                - string
+                - 'null'
+                format: uuid
+              finalModelId:
+                type:
+                - string
+                - 'null'
+                format: uuid
+              status:
+                type: string
+              latencyMs:
+                type:
+                - integer
+                - 'null'
+              inputTokens:
+                type:
+                - integer
+                - 'null'
+              outputTokens:
+                type:
+                - integer
+                - 'null'
+              estimatedCost:
+                type:
+                - number
+                - 'null'
+              retryCount:
+                type: integer
+              errorCode:
+                type:
+                - string
+                - 'null'
+              attemptedModels:
+                type: array
+                items:
+                  type: object
+              createdAt:
+                type: string
+                format: date-time
     AiProviderHealth:
       type: object
       properties:
-        providerId: { type: string, format: uuid }
-        name: { type: string }
-        enabled: { type: boolean }
+        providerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        enabled:
+          type: boolean
         status:
           type: string
-          enum: [unknown, healthy, degraded, unhealthy]
-        lastHealthCheckAt: { type: [string, "null"], format: date-time }
-        lastSuccessAt: { type: [string, "null"], format: date-time }
-        lastErrorAt: { type: [string, "null"], format: date-time }
-        lastError: { type: [string, "null"] }
-        consecutiveFailures: { type: integer }
-        circuitOpenUntil: { type: [string, "null"], format: date-time }
-
+          enum:
+          - unknown
+          - healthy
+          - degraded
+          - unhealthy
+        lastHealthCheckAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastSuccessAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastErrorAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastError:
+          type:
+          - string
+          - 'null'
+        consecutiveFailures:
+          type: integer
+        circuitOpenUntil:
+          type:
+          - string
+          - 'null'
+          format: date-time
+  headers:
+    XRequestId:
+      description: Request id for this response (echo or server-generated).
+      schema:
+        type: string
+    XCorrelationId:
+      description: Correlation id for this response.
+      schema:
+        type: string
+    XJobId:
+      description: Job / sync id when applicable.
+      schema:
+        type: string
 security:
-  - BearerAuth: []
-    Apikey: []
+- BearerAuth: []
+  Apikey: []

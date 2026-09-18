@@ -1,9 +1,16 @@
 // RevenueCat → Supabase subscription sync (server-to-server).
 // Auth: Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>
 // Set secret: supabase secrets set REVENUECAT_WEBHOOK_SECRET=... --project-ref semsjyrqjnumpvanibip
+// Issues: #11, #57 (request/job correlation + webhook failure monitoring)
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createLogger } from "../_shared/logger.ts";
+import { recordMonitorEvent } from "../_shared/monitor.ts";
+import {
+  resolveRequestContext,
+  requestIdHeaders,
+} from "../_shared/request-context.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -36,10 +43,17 @@ const IGNORED = new Set(["TEST", "SUBSCRIBER_ALIAS", "TRANSFER"]);
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function json(body: unknown, status = 200): Response {
+function json(
+  body: unknown,
+  status = 200,
+  extraHeaders: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...extraHeaders,
+    },
   });
 }
 
@@ -97,30 +111,79 @@ function sanitize(event: Record<string, unknown>, rcEventId: string | null) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  const ctx = resolveRequestContext(req);
+  const headers = requestIdHeaders(ctx);
+  const log = createLogger(ctx);
+
+  if (req.method !== "POST") {
+    return json({ error: "method_not_allowed", request_id: ctx.requestId }, 405, headers);
+  }
   if (!SUPABASE_URL || !SERVICE_ROLE || !WEBHOOK_SECRET) {
-    return json({ error: "server_misconfigured" }, 500);
+    recordMonitorEvent({
+      kind: "webhook_failure",
+      source: "revenuecat",
+      reason: "server_misconfigured",
+      code: "server_misconfigured",
+      ctx,
+    });
+    return json({ error: "server_misconfigured", request_id: ctx.requestId }, 500, headers);
   }
 
   const auth = req.headers.get("Authorization") ?? "";
   const ok = await timingSafeEqual(auth, `Bearer ${WEBHOOK_SECRET}`);
-  if (!ok) return json({ error: "unauthorized" }, 401);
+  if (!ok) {
+    recordMonitorEvent({
+      kind: "webhook_failure",
+      source: "revenuecat",
+      reason: "unauthorized",
+      code: "unauthorized",
+      ctx,
+      level: "warn",
+    });
+    return json({ error: "unauthorized", request_id: ctx.requestId }, 401, headers);
+  }
 
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
-    return json({ error: "invalid_json" }, 400);
+    recordMonitorEvent({
+      kind: "webhook_failure",
+      source: "revenuecat",
+      reason: "invalid_json",
+      code: "invalid_json",
+      ctx,
+      level: "warn",
+    });
+    return json({ error: "invalid_json", request_id: ctx.requestId }, 400, headers);
   }
 
   const event = body.event as Record<string, unknown> | undefined;
-  if (!event) return json({ error: "missing_event" }, 400);
+  if (!event) {
+    recordMonitorEvent({
+      kind: "webhook_failure",
+      source: "revenuecat",
+      reason: "missing_event",
+      code: "missing_event",
+      ctx,
+      level: "warn",
+    });
+    return json({ error: "missing_event", request_id: ctx.requestId }, 400, headers);
+  }
 
   const type = String(event.type ?? "").toUpperCase();
-  if (IGNORED.has(type)) return json({ received: true, ignored: true, type });
+  if (IGNORED.has(type)) {
+    return json({ received: true, ignored: true, type, request_id: ctx.requestId }, 200, headers);
+  }
 
   const status = STATUS_MAP[type];
-  if (!status) return json({ received: true, ignored: true, reason: "unknown_type", type });
+  if (!status) {
+    return json(
+      { received: true, ignored: true, reason: "unknown_type", type, request_id: ctx.requestId },
+      200,
+      headers,
+    );
+  }
 
   const appUserId = String(event.app_user_id ?? "").trim();
   const originalId = String(event.original_app_user_id ?? "").trim();
@@ -130,7 +193,12 @@ Deno.serve(async (req) => {
     ? originalId
     : "";
   if (!userId) {
-    return json({ received: true, skipped: true, reason: "unresolvable_user_id" });
+    log("warn", "revenuecat_unresolvable_user", { type });
+    return json(
+      { received: true, skipped: true, reason: "unresolvable_user_id", request_id: ctx.requestId },
+      200,
+      headers,
+    );
   }
 
   const productId = String(event.product_id ?? "").trim();
@@ -150,6 +218,12 @@ Deno.serve(async (req) => {
       ? event.is_auto_renewing
       : null;
 
+  // Prefer RevenueCat event id as job id when client did not send X-Job-Id.
+  if (!ctx.jobId && rcEventId) {
+    ctx.jobId = rcEventId;
+    headers["X-Job-Id"] = rcEventId;
+  }
+
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -161,7 +235,16 @@ Deno.serve(async (req) => {
       .eq("rc_event_id", rcEventId)
       .limit(1);
     if (existing && existing.length > 0) {
-      return json({ received: true, already_processed: true, rc_event_id: rcEventId });
+      return json(
+        {
+          received: true,
+          already_processed: true,
+          rc_event_id: rcEventId,
+          request_id: ctx.requestId,
+        },
+        200,
+        headers,
+      );
     }
   }
 
@@ -181,12 +264,29 @@ Deno.serve(async (req) => {
   });
 
   if (error) {
-    console.error("upsert failed", error.message);
     if (error.message.includes("foreign key")) {
-      return json({ received: true, skipped: true, reason: "user_not_found" });
+      log("warn", "revenuecat_user_not_found", { type });
+      return json(
+        { received: true, skipped: true, reason: "user_not_found", request_id: ctx.requestId },
+        200,
+        headers,
+      );
     }
-    return json({ error: "upsert_failed" }, 500);
+    recordMonitorEvent({
+      kind: "webhook_failure",
+      source: "revenuecat",
+      reason: error.message,
+      code: "upsert_failed",
+      fields: { type, store },
+      ctx,
+    });
+    return json({ error: "upsert_failed", request_id: ctx.requestId }, 500, headers);
   }
 
-  return json({ received: true, processed: true, type, subscription: data });
+  log("info", "revenuecat_processed", { type, store });
+  return json(
+    { received: true, processed: true, type, subscription: data, request_id: ctx.requestId },
+    200,
+    headers,
+  );
 });

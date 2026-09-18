@@ -4,7 +4,7 @@
  */
 
 import { assertEquals, assertRejects } from "jsr:@std/assert@1";
-import { AIRouter } from "./ai-router.ts";
+import { PlatformAIRouter } from "./ai-router.ts";
 import { AISecretStore, encryptSecret } from "./ai-secret-store.ts";
 import { AppError } from "./errors.ts";
 
@@ -213,7 +213,7 @@ Deno.test("AIRouter falls back to second model after primary failure", async () 
     );
   };
 
-  const router = new AIRouter(db as never);
+  const router = new PlatformAIRouter(db as never);
   const result = await router.invoke({
     routeKey: "recipe_import_text",
     messages: [{ role: "user", content: "hi" }],
@@ -244,7 +244,7 @@ Deno.test("AIRouter resolveRoute rejects unknown route", async () => {
       };
     },
   };
-  const router = new AIRouter(db as never);
+  const router = new PlatformAIRouter(db as never);
   await assertRejects(
     () => router.resolveRoute("nope"),
     AppError,

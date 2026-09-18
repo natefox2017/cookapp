@@ -95,7 +95,7 @@ export async function requireAdminSession(req: Request): Promise<{
   };
 }
 
-/** Owner-only gate for AI secrets/provider and other privileged Admin APIs. */
+/** Owner-only gate for AI secrets/provider, financial, and admin-account APIs. */
 export function requireOwnerRole(role: string): void {
   if (role !== "owner") {
     throw new AppError("forbidden", "Owner role required", 403);

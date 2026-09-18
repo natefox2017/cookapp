@@ -1,14 +1,16 @@
 // Admin Dashboard: subscription plans / records / revenue.
 // Auth: custom admin bearer (admin_sessions) via requireAdminSession.
 // Deploy: supabase functions deploy admin-subscriptions --project-ref semsjyrqjnumpvanibip
-// Issue: #35
+// Issues: #35, #57
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
 import { requireAdminSession } from "../_shared/admin-session.ts";
-import { log } from "../_shared/logger.ts";
+import { createLogger } from "../_shared/logger.ts";
+import { planAuditSnapshot, writeAdminAudit } from "../_shared/audit.ts";
+import { resolveRequestContext } from "../_shared/request-context.ts";
 
 type Platform = "app_store" | "play_store";
 
@@ -111,8 +113,12 @@ Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
 
+  const ctx = resolveRequestContext(req);
+  const log = createLogger(ctx);
+
   try {
-    await requireAdminSession(req);
+    const session = await requireAdminSession(req);
+    const actor = { adminId: session.adminId, username: session.username };
     const parts = routeParts(req);
     const method = req.method.toUpperCase();
     const admin = createServiceClient();
@@ -126,7 +132,12 @@ Deno.serve(async (req) => {
         .order("plan_key")
         .order("platform");
       if (error) throw new AppError("internal_error", error.message, 500);
-      return json((data ?? []).map((row) => mapPlan(row as Record<string, unknown>)), 200, publicCorsHeaders);
+      return json(
+        (data ?? []).map((row) => mapPlan(row as Record<string, unknown>)),
+        200,
+        publicCorsHeaders,
+        ctx,
+      );
     }
 
     if (resource === "plans" && method === "POST" && !id) {
@@ -144,10 +155,27 @@ Deno.serve(async (req) => {
         );
       }
       log("info", "admin_plan_created", { id: data.id });
-      return json(mapPlan(data as Record<string, unknown>), 201, publicCorsHeaders);
+      await writeAdminAudit({
+        actor,
+        action: "subscription_plan.create",
+        objectType: "subscription_plan",
+        objectId: String(data.id),
+        after: planAuditSnapshot(data as Record<string, unknown>),
+        ctx,
+        req,
+      });
+      return json(mapPlan(data as Record<string, unknown>), 201, publicCorsHeaders, ctx);
     }
 
     if (resource === "plans" && method === "PUT" && id) {
+      const { data: existing, error: existingError } = await admin
+        .from("subscription_plans")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (existingError) throw new AppError("internal_error", existingError.message, 500);
+      if (!existing) throw new AppError("not_found", "Plan not found", 404);
+
       const payload = parsePlanBody(await readJson(req));
       const { data, error } = await admin
         .from("subscription_plans")
@@ -157,17 +185,46 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (error) throw new AppError("internal_error", error.message, 500);
       if (!data) throw new AppError("not_found", "Plan not found", 404);
-      return json(mapPlan(data as Record<string, unknown>), 200, publicCorsHeaders);
+      log("info", "admin_plan_updated", { id });
+      await writeAdminAudit({
+        actor,
+        action: "subscription_plan.update",
+        objectType: "subscription_plan",
+        objectId: id,
+        before: planAuditSnapshot(existing as Record<string, unknown>),
+        after: planAuditSnapshot(data as Record<string, unknown>),
+        ctx,
+        req,
+      });
+      return json(mapPlan(data as Record<string, unknown>), 200, publicCorsHeaders, ctx);
     }
 
     if (resource === "plans" && method === "DELETE" && id) {
+      const { data: existing, error: existingError } = await admin
+        .from("subscription_plans")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (existingError) throw new AppError("internal_error", existingError.message, 500);
+      if (!existing) throw new AppError("not_found", "Plan not found", 404);
+
       const { error, count } = await admin
         .from("subscription_plans")
         .delete({ count: "exact" })
         .eq("id", id);
       if (error) throw new AppError("internal_error", error.message, 500);
       if (!count) throw new AppError("not_found", "Plan not found", 404);
-      return json({ ok: true }, 200, publicCorsHeaders);
+      log("info", "admin_plan_deleted", { id });
+      await writeAdminAudit({
+        actor,
+        action: "subscription_plan.delete",
+        objectType: "subscription_plan",
+        objectId: id,
+        before: planAuditSnapshot(existing as Record<string, unknown>),
+        ctx,
+        req,
+      });
+      return json({ ok: true }, 200, publicCorsHeaders, ctx);
     }
 
     if (resource === "records" && method === "GET") {
@@ -253,7 +310,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return json(rows, 200, publicCorsHeaders);
+      return json(rows, 200, publicCorsHeaders, ctx);
     }
 
     if (resource === "revenue" && method === "GET") {
@@ -339,6 +396,7 @@ Deno.serve(async (req) => {
         },
         200,
         publicCorsHeaders,
+        ctx,
       );
     }
 
@@ -348,6 +406,6 @@ Deno.serve(async (req) => {
       404,
     );
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, publicCorsHeaders, ctx);
   }
 });

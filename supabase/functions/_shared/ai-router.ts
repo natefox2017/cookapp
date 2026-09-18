@@ -99,7 +99,7 @@ function estimateCost(
   return inCost + outCost;
 }
 
-export class AIRouter {
+export class PlatformAIRouter {
   constructor(
     private readonly db: SupabaseClient,
     private readonly usage = new AIUsageRecorder(db),
@@ -438,6 +438,74 @@ export class AIRouter {
       })
       .eq("id", providerId);
   }
+
+  /** Recipe Import (#55) entrypoint — never expose provider keys to callers. */
+  async completeStructured(
+    request: {
+      route_key: string;
+      input: unknown;
+      schema_key?: string;
+      source_job_id?: string;
+      prompt_version?: string;
+    },
+  ): Promise<{
+    ok: boolean;
+    data: unknown | null;
+    route_key: string;
+    provider_id: string | null;
+    model_id: string | null;
+    prompt_version: string | null;
+    schema_version: string | null;
+    latency_ms: number;
+    error_code?: string;
+    error_message?: string;
+  }> {
+    const input = request.input;
+    let userContent: string;
+    if (typeof input === "string") userContent = input;
+    else {
+      try { userContent = JSON.stringify(input); }
+      catch { userContent = String(input); }
+    }
+    const started = Date.now();
+    try {
+      const result = await this.invoke({
+        routeKey: String(request.route_key),
+        messages: [{ role: "user", content: userContent }],
+        requestId: request.source_job_id,
+        responseFormat: { type: "json_object" },
+      });
+      let data: unknown = result.content;
+      if (typeof result.content === "string") {
+        try { data = JSON.parse(result.content); } catch { data = result.content; }
+      }
+      return {
+        ok: true,
+        data,
+        route_key: String(request.route_key),
+        provider_id: result.providerId ?? null,
+        model_id: result.modelId ?? null,
+        prompt_version: request.prompt_version ?? null,
+        schema_version: request.schema_key ?? null,
+        latency_ms: Date.now() - started,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const code = (err as { code?: string })?.code ?? "AI_ROUTER_ERROR";
+      return {
+        ok: false,
+        data: null,
+        route_key: String(request.route_key),
+        provider_id: null,
+        model_id: null,
+        prompt_version: request.prompt_version ?? null,
+        schema_version: request.schema_key ?? null,
+        latency_ms: Date.now() - started,
+        error_code: code,
+        error_message: message,
+      };
+    }
+  }
 }
 
 /** Pure helper for unit tests — enforce fallback list length. */
@@ -457,4 +525,78 @@ export function shouldTryNextModel(opts: {
   // Always allow next model after model-level retries exhausted or non-retryable
   if (!opts.lastRetryable) return true;
   return opts.retriesUsedOnModel >= opts.maxRetriesOnModel;
+}
+
+
+// --- Recipe Import port (Issue #55) ---
+
+export type AIRouteKey =
+  | "recipe_import_text"
+  | "recipe_import_vision"
+  | "recipe_quality_check"
+  | "recipe_dedup_similarity"
+  | "assistant_default"
+  | "assistant_vision";
+
+export interface AIStructuredRequest {
+  route_key: AIRouteKey | string;
+  input: unknown;
+  schema_key?: string;
+  source_job_id?: string;
+  prompt_version?: string;
+}
+
+export interface AIStructuredResult {
+  ok: boolean;
+  data: unknown | null;
+  route_key: string;
+  provider_id: string | null;
+  model_id: string | null;
+  prompt_version: string | null;
+  schema_version: string | null;
+  latency_ms: number;
+  error_code?: string;
+  error_message?: string;
+}
+
+/** Port used by Recipe Import — PlatformAIRouter and StubAIRouter both satisfy this. */
+export interface AIRouter {
+  completeStructured(request: AIStructuredRequest): Promise<AIStructuredResult>;
+}
+
+export class StubAIRouter implements AIRouter {
+  constructor(
+    private readonly handler?: (
+      request: AIStructuredRequest,
+    ) => Promise<AIStructuredResult> | AIStructuredResult,
+  ) {}
+
+  async completeStructured(
+    request: AIStructuredRequest,
+  ): Promise<AIStructuredResult> {
+    if (this.handler) return await this.handler(request);
+    return {
+      ok: false,
+      data: null,
+      route_key: String(request.route_key),
+      provider_id: null,
+      model_id: null,
+      prompt_version: request.prompt_version ?? null,
+      schema_version: request.schema_key ?? null,
+      latency_ms: 0,
+      error_code: "AI_PLATFORM_UNAVAILABLE",
+      error_message:
+        "AIRouter not configured. Wire AI Platform (#53) before live parse.",
+    };
+  }
+}
+
+let defaultRouter: AIRouter = new StubAIRouter();
+
+export function setAIRouter(router: AIRouter): void {
+  defaultRouter = router;
+}
+
+export function getAIRouter(): AIRouter {
+  return defaultRouter;
 }
