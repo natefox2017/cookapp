@@ -38,6 +38,7 @@ tags:
 - name: AdminDashboard
 - name: AdminSubscriptions
 - name: AdminRecipeImport
+- name: Operations
 - name: AdminAI
 paths:
   /auth/v1/token:
@@ -1233,6 +1234,49 @@ paths:
       responses:
         '200':
           description: Batch summary
+  /functions/v1/storage-cleanup-import-artifacts:
+    post:
+      tags:
+      - Storage
+      - Operations
+      summary: Cleanup expired recipe-import-artifacts
+      description: 'Operational job type `storage_cleanup_import_artifacts`.
+
+        Deletes Storage objects whose `recipe_import_artifact_objects.expires_at`
+
+        has passed and marks rows deleted. Server/cron only — auth via
+
+        `Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.
+
+        Never uses permanent signed URLs; never returns service_role secrets.
+
+        '
+      operationId: storageCleanupImportArtifacts
+      security:
+      - CleanupBearer: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                  default: 200
+      responses:
+        '200':
+          description: Cleanup run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageCleanupResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          description: Misconfigured (missing STORAGE_CLEANUP_SECRET)
   /functions/v1/admin-ai/providers:
     get:
       tags:
@@ -1658,6 +1702,10 @@ components:
       scheme: bearer
       bearerFormat: opaque
       description: Admin Dashboard session token from admin-auth/login (not end-user JWT)
+    CleanupBearer:
+      type: http
+      scheme: bearer
+      description: STORAGE_CLEANUP_SECRET (cron / operations worker only)
   parameters:
     PreferReturn:
       name: Prefer
@@ -2655,6 +2703,93 @@ components:
         created_at:
           type: string
           format: date-time
+    MediaObjectMetadata:
+      type: object
+      description: 'Postgres metadata pattern for object storage (never base64/blobs).
+
+        Used by MediaStorageProvider and recipe_import_artifact_objects.
+
+        '
+      required:
+      - storage_provider
+      - bucket
+      - object_key
+      - mime_type
+      - size_bytes
+      properties:
+        storage_provider:
+          type: string
+          description: Logical provider id (phase 1 `supabase`; future R2/Stream)
+          example: supabase
+        bucket:
+          type: string
+          enum:
+          - avatars
+          - recipe-covers
+          - recipe-images
+          - recipe-import-artifacts
+        object_key:
+          type: string
+          description: 'Provider-agnostic object key. Import artifacts use `{job_id}/…`.
+
+            User media use `{user_id}/…`.
+
+            '
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 1
+        width:
+          type:
+          - integer
+          - 'null'
+        height:
+          type:
+          - integer
+          - 'null'
+        duration_ms:
+          type:
+          - integer
+          - 'null'
+        checksum:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+    StorageCleanupResult:
+      type: object
+      required:
+      - ok
+      - job_type
+      - scanned
+      - deleted
+      - failed
+      - errors
+      properties:
+        ok:
+          type: boolean
+        job_type:
+          type: string
+          enum:
+          - storage_cleanup_import_artifacts
+        scanned:
+          type: integer
+        deleted:
+          type: integer
+        failed:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              object_key:
+                type: string
+              message:
+                type: string
     AiProvider:
       type: object
       description: 'AI provider registry row. `secretConfigured` indicates a server-side secret exists;

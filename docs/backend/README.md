@@ -14,7 +14,7 @@ Server-only. No Admin Dashboard UI lives in this repository (`admin/` is the sep
 | Auth | Supabase Auth (Apple / Google) → session JWT; no third-party tokens stored |
 | Data | PostgreSQL + RLS |
 | API | PostgREST `/rest/v1/*` + Edge Functions `/functions/v1/*` |
-| Files | Private Storage buckets with `{user_id}/…` path isolation |
+| Files | Private Storage buckets via `MediaStorageProvider` (Supabase); `{user_id}/…` for user media; `{job_id}/…` for import artifacts |
 | Subscriptions | RevenueCat webhook → `subscriptions` / `purchase_events` |
 | Admin ops | Custom bearer Edge Functions (`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`) |
 
@@ -30,6 +30,7 @@ Server-only. No Admin Dashboard UI lives in this repository (`admin/` is the sep
 - **Pantry** — `pantry_items`
 - **Category** — `cuisines`, `meal_categories`, `tags` (seeded, read-only)
 - **Storage** — buckets `avatars`, `recipe-covers`, `recipe-images` (V2: `MediaStorageProvider` + import artifacts — #54)
+- **Storage** — buckets `avatars`, `recipe-covers`, `recipe-images`, `recipe-import-artifacts` (private TTL)
 - **Subscription** — `subscriptions`, view `subscription_status` (`plan` / `status` / `expire_date`)
 
 ### V2 confirmed (not Phase 1 foundation)
@@ -54,6 +55,7 @@ supabase/
     admin-users/
     admin-dashboard/
     admin-subscriptions/
+    storage-cleanup-import-artifacts/
     admin-ai/          # AI Platform Admin APIs (#53)
 ```
 
@@ -63,6 +65,7 @@ supabase/
 - Live JSON: `GET /functions/v1/openapi` (no JWT)
 - Admin contract matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md)
 - Auth/IAP ops: [`AUTH_AND_IAP.md`](../AUTH_AND_IAP.md)
+- Media storage: [`MEDIA_STORAGE.md`](./MEDIA_STORAGE.md)
 
 ### Spec path ↔ PostgREST
 
@@ -86,7 +89,7 @@ Authorization: Bearer <access_token>
 - RLS on every user-owned table (select/insert/update/delete own rows only)
 - Category tables: authenticated select only
 - Subscriptions: authenticated select; writes via `service_role` RPC only
-- Storage: private buckets; first path segment must equal `auth.uid()`
+- Storage: private buckets; user media first path segment must equal `auth.uid()`; import artifacts are service_role-only
 - `SUPABASE_SERVICE_ROLE_KEY` used only inside Edge Functions / webhooks — never shipped to clients
 - Secrets: `REVENUECAT_WEBHOOK_SECRET`, OAuth provider secrets via Supabase Dashboard / `supabase secrets`
 - `profiles.email` is read-only for clients (synced from `auth.users`)
@@ -107,6 +110,7 @@ Authorization: Bearer <access_token>
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue (+ audit) |
+| `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
 
 ### Admin auth
