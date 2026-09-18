@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.admin-subscriptions]
 verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = false
