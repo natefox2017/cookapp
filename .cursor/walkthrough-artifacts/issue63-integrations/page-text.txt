@@ -3,16 +3,20 @@ Local ops console
 Dashboard
 Users
 Recipes
-Collections
-Ingredients
-Grocery
-Meal Plans
-Pantry
-Categories
-Subscription
+Commerce
+Analytics
+N/I
+Operations
+Data
 Settings
+General
+AI Platform
+N/I
+Integrations
+Security
+System
 Mock API mode
-Settings
+Integrations
 Mock data
 admin
 Log out
