@@ -121,8 +121,16 @@ paths:
       description: |
         Replaces the default seed account with a strong Owner password.
         Requires current default password when a seed row exists.
-        No prior session required. Does not return secret values.
+        Production requires header `X-CookApp-Bootstrap-Token` matching
+        secret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).
+        Local/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.
       security: []
+      parameters:
+        - name: X-CookApp-Bootstrap-Token
+          in: header
+          required: false
+          schema: { type: string }
+          description: Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN
       requestBody:
         required: true
         content:
