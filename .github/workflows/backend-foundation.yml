@@ -34,6 +34,8 @@ jobs:
           test -f supabase/functions/openapi/index.ts
           test -f supabase/functions/_shared/auth.ts
           test -f supabase/functions/admin-recipe-import/index.ts
+          test -f supabase/functions/admin-integrations/index.ts
+          test -f supabase/functions/_shared/integrations-status.ts
           test -f supabase/functions/_shared/ai-router.ts
           test -f supabase/functions/_shared/media-storage.ts
           test -f supabase/functions/_shared/recipe-import/pipeline.ts
@@ -111,6 +113,13 @@ jobs:
         run: |
           set -euo pipefail
           deno test --allow-env supabase/functions/_shared/ai_platform_test.ts supabase/functions/_shared/ai_router_fallback_test.ts
+      - name: Admin Integrations status unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/integrations_status_test.ts
+          test -f supabase/functions/admin-integrations/index.ts
+          test -f supabase/migrations/20260918110000_admin_integrations.sql
+          echo "Admin Integrations paths OK"
       - name: Import queue / worker unit tests
         run: |
           set -euo pipefail

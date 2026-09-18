@@ -109,7 +109,7 @@ export const navItems: NavEntry[] = [
     children: [
       { title: 'General', href: '/settings/general', icon: Settings, apiStatus: 'hybrid' },
       { title: 'AI Platform', href: '/settings/ai-platform', icon: Bot, apiStatus: 'planned' },
-      { title: 'Integrations', href: '/settings/integrations', icon: Plug, apiStatus: 'planned' },
+      { title: 'Integrations', href: '/settings/integrations', icon: Plug, apiStatus: 'live' },
       { title: 'Security', href: '/settings/security', icon: Shield, apiStatus: 'live' },
       { title: 'System', href: '/settings/system', icon: Server, apiStatus: 'hybrid' },
     ],

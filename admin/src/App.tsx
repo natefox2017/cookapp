@@ -33,14 +33,14 @@ function ProductionMockBlocked() {
   )
 }
 
-const SETTINGS_SECTIONS = new Set(['general', 'security', 'system'])
+const SETTINGS_SECTIONS = new Set(['general', 'security', 'system', 'integrations'])
 
 function SettingsSectionRoute() {
   const { section } = useParams()
   if (!section || !SETTINGS_SECTIONS.has(section)) {
     return <Navigate to="/settings/general" replace />
   }
-  return <SettingsPage section={section as 'general' | 'security' | 'system'} />
+  return <SettingsPage section={section as 'general' | 'security' | 'system' | 'integrations'} />
 }
 
 export default function App() {
@@ -162,18 +162,6 @@ export default function App() {
                   contractNote="Backend admin-ai APIs shipped in #53. Admin Settings UI is not wired yet."
                   relatedHref="/settings/general"
                   relatedLabel="Open Settings · General"
-                />
-              }
-            />
-            <Route
-              path="settings/integrations"
-              element={
-                <NotImplementedPage
-                  title="Integrations"
-                  description="Connection status for Supabase, RevenueCat, App Store Connect, AI Gateway."
-                  contractNote="Planned under Backend V2 §11. Secrets stay write-only; no plaintext reads."
-                  relatedHref="/settings/system"
-                  relatedLabel="Open Settings · System"
                 />
               }
             />

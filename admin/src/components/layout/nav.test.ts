@@ -58,7 +58,6 @@ describe('admin nav IA (#64)', () => {
       'Analytics',
       'Audit Log',
       'Import Review',
-      'Integrations',
       'Jobs & Syncs',
       'Payments',
     ])
@@ -81,4 +80,10 @@ describe('admin nav IA (#64)', () => {
     assert.equal(isPathUnderGroup('/recipes/xyz', recipes), true)
     assert.equal(isPathUnderGroup('/users', recipes), false)
   })
+  it('marks Integrations as live after #63', () => {
+    const leaf = flattenNavLeaves().find((item) => item.href === '/settings/integrations')
+    assert.ok(leaf)
+    assert.equal(leaf?.apiStatus, 'live')
+  })
+
 })

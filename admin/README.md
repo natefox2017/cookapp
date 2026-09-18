@@ -47,13 +47,13 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Commerce → Products · Subscriptions | `/functions/v1/admin-subscriptions/*` | live |
 | Data (Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories) | — | **missing** → live client `501`; sidebar **Pending** |
 | Recipes → Library | — | **missing** → **Pending** |
-| Recipes → AI Import / Import Review · Analytics · Ops · Payments · Settings AI/Integrations | — | **planned** nav → **Not implemented** badge (IA only; #64) |
-| Settings → General / System | hybrid | diagnostics-only in live mode |
-| Settings → Security | live | `admin-auth` change-password |
+| Recipes → AI Import / Import Review | — | **Not implemented** page (IA reserved) |
+| Commerce → Payments / Analytics / Operations | — | **Not implemented** page (IA reserved) |
+| Settings → General / Security / System | hybrid | Security via `admin-auth`; general diagnostics-only |
+| Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
+| Settings → AI Platform | — | **Not implemented** page (backend `admin-ai` exists) |
 
-## Navigation IA (Issue #64)
-
-Single shared nav: `src/components/layout/nav.ts` (sidebar renders groups + leaves; no per-page forks).
+Navigation IA (Issue #64) lives in `admin/src/components/layout/nav.ts` only:
 
 - Dashboard · Users
 - Recipes → Library / AI Import / Import Review
@@ -111,7 +111,7 @@ Admin Dashboard UI
 | `/pantry` | Pantry | pending |
 | `/categories` | Taxonomy | pending |
 | `/subscription` | Plans · Records · Revenue | yes |
-| `/settings` | General / Units / Categories / Security / System | hybrid |
+| `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |
 
 Sidebar collapses via header / rail control (persisted). In live mode, pending modules show a **Pending** badge.
 

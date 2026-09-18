@@ -58,8 +58,10 @@ supabase/
     admin-subscriptions/
     storage-cleanup-import-artifacts/
     admin-ai/          # AI Platform Admin APIs (#53)
+    admin-integrations/ # Integrations status (#63)
     admin-store-sync/  # ASC analytics + financial sync (#59)
     store-sync-worker/ # Cron tick for Apple store sync (#59)
+    recipe-import-worker/
 ```
 
 ## API documentation
@@ -115,6 +117,7 @@ Authorization: Bearer <access_token>
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) + enqueue (#56) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
+| `admin-integrations` | no (custom admin bearer; Owner for secret/config writes) | Integrations connection status / test / write-only secrets (#63) |
 | `admin-store-sync` | no (custom admin bearer; Owner for sync/credentials) | ASC analytics + financial sync (#59) |
 | `recipe-import-worker` | no (`RECIPE_IMPORT_WORKER_SECRET`) | pgmq Import Queue worker tick (#56) |
 | `store-sync-worker` | no (`STORE_SYNC_WORKER_SECRET`) | Apple analytics + financial cron tick (#59) |

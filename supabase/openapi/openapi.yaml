@@ -41,6 +41,7 @@ tags:
 - name: Operations
 - name: AdminAI
 - name: AdminStoreSync
+- name: AdminIntegrations
 paths:
   /auth/v1/token:
     post:
@@ -56,1444 +57,106 @@ paths:
       responses:
         '200':
           description: Session issued
-  /functions/v1/delete-account:
-    post:
+  /functions/v1/admin-ai/health:
+    get:
       tags:
-      - Auth
-      - User
-      summary: Delete account
-      description: Purges user storage objects and deletes the auth user (cascades all owned rows).
-      operationId: deleteAccount
+      - AdminAI
+      summary: AI provider health
+      security:
+      - AdminBearer: []
+      operationId: adminAiHealth
       responses:
         '200':
-          description: Account deleted
+          description: Health snapshot
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok:
-                    type: boolean
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-  /functions/v1/revenuecat-webhook:
-    post:
-      tags:
-      - Subscription
-      summary: RevenueCat webhook
-      description: 'Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
-
-        JWT verification disabled; service role used internally.
-
-        '
-      security:
-      - WebhookBearer: []
-      responses:
-        '200':
-          description: Event received
-      parameters:
-      - $ref: '#/components/parameters/XJobId'
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/health:
+                  providers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AiProviderHealth'
+  /functions/v1/admin-ai/models:
     get:
       tags:
-      - System
-      summary: Backend health / module probe
-      responses:
-        '200':
-          description: Healthy
-  /functions/v1/admin-auth/login:
-    post:
-      tags:
-      - AdminAuth
-      summary: Admin login
-      description: 'Issues a custom admin bearer session (not end-user JWT).
-
-        Production rejects default `admin`/`admin` credentials (Issue #51).
-
-        Set `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`
-
-        only for local/dev.
-
-        '
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - username
-              - password
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-                  format: password
-      responses:
-        '200':
-          description: Session issued
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSessionPayload'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          description: Default credentials blocked in production
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-auth/bootstrap:
-    post:
-      tags:
-      - AdminAuth
-      summary: Bootstrap Owner credentials
-      description: 'Replaces the default seed account with a strong Owner password.
-
-        Requires current default password when a seed row exists.
-
-        Production requires header `X-CookApp-Bootstrap-Token` matching
-
-        secret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).
-
-        Local/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.
-
-        '
-      security: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: X-CookApp-Bootstrap-Token
-        in: header
-        required: false
-        schema:
-          type: string
-        description: Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - newPassword
-              properties:
-                username:
-                  type: string
-                  default: admin
-                newPassword:
-                  type: string
-                  format: password
-                  minLength: 12
-                currentPassword:
-                  type: string
-                  format: password
-      responses:
-        '200':
-          description: Owner bootstrapped and session issued
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSessionPayload'
-        '400':
-          description: Weak password or invalid bootstrap state
-        '401':
-          description: Current default password incorrect
-        '409':
-          description: Bootstrap not available
-  /functions/v1/admin-auth/logout:
-    post:
-      tags:
-      - AdminAuth
-      summary: Admin logout
-      description: Revokes the current admin bearer session.
+      - AdminAI
+      summary: List AI models
       security:
       - AdminBearer: []
-      responses:
-        '200':
-          description: Session revoked
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+      operationId: adminAiListModels
       parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-auth/session:
-    get:
-      tags:
-      - AdminAuth
-      summary: Current admin session
-      security:
-      - AdminBearer: []
-      responses:
-        '200':
-          description: Session valid
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                - admin
-                properties:
-                  admin:
-                    $ref: '#/components/schemas/AdminIdentity'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-auth/change-password:
-    post:
-      tags:
-      - AdminAuth
-      summary: Change admin password
-      description: 'Requires strong password policy (min 12, upper, lower, digit).
-
-        Revokes all sessions for the account and returns a fresh token.
-
-        '
-      security:
-      - AdminBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - currentPassword
-              - newPassword
-              properties:
-                currentPassword:
-                  type: string
-                  format: password
-                newPassword:
-                  type: string
-                  format: password
-                  minLength: 12
-      responses:
-        '200':
-          description: Password updated
-          content:
-            application/json:
-              schema:
-                allOf:
-                - $ref: '#/components/schemas/AdminSessionPayload'
-                - type: object
-                  properties:
-                    ok:
-                      type: boolean
-        '400':
-          description: Weak password
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /rest/v1/profiles:
-    get:
-      tags:
-      - User
-      summary: GET User Profile
-      operationId: getUserProfile
-      parameters:
-      - $ref: '#/components/parameters/PreferReturn'
-      - name: id
+      - name: providerId
         in: query
         schema:
           type: string
           format: uuid
-        description: Filter `eq.<user_id>` (own id only under RLS)
       responses:
         '200':
-          description: Profile rows
+          description: Model list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserProfile'
-    patch:
+                  $ref: '#/components/schemas/AiModel'
+    post:
       tags:
-      - User
-      summary: UPDATE User Profile
-      operationId: updateUserProfile
-      parameters:
-      - $ref: '#/components/parameters/PreferReturn'
+      - AdminAI
+      summary: Register AI model (Owner)
+      security:
+      - AdminBearer: []
+      operationId: adminAiCreateModel
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserProfileUpdate'
-      responses:
-        '200':
-          description: Updated profile
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserProfile'
-  /rest/v1/recipes:
-    get:
-      tags:
-      - Recipe
-      summary: Recipe List / Detail
-      description: 'List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
-
-        Update: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).
-
-        Delete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).
-
-        '
-      operationId: listRecipes
-      parameters:
-      - name: id
-        in: query
-        description: Filter e.g. `eq.<uuid>` for single recipe
-        schema:
-          type: string
-      - name: order
-        in: query
-        schema:
-          type: string
-          example: created_at.desc
-      - name: select
-        in: query
-        schema:
-          type: string
-          example: '*'
-      responses:
-        '200':
-          description: Own recipes
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Recipe'
-    post:
-      tags:
-      - Recipe
-      summary: Create Recipe
-      operationId: createRecipe
-      parameters:
-      - $ref: '#/components/parameters/PreferReturn'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecipeCreate'
+              $ref: '#/components/schemas/AiModelCreate'
       responses:
         '201':
           description: Created
-    patch:
-      tags:
-      - Recipe
-      summary: Update Recipe
-      operationId: updateRecipe
-      parameters:
-      - name: id
-        in: query
-        required: true
-        schema:
-          type: string
-          example: eq.<uuid>
-      - $ref: '#/components/parameters/PreferReturn'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecipeCreate'
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - Recipe
-      summary: Delete Recipe
-      operationId: deleteRecipe
-      parameters:
-      - name: id
-        in: query
-        required: true
-        schema:
-          type: string
-          example: eq.<uuid>
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/collections:
-    get:
-      tags:
-      - Collection
-      summary: GET Collections
-      operationId: listCollections
-      responses:
-        '200':
-          description: Own collections
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Collection'
-    post:
-      tags:
-      - Collection
-      summary: POST Collection
-      operationId: createCollection
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CollectionCreate'
-      responses:
-        '201':
-          description: Created
-    patch:
-      tags:
-      - Collection
-      summary: UPDATE Collection
-      operationId: updateCollection
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - Collection
-      summary: DELETE Collection
-      operationId: deleteCollection
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/collection_recipes:
-    get:
-      tags:
-      - Collection
-      summary: List recipes in collections
-      responses:
-        '200':
-          description: Membership rows
-    post:
-      tags:
-      - Collection
-      summary: Add recipe to collection
-      responses:
-        '201':
-          description: Added
-    delete:
-      tags:
-      - Collection
-      summary: Remove recipe from collection
-      responses:
-        '204':
-          description: Removed
-  /rest/v1/ingredients:
-    get:
-      tags:
-      - Ingredient
-      summary: List ingredients (system + own)
-      responses:
-        '200':
-          description: Ingredient catalog
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Ingredient'
-    post:
-      tags:
-      - Ingredient
-      summary: Create user ingredient
-      responses:
-        '201':
-          description: Created
-    patch:
-      tags:
-      - Ingredient
-      summary: Update own user ingredient
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - Ingredient
-      summary: Delete own user ingredient
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/grocery_lists:
-    get:
-      tags:
-      - Grocery
-      summary: GET Grocery Lists
-      responses:
-        '200':
-          description: Lists
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GroceryList'
-    post:
-      tags:
-      - Grocery
-      summary: Create grocery list
-      responses:
-        '201':
-          description: Created
-    patch:
-      tags:
-      - Grocery
-      summary: UPDATE Grocery List
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - Grocery
-      summary: DELETE Grocery List
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/grocery_items:
-    get:
-      tags:
-      - Grocery
-      summary: List grocery items
-      responses:
-        '200':
-          description: Items
-    post:
-      tags:
-      - Grocery
-      summary: POST Item
-      responses:
-        '201':
-          description: Created
-    patch:
-      tags:
-      - Grocery
-      summary: UPDATE Item
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - Grocery
-      summary: DELETE Item
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/meal_plans:
-    get:
-      tags:
-      - MealPlan
-      summary: List meal plans
-      responses:
-        '200':
-          description: Meal plan entries
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MealPlan'
-    post:
-      tags:
-      - MealPlan
-      summary: Create meal plan entry
-      responses:
-        '201':
-          description: Created
-    patch:
-      tags:
-      - MealPlan
-      summary: Update meal plan entry
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - MealPlan
-      summary: Delete meal plan entry
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/pantry_items:
-    get:
-      tags:
-      - Pantry
-      summary: List pantry items
-      responses:
-        '200':
-          description: Pantry
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PantryItem'
-    post:
-      tags:
-      - Pantry
-      summary: Create pantry item
-      responses:
-        '201':
-          description: Created
-    patch:
-      tags:
-      - Pantry
-      summary: Update pantry item
-      responses:
-        '200':
-          description: Updated
-    delete:
-      tags:
-      - Pantry
-      summary: Delete pantry item
-      responses:
-        '204':
-          description: Deleted
-  /rest/v1/cuisines:
-    get:
-      tags:
-      - Category
-      summary: List cuisines
-      responses:
-        '200':
-          description: Cuisine catalog
-  /rest/v1/meal_categories:
-    get:
-      tags:
-      - Category
-      summary: List meal categories
-      responses:
-        '200':
-          description: Meal category catalog
-  /rest/v1/tags:
-    get:
-      tags:
-      - Category
-      summary: List tags
-      responses:
-        '200':
-          description: Tag catalog
-  /rest/v1/subscriptions:
-    get:
-      tags:
-      - Subscription
-      summary: Get own subscription row
-      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped
-        `expire_date`.
-      responses:
-        '200':
-          description: Subscription entitlement
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionRow'
-  /rest/v1/subscription_status:
-    get:
-      tags:
-      - Subscription
-      summary: Get subscription status (plan / status / expire_date)
-      responses:
-        '200':
-          description: Simplified subscription view matching Subscription Service contract
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionStatus'
-  /storage/v1/object/{bucket}/{user_id}/{object}:
+                $ref: '#/components/schemas/AiModel'
+  /functions/v1/admin-ai/models/{id}:
     parameters:
-    - name: bucket
-      in: path
-      required: true
-      schema:
-        type: string
-        enum:
-        - avatars
-        - recipe-covers
-        - recipe-images
-    - name: user_id
+    - name: id
       in: path
       required: true
       schema:
         type: string
         format: uuid
-    - name: object
-      in: path
-      required: true
-      schema:
-        type: string
-    post:
+    put:
       tags:
-      - Storage
-      summary: Upload object (private bucket, path must start with auth user id)
-      responses:
-        '200':
-          description: Uploaded
-    get:
-      tags:
-      - Storage
-      summary: Download / signed access to own object
-      responses:
-        '200':
-          description: Object bytes
-    delete:
-      tags:
-      - Storage
-      summary: Delete own object
-      responses:
-        '200':
-          description: Deleted
-  /functions/v1/admin-users:
-    get:
-      tags:
-      - AdminUsers
-      summary: List users (paginated, filterable)
-      operationId: adminListUsers
+      - AdminAI
+      summary: Update AI model (Owner)
       security:
       - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: q
-        in: query
-        schema:
-          type: string
-      - name: status
-        in: query
-        schema:
-          type: string
-      - name: subscription
-        in: query
-        schema:
-          type: string
-      - name: registrationProvider
-        in: query
-        schema:
-          type: string
-      - name: deviceType
-        in: query
-        schema:
-          type: string
-      - name: page
-        in: query
-        schema:
-          type: integer
-      - name: pageSize
-        in: query
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedAdminUsers'
-  /functions/v1/admin-users/stats:
-    get:
-      tags:
-      - AdminUsers
-      summary: Registration mix stats
-      operationId: adminUserStats
-      security:
-      - AdminBearer: []
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserRegistrationStats'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-users/{id}:
-    get:
-      tags:
-      - AdminUsers
-      summary: User detail + payment timeline
-      operationId: adminGetUser
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminUserDetail'
-  /functions/v1/admin-dashboard:
-    get:
-      tags:
-      - AdminDashboard
-      summary: Dashboard KPI aggregation
-      operationId: adminDashboard
-      security:
-      - AdminBearer: []
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DashboardData'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-subscriptions/plans:
-    get:
-      tags:
-      - AdminSubscriptions
-      summary: List subscription plan products
-      operationId: adminListPlans
-      security:
-      - AdminBearer: []
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionPlanProduct'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-    post:
-      tags:
-      - AdminSubscriptions
-      summary: Create subscription plan product
-      operationId: adminCreatePlan
-      security:
-      - AdminBearer: []
+      operationId: adminAiUpdateModel
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SubscriptionPlanProduct'
-      responses:
-        '201':
-          description: Created
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-subscriptions/plans/{id}:
-    put:
-      tags:
-      - AdminSubscriptions
-      summary: Update subscription plan product
-      operationId: adminUpdatePlan
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+              $ref: '#/components/schemas/AiModelUpdate'
       responses:
         '200':
           description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiModel'
     delete:
       tags:
-      - AdminSubscriptions
-      summary: Delete subscription plan product
-      operationId: adminDeletePlan
+      - AdminAI
+      summary: Delete AI model (Owner)
       security:
       - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      operationId: adminAiDeleteModel
       responses:
         '200':
           description: Deleted
-  /functions/v1/admin-subscriptions/records:
-    get:
-      tags:
-      - AdminSubscriptions
-      summary: List subscription records
-      operationId: adminListSubscriptionRecords
-      security:
-      - AdminBearer: []
-      responses:
-        '200':
-          description: OK
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-subscriptions/revenue:
-    get:
-      tags:
-      - AdminSubscriptions
-      summary: Subscription revenue series
-      operationId: adminSubscriptionRevenue
-      security:
-      - AdminBearer: []
-      responses:
-        '200':
-          description: OK
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-subscriptions/transactions:
-    get:
-      tags:
-      - AdminSubscriptions
-      summary: List normalized payment transactions
-      description: |
-        Reads `payment_transactions` (#58). Amounts from RevenueCat are estimated only;
-        `final_proceeds` is null until financial reports (#59). Google Play is schema-reserved
-        — responses include `googlePlay.status=reserved_not_implemented` (no fake Android revenue).
-      operationId: adminListPaymentTransactions
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: store
-        in: query
-        schema:
-          type: string
-          enum:
-          - app_store
-          - google_play
-          - play_store
-        description: play_store accepted as alias for google_play
-      - name: platform
-        in: query
-        schema:
-          type: string
-          enum:
-          - ios
-          - android
-      - name: userId
-        in: query
-        schema:
-          type: string
-          format: uuid
-      - name: eventType
-        in: query
-        schema:
-          type: string
-      - name: status
-        in: query
-        schema:
-          type: string
-      - name: page
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-      - name: pageSize
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 100
-          default: 50
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedPaymentTransactions'
-  /functions/v1/admin-subscriptions/transactions/{id}:
-    get:
-      tags:
-      - AdminSubscriptions
-      summary: Payment transaction detail
-      operationId: adminGetPaymentTransaction
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaymentTransactionDetail'
-        '404':
-          description: Not found
-  /functions/v1/admin-recipe-import/jobs:
-    get:
-      tags:
-      - AdminRecipeImport
-      summary: List recipe import jobs
-      operationId: adminListRecipeImportJobs
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: status
-        in: query
-        schema:
-          type: string
-          enum:
-          - pending
-          - running
-          - imported
-          - needs_review
-          - failed
-          - rejected
-          - duplicate
-      - name: limit
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 200
-          default: 50
-      responses:
-        '200':
-          description: Job list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  jobs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RecipeImportJob'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-    post:
-      tags:
-      - AdminRecipeImport
-      summary: Create single import job and enqueue for async worker
-      description: 'Shared Backend AI Recipe Import pipeline (Issue #55).
-
-        Exact active source URL returns 409 DUPLICATE.
-
-        Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
-
-        Job is enqueued on Supabase Queues (pgmq) — Issue #56. Worker runs pipeline asynchronously.
-
-        '
-      operationId: adminCreateRecipeImportJob
-      security:
-      - AdminBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecipeImportCreateRequest'
-      responses:
-        '201':
-          description: Job created and enqueued (pending)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  job:
-                    $ref: '#/components/schemas/RecipeImportJob'
-                  queued:
-                    type: boolean
-                  queueMsgId:
-                    type:
-                    - integer
-                    - 'null'
-        '409':
-          description: Exact URL duplicate
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorBody'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-recipe-import/jobs/{jobId}:
-    get:
-      tags:
-      - AdminRecipeImport
-      summary: Get import job detail
-      operationId: adminGetRecipeImportJob
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - $ref: '#/components/parameters/RecipeImportJobId'
-      responses:
-        '200':
-          description: Job + result + artifact metadata
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  job:
-                    $ref: '#/components/schemas/RecipeImportJob'
-                  result:
-                    oneOf:
-                    - $ref: '#/components/schemas/RecipeImportResult'
-                    - type: 'null'
-                  artifacts:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RecipeImportArtifact'
-        '404':
-          description: Not found
-  /functions/v1/admin-recipe-import/jobs/{jobId}/retry:
-    post:
-      tags:
-      - AdminRecipeImport
-      summary: Enqueue retry from a pipeline stage
-      operationId: adminRetryRecipeImportJob
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - $ref: '#/components/parameters/RecipeImportJobId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                fromStage:
-                  $ref: '#/components/schemas/RecipeImportStage'
-      responses:
-        '202':
-          description: Retry enqueued
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  job:
-                    $ref: '#/components/schemas/RecipeImportJob'
-                  queued:
-                    type: boolean
-                  queueMsgId:
-                    type:
-                    - integer
-                    - 'null'
-                  fromStage:
-                    $ref: '#/components/schemas/RecipeImportStage'
-  /functions/v1/admin-recipe-import/jobs/{jobId}/reparse:
-    post:
-      tags:
-      - AdminRecipeImport
-      summary: Enqueue re-run AI parse from parse stage
-      operationId: adminReparseRecipeImportJob
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - $ref: '#/components/parameters/RecipeImportJobId'
-      responses:
-        '202':
-          description: Reparse enqueued
-  /functions/v1/admin-recipe-import/jobs/{jobId}/approve:
-    post:
-      tags:
-      - AdminRecipeImport
-      summary: Approve needs-review job and enqueue import
-      operationId: adminApproveRecipeImportJob
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - $ref: '#/components/parameters/RecipeImportJobId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                destinationUserId:
-                  type: string
-                  format: uuid
-      responses:
-        '202':
-          description: Approve / import enqueued
-  /functions/v1/admin-recipe-import/jobs/{jobId}/reject:
-    post:
-      tags:
-      - AdminRecipeImport
-      summary: Reject import job
-      operationId: adminRejectRecipeImportJob
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - $ref: '#/components/parameters/RecipeImportJobId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                reason:
-                  type: string
-      responses:
-        '200':
-          description: Rejected job
-  /functions/v1/admin-recipe-import/batches:
-    post:
-      tags:
-      - AdminRecipeImport
-      summary: Create batch import and enqueue jobs (async)
-      description: 'Returns immediately. Jobs are processed by recipe-import-worker
-
-        via Supabase Queues / pgmq (Issue #56). Single-job failure does not block the batch.
-
-        '
-      operationId: adminCreateRecipeImportBatch
-      security:
-      - AdminBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - urls
-              properties:
-                urls:
-                  type: array
-                  items:
-                    type: string
-                    format: uri
-                destinationUserId:
-                  type: string
-                  format: uuid
-      responses:
-        '201':
-          description: Batch created; jobs enqueued pending
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  batch:
-                    $ref: '#/components/schemas/RecipeImportBatch'
-                  jobIds:
-                    type: array
-                    items:
-                      type: string
-                      format: uuid
-                  skipped:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        url:
-                          type: string
-                        reason:
-                          type: string
-                  queuedCount:
-                    type: integer
-                  queueMsgIds:
-                    type: array
-                    items:
-                      type: integer
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-  /functions/v1/admin-recipe-import/batches/{batchId}:
-    get:
-      tags:
-      - AdminRecipeImport
-      summary: Get batch summary + jobs
-      operationId: adminGetRecipeImportBatch
-      security:
-      - AdminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - name: batchId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Batch summary
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  batch:
-                    $ref: '#/components/schemas/RecipeImportBatch'
-                  jobs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RecipeImportJob'
-  /functions/v1/recipe-import-worker:
-    post:
-      tags:
-      - Operations
-      - AdminRecipeImport
-      summary: Process recipe import queue (pgmq worker tick)
-      description: 'Operational job type `recipe_import_worker` (Issue #56).
-
-        Reads up to `import_queue_concurrency` messages from Supabase Queues (pgmq),
-
-        calls shared `runImportPipeline`, archives on success / poison.
-
-        Server/cron only — auth via `Authorization: Bearer <RECIPE_IMPORT_WORKER_SECRET>`.
-
-        Concurrency / VT / max attempts come from `runtime_config` (not secrets).
-
-        '
-      operationId: recipeImportWorkerTick
-      security:
-      - WorkerBearer: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                recoverStale:
-                  type: boolean
-                  default: true
-                  description: Re-enqueue pending jobs older than 60s
-      responses:
-        '200':
-          description: Worker tick result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                  job_type:
-                    type: string
-                  claimed:
-                    type: integer
-                  processed:
-                    type: integer
-                  succeeded:
-                    type: integer
-                  failed:
-                    type: integer
-                  poisoned:
-                    type: integer
-                  skipped:
-                    type: integer
-                  recovered:
-                    type: integer
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      parameters:
-      - $ref: '#/components/parameters/XCorrelationId'
-      - $ref: '#/components/parameters/XRequestId'
-      - $ref: '#/components/parameters/XJobId'
-  /functions/v1/storage-cleanup-import-artifacts:
-    post:
-      tags:
-      - Storage
-      - Operations
-      summary: Cleanup expired recipe-import-artifacts
-      description: 'Operational job type `storage_cleanup_import_artifacts`.
-
-        Deletes Storage objects whose `recipe_import_artifact_objects.expires_at`
-
-        has passed and marks rows deleted. Server/cron only — auth via
-
-        `Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.
-
-        Never uses permanent signed URLs; never returns service_role secrets.
-
-        '
-      operationId: storageCleanupImportArtifacts
-      security:
-      - CleanupBearer: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                limit:
-                  type: integer
-                  minimum: 1
-                  maximum: 1000
-                  default: 200
-      responses:
-        '200':
-          description: Cleanup run result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StorageCleanupResult'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          description: Misconfigured (missing STORAGE_CLEANUP_SECRET)
   /functions/v1/admin-ai/providers:
     get:
       tags:
@@ -1684,86 +347,28 @@ paths:
                     type: integer
                   model:
                     type: string
-  /functions/v1/admin-ai/models:
-    get:
-      tags:
-      - AdminAI
-      summary: List AI models
-      security:
-      - AdminBearer: []
-      operationId: adminAiListModels
-      parameters:
-      - name: providerId
-        in: query
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Model list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AiModel'
+  /functions/v1/admin-ai/resolve:
     post:
       tags:
       - AdminAI
-      summary: Register AI model (Owner)
+      summary: Resolve route model chain (Owner, no provider call)
       security:
       - AdminBearer: []
-      operationId: adminAiCreateModel
+      operationId: adminAiResolveRoute
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AiModelCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AiModel'
-  /functions/v1/admin-ai/models/{id}:
-    parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-    put:
-      tags:
-      - AdminAI
-      summary: Update AI model (Owner)
-      security:
-      - AdminBearer: []
-      operationId: adminAiUpdateModel
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AiModelUpdate'
+              type: object
+              required:
+              - routeKey
+              properties:
+                routeKey:
+                  type: string
       responses:
         '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AiModel'
-    delete:
-      tags:
-      - AdminAI
-      summary: Delete AI model (Owner)
-      security:
-      - AdminBearer: []
-      operationId: adminAiDeleteModel
-      responses:
-        '200':
-          description: Deleted
+          description: Resolved chain (no secrets)
   /functions/v1/admin-ai/routes:
     get:
       tags:
@@ -1856,34 +461,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AiUsageResponse'
-  /functions/v1/admin-ai/health:
-    get:
-      tags:
-      - AdminAI
-      summary: AI provider health
-      security:
-      - AdminBearer: []
-      operationId: adminAiHealth
-      responses:
-        '200':
-          description: Health snapshot
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  providers:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AiProviderHealth'
-  /functions/v1/admin-ai/resolve:
+  /functions/v1/admin-auth/bootstrap:
     post:
       tags:
-      - AdminAI
-      summary: Resolve route model chain (Owner, no provider call)
-      security:
-      - AdminBearer: []
-      operationId: adminAiResolveRoute
+      - AdminAuth
+      summary: Bootstrap Owner credentials
+      description: 'Replaces the default seed account with a strong Owner password.
+
+        Requires current default password when a seed row exists.
+
+        Production requires header `X-CookApp-Bootstrap-Token` matching
+
+        secret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).
+
+        Local/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.
+
+        '
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: X-CookApp-Bootstrap-Token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN
       requestBody:
         required: true
         content:
@@ -1891,34 +494,865 @@ paths:
             schema:
               type: object
               required:
-              - routeKey
+              - newPassword
               properties:
-                routeKey:
+                username:
                   type: string
+                  default: admin
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 12
+                currentPassword:
+                  type: string
+                  format: password
       responses:
         '200':
-          description: Resolved chain (no secrets)
-  /functions/v1/admin-store-sync/status:
-    get:
+          description: Owner bootstrapped and session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionPayload'
+        '400':
+          description: Weak password or invalid bootstrap state
+        '401':
+          description: Current default password incorrect
+        '409':
+          description: Bootstrap not available
+  /functions/v1/admin-auth/change-password:
+    post:
       tags:
-      - AdminStoreSync
-      summary: Store integration connection status
-      description: |
-        Returns App Store Connect + Google Play connection status.
-        Secrets never returned — only `secretConfigured` booleans.
-        Google Play remains `future_reserved` until Android work starts (Issue #59).
+      - AdminAuth
+      summary: Change admin password
+      description: 'Requires strong password policy (min 12, upper, lower, digit).
+
+        Revokes all sessions for the account and returns a fresh token.
+
+        '
       security:
       - AdminBearer: []
-      operationId: adminStoreSyncStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - currentPassword
+              - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 12
+      responses:
+        '200':
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/AdminSessionPayload'
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+        '400':
+          description: Weak password
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-auth/login:
+    post:
+      tags:
+      - AdminAuth
+      summary: Admin login
+      description: 'Issues a custom admin bearer session (not end-user JWT).
+
+        Production rejects default `admin`/`admin` credentials (Issue #51).
+
+        Set `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`
+
+        only for local/dev.
+
+        '
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - username
+              - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionPayload'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Default credentials blocked in production
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-auth/logout:
+    post:
+      tags:
+      - AdminAuth
+      summary: Admin logout
+      description: Revokes the current admin bearer session.
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-auth/session:
+    get:
+      tags:
+      - AdminAuth
+      summary: Current admin session
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - admin
+                properties:
+                  admin:
+                    $ref: '#/components/schemas/AdminIdentity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-dashboard:
+    get:
+      tags:
+      - AdminDashboard
+      summary: Dashboard KPI aggregation
+      operationId: adminDashboard
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardData'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-integrations:
+    get:
+      tags:
+      - AdminIntegrations
+      summary: List integration connection statuses
+      description: 'Returns connected / not_configured / degraded / future_reserved for
+
+        Supabase, RevenueCat, App Store Connect, AI Gateway, and Google Play.
+
+        Secrets are never returned as plaintext — only `secretConfigured`.
+
+        Google Play is always Future Reserved / Not Connected (Issue #63).
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminIntegrationsList
+      parameters:
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '200':
           description: Integration status list
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreIntegrationsResponse'
+                $ref: '#/components/schemas/IntegrationsListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /functions/v1/admin-integrations/{id}:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/IntegrationId'
+    get:
+      tags:
+      - AdminIntegrations
+      summary: Get one integration status
+      security:
+      - AdminBearer: []
+      operationId: adminIntegrationsGet
+      responses:
+        '200':
+          description: Integration status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /functions/v1/admin-integrations/{id}/config:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/IntegrationId'
+    put:
+      tags:
+      - AdminIntegrations
+      summary: Update non-secret integration config (Owner)
+      description: Non-secret fields only (e.g. ASC issuerId / keyId). Never accepts secret values.
+      security:
+      - AdminBearer: []
+      operationId: adminIntegrationsPutConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                issuerId:
+                  type: string
+                keyId:
+                  type: string
+      responses:
+        '200':
+          description: Config saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  integration:
+                    $ref: '#/components/schemas/IntegrationStatus'
+  /functions/v1/admin-integrations/{id}/secret:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/IntegrationId'
+    put:
+      tags:
+      - AdminIntegrations
+      summary: Write-only integration secret (Owner)
+      description: 'Stores ciphertext in `integration_secrets`. There is no read-full-secret API.
+
+        Response only confirms `secretConfigured: true`. Currently supported for
+
+        `app_store_connect`. RevenueCat webhook secret remains Edge env-only;
+
+        AI Gateway secrets use `admin-ai`.
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminIntegrationsPutSecret
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                privateKey:
+                  type: string
+                  description: ASC .p8 private key (write-only)
+                apiKey:
+                  type: string
+                secret:
+                  type: string
+                issuerId:
+                  type: string
+                keyId:
+                  type: string
+      responses:
+        '200':
+          description: Secret stored
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - ok
+                - secretConfigured
+                - integration
+                properties:
+                  ok:
+                    type: boolean
+                  secretConfigured:
+                    type: boolean
+                  integration:
+                    $ref: '#/components/schemas/IntegrationStatus'
+  /functions/v1/admin-integrations/{id}/test:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/IntegrationId'
+    post:
+      tags:
+      - AdminIntegrations
+      summary: Test integration connection
+      description: 'Backend-initiated probe. Admin browser never calls third-party providers
+
+        directly. Google Play test is rejected (Future Reserved).
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminIntegrationsTest
+      responses:
+        '200':
+          description: Probe result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationTestResult'
+  /functions/v1/admin-recipe-import/batches:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Create batch import and enqueue jobs (async)
+      description: 'Returns immediately. Jobs are processed by recipe-import-worker
+
+        via Supabase Queues / pgmq (Issue #56). Single-job failure does not block the batch.
+
+        '
+      operationId: adminCreateRecipeImportBatch
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - urls
+              properties:
+                urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                destinationUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Batch created; jobs enqueued pending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch:
+                    $ref: '#/components/schemas/RecipeImportBatch'
+                  jobIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                  skipped:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        reason:
+                          type: string
+                  queuedCount:
+                    type: integer
+                  queueMsgIds:
+                    type: array
+                    items:
+                      type: integer
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-recipe-import/batches/{batchId}:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: Get batch summary + jobs
+      operationId: adminGetRecipeImportBatch
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: batchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Batch summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch:
+                    $ref: '#/components/schemas/RecipeImportBatch'
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportJob'
+  /functions/v1/admin-recipe-import/jobs:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: List recipe import jobs
+      operationId: adminListRecipeImportJobs
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - running
+          - imported
+          - needs_review
+          - failed
+          - rejected
+          - duplicate
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      responses:
+        '200':
+          description: Job list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Create single import job and enqueue for async worker
+      description: 'Shared Backend AI Recipe Import pipeline (Issue #55).
+
+        Exact active source URL returns 409 DUPLICATE.
+
+        Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
+
+        Job is enqueued on Supabase Queues (pgmq) — Issue #56. Worker runs pipeline asynchronously.
+
+        '
+      operationId: adminCreateRecipeImportJob
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeImportCreateRequest'
+      responses:
+        '201':
+          description: Job created and enqueued (pending)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  queued:
+                    type: boolean
+                  queueMsgId:
+                    type:
+                    - integer
+                    - 'null'
+        '409':
+          description: Exact URL duplicate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-recipe-import/jobs/{jobId}:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: Get import job detail
+      operationId: adminGetRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      responses:
+        '200':
+          description: Job + result + artifact metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  result:
+                    oneOf:
+                    - $ref: '#/components/schemas/RecipeImportResult'
+                    - type: 'null'
+                  artifacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportArtifact'
+        '404':
+          description: Not found
+  /functions/v1/admin-recipe-import/jobs/{jobId}/approve:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Approve needs-review job and enqueue import
+      operationId: adminApproveRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destinationUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '202':
+          description: Approve / import enqueued
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reject:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Reject import job
+      operationId: adminRejectRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Rejected job
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reparse:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Enqueue re-run AI parse from parse stage
+      operationId: adminReparseRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      responses:
+        '202':
+          description: Reparse enqueued
+  /functions/v1/admin-recipe-import/jobs/{jobId}/retry:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Enqueue retry from a pipeline stage
+      operationId: adminRetryRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromStage:
+                  $ref: '#/components/schemas/RecipeImportStage'
+      responses:
+        '202':
+          description: Retry enqueued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  queued:
+                    type: boolean
+                  queueMsgId:
+                    type:
+                    - integer
+                    - 'null'
+                  fromStage:
+                    $ref: '#/components/schemas/RecipeImportStage'
+  /functions/v1/admin-store-sync/analytics/daily:
+    get:
+      tags:
+      - AdminStoreSync
+      summary: Query store_analytics_daily
+      description: 'Normalized App Store analytics. `metricValue` may be null when Apple
+
+        omitted data (privacy threshold). Clients must not coerce null to 0.
+
+        Not final financial truth — use financial/rows for proceeds.
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminStoreAnalyticsDaily
+      parameters:
+      - name: start
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: end
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: platform
+        in: query
+        schema:
+          type: string
+          enum:
+          - ios
+          - android
+      - name: store
+        in: query
+        schema:
+          type: string
+          enum:
+          - app_store
+          - google_play
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 500
+      responses:
+        '200':
+          description: Analytics daily rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreAnalyticsDailyResponse'
+  /functions/v1/admin-store-sync/analytics/sync:
+    post:
+      tags:
+      - AdminStoreSync
+      summary: Trigger store analytics sync (Owner)
+      description: 'Runs `StoreAnalyticsProvider` for the given provider and records a
+
+        `store_sync_runs` row. Missing ASC credentials → `skipped_not_configured`
+
+        with zero invented series. Google Play → `skipped_reserved`.
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminStoreAnalyticsSync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSyncRequest'
+      responses:
+        '200':
+          description: Sync run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSyncRunResult'
+        '403':
+          description: Owner role required
+  /functions/v1/admin-store-sync/financial/rows:
+    get:
+      tags:
+      - AdminStoreSync
+      summary: Query financial_report_rows
+      description: 'Apple Financial Reports reconciliation rows. Kept separate from analytics —
+
+        never merge into one "final revenue" field with analytics estimates.
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminFinancialReportRows
+      parameters:
+      - name: fiscalPeriod
+        in: query
+        schema:
+          type: string
+          description: Apple fiscal month YYYY-MM
+      - name: store
+        in: query
+        schema:
+          type: string
+          enum:
+          - app_store
+          - google_play
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 500
+      responses:
+        '200':
+          description: Financial report rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialReportRowsResponse'
+  /functions/v1/admin-store-sync/financial/sync:
+    post:
+      tags:
+      - AdminStoreSync
+      summary: Trigger financial report sync (Owner)
+      description: 'Runs `FinancialReportProvider` and upserts `financial_report_rows`.
+
+        Separate from analytics sync — never writes analytics metrics as proceeds.
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminFinancialReportSync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSyncRequest'
+      responses:
+        '200':
+          description: Sync run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSyncRunResult'
+        '403':
+          description: Owner role required
+  /functions/v1/admin-store-sync/integrations/apple_app_store/credentials:
+    put:
+      tags:
+      - AdminStoreSync
+      summary: Set App Store Connect credentials (Owner, write-only)
+      description: 'Stores ASC private key ciphertext in `store_secrets`. Never returns plaintext.
+
+        Non-secret fields (issuerId, keyId, vendorNumber, appAppleId) stored on
+
+        `store_integrations`. Env fallbacks documented in OWNER_CONFIG.
+
+        '
+      security:
+      - AdminBearer: []
+      operationId: adminStoreSetAppleCredentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleStoreCredentialsWrite'
+      responses:
+        '200':
+          description: Credentials stored (status only)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - apple_app_store
+                  status:
+                    type: string
+                  secretConfigured:
+                    type: boolean
+        '403':
+          description: Owner role required
   /functions/v1/admin-store-sync/runs:
     get:
       tags:
@@ -1962,29 +1396,163 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/StoreSyncRun'
-  /functions/v1/admin-store-sync/analytics/daily:
+  /functions/v1/admin-store-sync/status:
     get:
       tags:
       - AdminStoreSync
-      summary: Query store_analytics_daily
-      description: |
-        Normalized App Store analytics. `metricValue` may be null when Apple
-        omitted data (privacy threshold). Clients must not coerce null to 0.
-        Not final financial truth — use financial/rows for proceeds.
+      summary: Store integration connection status
+      description: 'Returns App Store Connect + Google Play connection status.
+
+        Secrets never returned — only `secretConfigured` booleans.
+
+        Google Play remains `future_reserved` until Android work starts (Issue #59).
+
+        '
       security:
       - AdminBearer: []
-      operationId: adminStoreAnalyticsDaily
+      operationId: adminStoreSyncStatus
+      responses:
+        '200':
+          description: Integration status list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreIntegrationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /functions/v1/admin-subscriptions/plans:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription plan products
+      operationId: adminListPlans
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlanProduct'
       parameters:
-      - name: start
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+    post:
+      tags:
+      - AdminSubscriptions
+      summary: Create subscription plan product
+      operationId: adminCreatePlan
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPlanProduct'
+      responses:
+        '201':
+          description: Created
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/plans/{id}:
+    put:
+      tags:
+      - AdminSubscriptions
+      summary: Update subscription plan product
+      operationId: adminUpdatePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - AdminSubscriptions
+      summary: Delete subscription plan product
+      operationId: adminDeletePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-subscriptions/records:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription records
+      operationId: adminListSubscriptionRecords
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/revenue:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: Subscription revenue series
+      operationId: adminSubscriptionRevenue
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/transactions:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List normalized payment transactions
+      description: 'Reads `payment_transactions` (#58). Amounts from RevenueCat are estimated only;
+
+        `final_proceeds` is null until financial reports (#59). Google Play is schema-reserved
+
+        — responses include `googlePlay.status=reserved_not_implemented` (no fake Android revenue).
+
+        '
+      operationId: adminListPaymentTransactions
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: store
         in: query
         schema:
           type: string
-          format: date
-      - name: end
-        in: query
-        schema:
-          type: string
-          format: date
+          enum:
+          - app_store
+          - google_play
+          - play_store
+        description: play_store accepted as alias for google_play
       - name: platform
         in: query
         schema:
@@ -1992,157 +1560,317 @@ paths:
           enum:
           - ios
           - android
-      - name: store
+      - name: userId
         in: query
         schema:
           type: string
-          enum:
-          - app_store
-          - google_play
-      - name: limit
+          format: uuid
+      - name: eventType
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: page
         in: query
         schema:
           type: integer
-          default: 500
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
       responses:
         '200':
-          description: Analytics daily rows
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreAnalyticsDailyResponse'
-  /functions/v1/admin-store-sync/financial/rows:
+                $ref: '#/components/schemas/PaginatedPaymentTransactions'
+  /functions/v1/admin-subscriptions/transactions/{id}:
     get:
       tags:
-      - AdminStoreSync
-      summary: Query financial_report_rows
-      description: |
-        Apple Financial Reports reconciliation rows. Kept separate from analytics —
-        never merge into one "final revenue" field with analytics estimates.
+      - AdminSubscriptions
+      summary: Payment transaction detail
+      operationId: adminGetPaymentTransaction
       security:
       - AdminBearer: []
-      operationId: adminFinancialReportRows
       parameters:
-      - name: fiscalPeriod
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransactionDetail'
+        '404':
+          description: Not found
+  /functions/v1/admin-users:
+    get:
+      tags:
+      - AdminUsers
+      summary: List users (paginated, filterable)
+      operationId: adminListUsers
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: q
         in: query
         schema:
           type: string
-          description: Apple fiscal month YYYY-MM
-      - name: store
+      - name: status
         in: query
         schema:
           type: string
-          enum:
-          - app_store
-          - google_play
-      - name: limit
+      - name: subscription
+        in: query
+        schema:
+          type: string
+      - name: registrationProvider
+        in: query
+        schema:
+          type: string
+      - name: deviceType
+        in: query
+        schema:
+          type: string
+      - name: page
         in: query
         schema:
           type: integer
-          default: 500
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
       responses:
         '200':
-          description: Financial report rows
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FinancialReportRowsResponse'
-  /functions/v1/admin-store-sync/analytics/sync:
-    post:
+                $ref: '#/components/schemas/PaginatedAdminUsers'
+  /functions/v1/admin-users/stats:
+    get:
       tags:
-      - AdminStoreSync
-      summary: Trigger store analytics sync (Owner)
-      description: |
-        Runs `StoreAnalyticsProvider` for the given provider and records a
-        `store_sync_runs` row. Missing ASC credentials → `skipped_not_configured`
-        with zero invented series. Google Play → `skipped_reserved`.
+      - AdminUsers
+      summary: Registration mix stats
+      operationId: adminUserStats
       security:
       - AdminBearer: []
-      operationId: adminStoreAnalyticsSync
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StoreSyncRequest'
       responses:
         '200':
-          description: Sync run result
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreSyncRunResult'
-        '403':
-          description: Owner role required
-  /functions/v1/admin-store-sync/financial/sync:
-    post:
+                $ref: '#/components/schemas/UserRegistrationStats'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-users/{id}:
+    get:
       tags:
-      - AdminStoreSync
-      summary: Trigger financial report sync (Owner)
-      description: |
-        Runs `FinancialReportProvider` and upserts `financial_report_rows`.
-        Separate from analytics sync — never writes analytics metrics as proceeds.
+      - AdminUsers
+      summary: User detail + payment timeline
+      operationId: adminGetUser
       security:
       - AdminBearer: []
-      operationId: adminFinancialReportSync
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StoreSyncRequest'
-      responses:
-        '200':
-          description: Sync run result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StoreSyncRunResult'
-        '403':
-          description: Owner role required
-  /functions/v1/admin-store-sync/integrations/apple_app_store/credentials:
-    put:
-      tags:
-      - AdminStoreSync
-      summary: Set App Store Connect credentials (Owner, write-only)
-      description: |
-        Stores ASC private key ciphertext in `store_secrets`. Never returns plaintext.
-        Non-secret fields (issuerId, keyId, vendorNumber, appAppleId) stored on
-        `store_integrations`. Env fallbacks documented in OWNER_CONFIG.
-      security:
-      - AdminBearer: []
-      operationId: adminStoreSetAppleCredentials
-      requestBody:
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppleStoreCredentialsWrite'
+        schema:
+          type: string
+          format: uuid
       responses:
         '200':
-          description: Credentials stored (status only)
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserDetail'
+  /functions/v1/delete-account:
+    post:
+      tags:
+      - Auth
+      - User
+      summary: Delete account
+      description: Purges user storage objects and deletes the auth user (cascades all owned rows).
+      operationId: deleteAccount
+      responses:
+        '200':
+          description: Account deleted
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  provider:
-                    type: string
-                    enum:
-                    - apple_app_store
-                  status:
-                    type: string
-                  secretConfigured:
+                  ok:
                     type: boolean
-        '403':
-          description: Owner role required
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /functions/v1/health:
+    get:
+      tags:
+      - System
+      summary: Backend health / module probe
+      responses:
+        '200':
+          description: Healthy
+  /functions/v1/recipe-import-worker:
+    post:
+      tags:
+      - Operations
+      - AdminRecipeImport
+      summary: Process recipe import queue (pgmq worker tick)
+      description: 'Operational job type `recipe_import_worker` (Issue #56).
+
+        Reads up to `import_queue_concurrency` messages from Supabase Queues (pgmq),
+
+        calls shared `runImportPipeline`, archives on success / poison.
+
+        Server/cron only — auth via `Authorization: Bearer <RECIPE_IMPORT_WORKER_SECRET>`.
+
+        Concurrency / VT / max attempts come from `runtime_config` (not secrets).
+
+        '
+      operationId: recipeImportWorkerTick
+      security:
+      - WorkerBearer: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recoverStale:
+                  type: boolean
+                  default: true
+                  description: Re-enqueue pending jobs older than 60s
+      responses:
+        '200':
+          description: Worker tick result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  job_type:
+                    type: string
+                  claimed:
+                    type: integer
+                  processed:
+                    type: integer
+                  succeeded:
+                    type: integer
+                  failed:
+                    type: integer
+                  poisoned:
+                    type: integer
+                  skipped:
+                    type: integer
+                  recovered:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/XJobId'
+  /functions/v1/revenuecat-webhook:
+    post:
+      tags:
+      - Subscription
+      summary: RevenueCat webhook
+      description: 'Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
+
+        JWT verification disabled; service role used internally.
+
+        '
+      security:
+      - WebhookBearer: []
+      responses:
+        '200':
+          description: Event received
+      parameters:
+      - $ref: '#/components/parameters/XJobId'
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/storage-cleanup-import-artifacts:
+    post:
+      tags:
+      - Storage
+      - Operations
+      summary: Cleanup expired recipe-import-artifacts
+      description: 'Operational job type `storage_cleanup_import_artifacts`.
+
+        Deletes Storage objects whose `recipe_import_artifact_objects.expires_at`
+
+        has passed and marks rows deleted. Server/cron only — auth via
+
+        `Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.
+
+        Never uses permanent signed URLs; never returns service_role secrets.
+
+        '
+      operationId: storageCleanupImportArtifacts
+      security:
+      - CleanupBearer: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                  default: 200
+      responses:
+        '200':
+          description: Cleanup run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageCleanupResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          description: Misconfigured (missing STORAGE_CLEANUP_SECRET)
   /functions/v1/store-sync-worker:
     post:
       tags:
       - Operations
       - AdminStoreSync
       summary: Cron worker tick for Apple store sync
-      description: |
-        Server/cron only. Auth via `Authorization: Bearer <STORE_SYNC_WORKER_SECRET>`.
+      description: 'Server/cron only. Auth via `Authorization: Bearer <STORE_SYNC_WORKER_SECRET>`.
+
         Syncs Apple analytics + financial only. Never auto-syncs Google Play.
+
+        '
       security:
       - StoreSyncWorkerBearer: []
       operationId: storeSyncWorkerTick
@@ -2182,6 +1910,475 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           description: Misconfigured (missing STORE_SYNC_WORKER_SECRET)
+  /rest/v1/collection_recipes:
+    get:
+      tags:
+      - Collection
+      summary: List recipes in collections
+      responses:
+        '200':
+          description: Membership rows
+    post:
+      tags:
+      - Collection
+      summary: Add recipe to collection
+      responses:
+        '201':
+          description: Added
+    delete:
+      tags:
+      - Collection
+      summary: Remove recipe from collection
+      responses:
+        '204':
+          description: Removed
+  /rest/v1/collections:
+    get:
+      tags:
+      - Collection
+      summary: GET Collections
+      operationId: listCollections
+      responses:
+        '200':
+          description: Own collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Collection'
+    post:
+      tags:
+      - Collection
+      summary: POST Collection
+      operationId: createCollection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionCreate'
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - Collection
+      summary: UPDATE Collection
+      operationId: updateCollection
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - Collection
+      summary: DELETE Collection
+      operationId: deleteCollection
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/cuisines:
+    get:
+      tags:
+      - Category
+      summary: List cuisines
+      responses:
+        '200':
+          description: Cuisine catalog
+  /rest/v1/grocery_items:
+    get:
+      tags:
+      - Grocery
+      summary: List grocery items
+      responses:
+        '200':
+          description: Items
+    post:
+      tags:
+      - Grocery
+      summary: POST Item
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - Grocery
+      summary: UPDATE Item
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - Grocery
+      summary: DELETE Item
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/grocery_lists:
+    get:
+      tags:
+      - Grocery
+      summary: GET Grocery Lists
+      responses:
+        '200':
+          description: Lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroceryList'
+    post:
+      tags:
+      - Grocery
+      summary: Create grocery list
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - Grocery
+      summary: UPDATE Grocery List
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - Grocery
+      summary: DELETE Grocery List
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/ingredients:
+    get:
+      tags:
+      - Ingredient
+      summary: List ingredients (system + own)
+      responses:
+        '200':
+          description: Ingredient catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+    post:
+      tags:
+      - Ingredient
+      summary: Create user ingredient
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - Ingredient
+      summary: Update own user ingredient
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - Ingredient
+      summary: Delete own user ingredient
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/meal_categories:
+    get:
+      tags:
+      - Category
+      summary: List meal categories
+      responses:
+        '200':
+          description: Meal category catalog
+  /rest/v1/meal_plans:
+    get:
+      tags:
+      - MealPlan
+      summary: List meal plans
+      responses:
+        '200':
+          description: Meal plan entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MealPlan'
+    post:
+      tags:
+      - MealPlan
+      summary: Create meal plan entry
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - MealPlan
+      summary: Update meal plan entry
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - MealPlan
+      summary: Delete meal plan entry
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/pantry_items:
+    get:
+      tags:
+      - Pantry
+      summary: List pantry items
+      responses:
+        '200':
+          description: Pantry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PantryItem'
+    post:
+      tags:
+      - Pantry
+      summary: Create pantry item
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - Pantry
+      summary: Update pantry item
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - Pantry
+      summary: Delete pantry item
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/profiles:
+    get:
+      tags:
+      - User
+      summary: GET User Profile
+      operationId: getUserProfile
+      parameters:
+      - $ref: '#/components/parameters/PreferReturn'
+      - name: id
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Filter `eq.<user_id>` (own id only under RLS)
+      responses:
+        '200':
+          description: Profile rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+    patch:
+      tags:
+      - User
+      summary: UPDATE User Profile
+      operationId: updateUserProfile
+      parameters:
+      - $ref: '#/components/parameters/PreferReturn'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+  /rest/v1/recipes:
+    get:
+      tags:
+      - Recipe
+      summary: Recipe List / Detail
+      description: 'List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
+
+        Update: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).
+
+        Delete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).
+
+        '
+      operationId: listRecipes
+      parameters:
+      - name: id
+        in: query
+        description: Filter e.g. `eq.<uuid>` for single recipe
+        schema:
+          type: string
+      - name: order
+        in: query
+        schema:
+          type: string
+          example: created_at.desc
+      - name: select
+        in: query
+        schema:
+          type: string
+          example: '*'
+      responses:
+        '200':
+          description: Own recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+    post:
+      tags:
+      - Recipe
+      summary: Create Recipe
+      operationId: createRecipe
+      parameters:
+      - $ref: '#/components/parameters/PreferReturn'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreate'
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags:
+      - Recipe
+      summary: Update Recipe
+      operationId: updateRecipe
+      parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: eq.<uuid>
+      - $ref: '#/components/parameters/PreferReturn'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreate'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - Recipe
+      summary: Delete Recipe
+      operationId: deleteRecipe
+      parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: eq.<uuid>
+      responses:
+        '204':
+          description: Deleted
+  /rest/v1/subscription_status:
+    get:
+      tags:
+      - Subscription
+      summary: Get subscription status (plan / status / expire_date)
+      responses:
+        '200':
+          description: Simplified subscription view matching Subscription Service contract
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionStatus'
+  /rest/v1/subscriptions:
+    get:
+      tags:
+      - Subscription
+      summary: Get own subscription row
+      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped
+        `expire_date`.
+      responses:
+        '200':
+          description: Subscription entitlement
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionRow'
+  /rest/v1/tags:
+    get:
+      tags:
+      - Category
+      summary: List tags
+      responses:
+        '200':
+          description: Tag catalog
+  /storage/v1/object/{bucket}/{user_id}/{object}:
+    parameters:
+    - name: bucket
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - avatars
+        - recipe-covers
+        - recipe-images
+    - name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: object
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - Storage
+      summary: Upload object (private bucket, path must start with auth user id)
+      responses:
+        '200':
+          description: Uploaded
+    get:
+      tags:
+      - Storage
+      summary: Download / signed access to own object
+      responses:
+        '200':
+          description: Object bytes
+    delete:
+      tags:
+      - Storage
+      summary: Delete own object
+      responses:
+        '200':
+          description: Deleted
 components:
   securitySchemes:
     BearerAuth:
@@ -2214,7 +2411,7 @@ components:
     StoreSyncWorkerBearer:
       type: http
       scheme: bearer
-      description: STORE_SYNC_WORKER_SECRET (cron / App Store sync worker only; Issue #59)
+      description: STORE_SYNC_WORKER_SECRET (cron / App Store sync worker only; Issue
   parameters:
     PreferReturn:
       name: Prefer
@@ -2285,6 +2482,12 @@ components:
           $ref: '#/components/headers/XRequestId'
         X-Correlation-Id:
           $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
       content:
         application/json:
           schema:
@@ -4349,6 +4552,127 @@ components:
           type: string
         appAppleId:
           type: string
+    IntegrationId:
+      type: string
+      enum:
+      - supabase
+      - revenuecat
+      - app_store_connect
+      - ai_gateway
+      - google_play
+    IntegrationConnectionStatus:
+      type: string
+      enum:
+      - connected
+      - not_configured
+      - degraded
+      - future_reserved
+    IntegrationConfigCompleteness:
+      type: object
+      required:
+      - required
+      - configured
+      - missing
+      - percent
+      properties:
+        required:
+          type: array
+          items:
+            type: string
+        configured:
+          type: array
+          items:
+            type: string
+        missing:
+          type: array
+          items:
+            type: string
+        percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+    IntegrationStatus:
+      type: object
+      required:
+      - id
+      - name
+      - status
+      - configCompleteness
+      - secretConfigured
+      - testSupported
+      - secretWriteSupported
+      - reserved
+      description: 'Integration connection status for Admin Settings → Integrations (Issue #63).
+
+        `secretConfigured` is boolean only — plaintext secrets are never returned.
+
+        '
+      properties:
+        id:
+          $ref: '#/components/schemas/IntegrationId'
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/IntegrationConnectionStatus'
+        lastSuccessAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastErrorAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastErrorMessage:
+          type:
+          - string
+          - 'null'
+        lastCheckedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        configCompleteness:
+          $ref: '#/components/schemas/IntegrationConfigCompleteness'
+        secretConfigured:
+          type: boolean
+        testSupported:
+          type: boolean
+        secretWriteSupported:
+          type: boolean
+        reserved:
+          type: boolean
+        notes:
+          type:
+          - string
+          - 'null'
+    IntegrationsListResponse:
+      type: object
+      required:
+      - integrations
+      - checkedAt
+      properties:
+        integrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationStatus'
+        checkedAt:
+          type: string
+          format: date-time
+    IntegrationTestResult:
+      type: object
+      required:
+      - ok
+      - message
+      - integration
+      properties:
+        ok:
+          type: boolean
+        message:
+          type: string
+        integration:
+          $ref: '#/components/schemas/IntegrationStatus'
   headers:
     XRequestId:
       description: Request id for this response (echo or server-generated).
@@ -4362,6 +4686,7 @@ components:
       description: Job / sync id when applicable.
       schema:
         type: string
+  requestBodies: {}
 security:
 - BearerAuth: []
   Apikey: []

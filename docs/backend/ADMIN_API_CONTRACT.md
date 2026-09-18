@@ -41,7 +41,7 @@ Shared source: `admin/src/components/layout/nav.ts` (no per-page forks).
 | Data → Collections…Categories | `/data/*` | mock UI | missing |
 | Settings → General / Security / System | `/settings/{general,security,system}` | hybrid | hybrid / live / hybrid |
 | Settings → AI Platform | `/settings/ai-platform` | Not implemented page | planned (backend `admin-ai` exists) |
-| Settings → Integrations | `/settings/integrations` | Not implemented page | planned |
+| Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live |
 
 Legacy redirects (capabilities preserved): `/subscription` → `/commerce/products`; `/collections` → `/data/collections` (same for ingredients, grocery, meal-plans, pantry, categories); `/settings` → `/settings/general`.
 
@@ -71,7 +71,7 @@ Legacy redirects (capabilities preserved): `/subscription` → `/commerce/produc
 | `/analytics` | — | `admin-store-sync/*` (backend) | planned | #59/#60 Dashboard aggregation pending |
 | `/operations/jobs` | — | — | planned | #60 |
 | `/operations/audit-log` | — | `admin_audit_logs` (write path #57) | planned | List/read Admin UI pending |
-| `/settings/integrations` | — | — | planned | V2 §11 |
+| `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only |
 | Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved |
 
 ## Live Edge Functions (inventory)
@@ -83,6 +83,7 @@ Legacy redirects (capabilities preserved): `/subscription` → `/commerce/produc
 | `admin-dashboard` | false | Ops KPI aggregation |
 | `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series, payment transactions (#58) |
 | `admin-ai` | false | AI Platform providers / models / routes / usage / health (#53) |
+| `admin-integrations` | false | Integration connection status / test / write-only secrets (#63) |
 | `admin-store-sync` | false | ASC analytics + financial sync (#59) |
 | `admin-recipe-import` | false | Import jobs / batches / review actions (#55/#56) |
 | `store-sync-worker` | false | ASC sync cron worker (#59) |

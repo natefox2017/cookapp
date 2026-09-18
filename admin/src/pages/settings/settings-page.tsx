@@ -19,8 +19,9 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { validateAdminPassword } from '@/lib/password-policy'
+import { IntegrationsPanel } from '@/pages/settings/integrations-panel'
 
-export type SettingsSection = 'general' | 'security' | 'system'
+export type SettingsSection = 'general' | 'security' | 'system' | 'integrations'
 type SettingsTab = SettingsSection | 'units' | 'categories'
 
 export function SettingsPage({ section = 'general' }: { section?: SettingsSection }) {
@@ -53,7 +54,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
   function onTabChange(next: string) {
     const nextTab = next as SettingsTab
     setTab(nextTab)
-    if (nextTab === 'security' || nextTab === 'system') {
+    if (nextTab === 'security' || nextTab === 'system' || nextTab === 'integrations') {
       navigate(`/settings/${nextTab}`, { replace: true })
       return
     }
@@ -117,7 +118,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
     )
   }
 
-  const showSettingsSave = tab !== 'security' && isMockMode()
+  const showSettingsSave =
+    tab !== 'security' && tab !== 'integrations' && isMockMode()
   const liveDiagnostics = !isMockMode()
 
   return (
@@ -126,8 +128,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
         title="Settings"
         description={
           liveDiagnostics
-            ? 'Live mode: Security uses admin-auth. General/units/categories are diagnostics-only (no persist API).'
-            : 'General, units, category policy, and system configuration.'
+            ? 'Live mode: Security uses admin-auth; Integrations uses admin-integrations. General/units/categories are diagnostics-only (no persist API).'
+            : 'General, units, category policy, integrations, and system configuration.'
         }
         actions={
           showSettingsSave ? (
@@ -143,6 +145,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
@@ -320,6 +323,19 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations">
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Integrations</CardTitle>
+              <CardDescription>
+                Connection status for Supabase, RevenueCat, App Store Connect, and AI Gateway.
+                Google Play remains Future Reserved / Not Connected. Secrets are write-only.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <IntegrationsPanel />
         </TabsContent>
 
         <TabsContent value="security">
