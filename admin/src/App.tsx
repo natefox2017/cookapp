@@ -6,10 +6,19 @@ import { LoginPage } from '@/pages/login/login-page'
 import { DashboardPage } from '@/pages/dashboard/dashboard-page'
 import { UsersPage } from '@/pages/users/users-page'
 import { RecipeDetailPage, RecipesPage } from '@/pages/recipes/recipes-page'
-import { IngredientsPage } from '@/pages/ingredients/ingredients-page'
-import { CategoriesPage } from '@/pages/categories/categories-page'
+import { ImportPage } from '@/pages/recipes/import-page'
+import { ImportReviewPage } from '@/pages/recipes/import-review-page'
+import { TaxonomyPage } from '@/pages/content/taxonomy-page'
+import { CommerceOverviewPage } from '@/pages/commerce/commerce-overview-page'
+import { ProductsPage } from '@/pages/commerce/products-page'
 import { SubscriptionPage } from '@/pages/subscription/subscription-page'
-import { SettingsPage } from '@/pages/settings/settings-page'
+import { PaymentsPage } from '@/pages/payments/payments-page'
+import { AnalyticsPage } from '@/pages/analytics/analytics-page'
+import { OperationsPage } from '@/pages/operations/operations-page'
+import { HealthPage } from '@/pages/operations/health-page'
+import { ErrorsPage } from '@/pages/operations/errors-page'
+import { AuditLogPage } from '@/pages/operations/audit-log-page'
+import { SettingsPage, type SettingsSection } from '@/pages/settings/settings-page'
 
 function ProductionMockBlocked() {
   return (
@@ -28,15 +37,27 @@ function ProductionMockBlocked() {
   )
 }
 
-/** Settings deep-links from #63 (Integrations) + Security/System tabs. */
-const SETTINGS_SECTIONS = new Set(['general', 'security', 'system', 'integrations'])
+/** Settings deep-links matching §14 IA. */
+const SETTINGS_SECTIONS = new Set<SettingsSection>([
+  'general',
+  'runtime-config',
+  'security',
+  'system',
+  'integrations',
+  'ai-platform',
+])
 
 function SettingsSectionRoute() {
   const { section } = useParams()
-  if (!section || !SETTINGS_SECTIONS.has(section)) {
+  if (!section || !SETTINGS_SECTIONS.has(section as SettingsSection)) {
     return <Navigate to="/settings/general" replace />
   }
-  return <SettingsPage section={section as 'general' | 'security' | 'system' | 'integrations'} />
+  return <SettingsPage section={section as SettingsSection} />
+}
+
+function LegacyRecipeDetailRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/content/recipes/${id ?? ''}`} replace />
 }
 
 export default function App() {
@@ -53,16 +74,49 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
 
-            {/* Compatibility redirects from rolled-back #64 paths (before :id catch-alls) */}
-            <Route path="recipes/import" element={<Navigate to="/recipes" replace />} />
-            <Route path="recipes/import-review" element={<Navigate to="/recipes" replace />} />
-            <Route path="commerce/products" element={<Navigate to="/subscription" replace />} />
-            <Route path="commerce/payments" element={<Navigate to="/subscription" replace />} />
-            <Route path="data/ingredients" element={<Navigate to="/ingredients" replace />} />
-            <Route path="data/categories" element={<Navigate to="/categories" replace />} />
-            <Route path="analytics" element={<Navigate to="/" replace />} />
-            <Route path="operations/jobs" element={<Navigate to="/" replace />} />
-            <Route path="operations/audit-log" element={<Navigate to="/" replace />} />
+            {/* Commerce */}
+            <Route path="commerce" element={<CommerceOverviewPage />} />
+            <Route
+              path="commerce/subscriptions"
+              element={
+                <SubscriptionPage
+                  title="Subscriptions"
+                  initialTab="records"
+                  description="Entitlements and subscription revenue. Manage plan SKUs under Products & Plans."
+                />
+              }
+            />
+            <Route path="commerce/payments" element={<PaymentsPage />} />
+            <Route path="commerce/products" element={<ProductsPage />} />
+
+            <Route path="analytics" element={<AnalyticsPage />} />
+
+            {/* Content & AI */}
+            <Route path="content/recipes" element={<RecipesPage />} />
+            <Route path="content/recipes/:id" element={<RecipeDetailPage />} />
+            <Route path="content/import" element={<ImportPage />} />
+            <Route path="content/import-review" element={<ImportReviewPage />} />
+            <Route path="content/taxonomy" element={<TaxonomyPage />} />
+
+            {/* Operations */}
+            <Route path="operations/health" element={<HealthPage />} />
+            <Route path="operations/jobs" element={<OperationsPage />} />
+            <Route path="operations/errors" element={<ErrorsPage />} />
+            <Route path="operations/audit-log" element={<AuditLogPage />} />
+
+            {/* Compatibility redirects from pre-§14 paths */}
+            <Route path="recipes/import" element={<Navigate to="/content/import" replace />} />
+            <Route
+              path="recipes/import-review"
+              element={<Navigate to="/content/import-review" replace />}
+            />
+            <Route path="recipes/:id" element={<LegacyRecipeDetailRedirect />} />
+            <Route path="recipes" element={<Navigate to="/content/recipes" replace />} />
+            <Route path="ingredients" element={<Navigate to="/content/taxonomy" replace />} />
+            <Route path="categories" element={<Navigate to="/content/taxonomy" replace />} />
+            <Route path="data/ingredients" element={<Navigate to="/content/taxonomy" replace />} />
+            <Route path="data/categories" element={<Navigate to="/content/taxonomy" replace />} />
+            <Route path="subscription" element={<Navigate to="/commerce/subscriptions" replace />} />
 
             {/* End-user personal surfaces — not an Admin ops view */}
             <Route path="collections" element={<Navigate to="/" replace />} />
@@ -74,13 +128,7 @@ export default function App() {
             <Route path="data/meal-plans" element={<Navigate to="/" replace />} />
             <Route path="data/pantry" element={<Navigate to="/" replace />} />
 
-            <Route path="recipes" element={<RecipesPage />} />
-            <Route path="recipes/:id" element={<RecipeDetailPage />} />
-            <Route path="ingredients" element={<IngredientsPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="subscription" element={<SubscriptionPage />} />
-
-            {/* Settings — implemented tabs only (#63 Integrations kept; unknown sections → general) */}
+            {/* Settings */}
             <Route path="settings" element={<Navigate to="/settings/general" replace />} />
             <Route path="settings/:section" element={<SettingsSectionRoute />} />
 

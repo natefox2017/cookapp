@@ -152,7 +152,13 @@ export function mapRecipeSummary(
     category: displayName(row.category as string | null, opts.categoryLookup),
     tags: tags.map((id) => displayName(id, opts.tagLookup) || id),
     createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? row.created_at ?? ""),
     ownerEmail: opts.ownerEmail,
+    libraryKind: String(row.library_kind ?? "system_recommended"),
+    publishStatus: String(row.publish_status ?? "draft"),
+    sourceUrl: row.source_url != null ? String(row.source_url) : null,
+    sourcePlatform: row.source_platform != null ? String(row.source_platform) : null,
+    publishedAt: row.published_at != null ? String(row.published_at) : null,
   };
 }
 

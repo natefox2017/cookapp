@@ -212,6 +212,81 @@ Deno.serve(async (req) => {
       return json(toAdminIntegration(probe), 200, headers, ctx);
     }
 
+    // GET /audit-logs — Admin audit trail (Issue #57 / #104). Secrets never stored.
+    if (resource === "audit-logs" && method === "GET" && !id) {
+      const url = new URL(req.url);
+      const limit = Math.min(Number(url.searchParams.get("limit") ?? 50), 200);
+      const offset = Math.max(Number(url.searchParams.get("offset") ?? 0), 0);
+      const action = url.searchParams.get("action")?.trim() ?? "";
+      let query = db
+        .from("admin_audit_logs")
+        .select(
+          "id, actor_admin_id, actor_username, action, object_type, object_id, before_diff, after_diff, request_id, correlation_id, job_id, ip, created_at",
+          { count: "exact" },
+        )
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+      if (action) query = query.eq("action", action);
+      const { data, error, count } = await query;
+      if (error) throw new AppError("internal_error", error.message, 500);
+      return json(
+        {
+          data: (data ?? []).map((row) => ({
+            id: row.id,
+            actorAdminId: row.actor_admin_id,
+            actorUsername: row.actor_username,
+            action: row.action,
+            objectType: row.object_type,
+            objectId: row.object_id,
+            beforeDiff: row.before_diff,
+            afterDiff: row.after_diff,
+            requestId: row.request_id,
+            correlationId: row.correlation_id,
+            jobId: row.job_id,
+            ip: row.ip,
+            result: "ok",
+            createdAt: row.created_at,
+          })),
+          total: count ?? 0,
+          pageSize: limit,
+          offset,
+        },
+        200,
+        headers,
+        ctx,
+      );
+    }
+
+    // GET /health — unified system health from integration probes (#104).
+    if (resource === "health" && method === "GET" && !id) {
+      const probes = await probeAllIntegrations(db);
+      await Promise.all(probes.map((p) => persistIntegrationStatus(db, p)));
+      const mapStatus = (s: string) => {
+        if (s === "connected" || s === "healthy") return "healthy";
+        if (s === "degraded") return "degraded";
+        if (s === "down" || s === "error") return "down";
+        if (s === "not_configured" || s === "future_reserved") return "not_configured";
+        return s;
+      };
+      return json(
+        {
+          generatedAt: new Date().toISOString(),
+          components: probes.map((p) => ({
+            key: p.key,
+            label: p.label,
+            status: mapStatus(p.status),
+            lastSuccessAt: p.lastSuccessAt ?? null,
+            lastErrorAt: p.lastErrorAt ?? null,
+            lastError: p.lastErrorMessage ?? null,
+            note: typeof p.details?.note === "string" ? p.details.note : null,
+          })),
+        },
+        200,
+        headers,
+        ctx,
+      );
+    }
+
     // GET /job-types
     if (resource === "job-types" && method === "GET") {
       const { data, error } = await db

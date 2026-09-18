@@ -42,13 +42,13 @@ export function RecipesPage() {
   return (
     <div>
       <PageHeader
-        title="Recipes"
-        description="User recipes from CookApp. Empty until members save recipes."
+        title="System Recipe Library"
+        description="Platform recommended recipes (library_kind=system_recommended). User private recipes are not browsable here."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <Input
-          placeholder="Search recipes…"
+          placeholder="Search system recipes…"
           value={q}
           onChange={(event) => setQ(event.target.value)}
           className="sm:max-w-xs"
@@ -81,19 +81,22 @@ export function RecipesPage() {
         </Select>
       </div>
 
-      {loading ? <LoadingBlock label="Loading recipes…" /> : null}
+      {loading ? <LoadingBlock label="Loading system recipes…" /> : null}
       {error ? (
-        <ErrorState title="Could not load recipes" description={error} onRetry={reload} />
+        <ErrorState title="Could not load system recipes" description={error} onRetry={reload} />
       ) : null}
       {!loading && !error && data?.length === 0 ? (
-        <EmptyState title="No recipes" description="No recipes match the current filters." />
+        <EmptyState
+          title="No system recipes"
+          description="No platform recommended recipes match the current filters."
+        />
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {data?.map((recipe) => (
           <Link
             key={recipe.id}
-            to={`/recipes/${recipe.id}`}
+            to={`/content/recipes/${recipe.id}`}
             className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -110,7 +113,9 @@ export function RecipesPage() {
               <CardContent className="space-y-3 p-4">
                 <div>
                   <h3 className="font-semibold leading-snug">{recipe.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{formatDate(recipe.createdAt)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    System · {recipe.publishStatus ?? 'published'} · {formatDate(recipe.createdAt)}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   <Badge variant="secondary">{recipe.cuisine}</Badge>
@@ -145,7 +150,7 @@ export function RecipeDetailPage() {
     setDeleting(true)
     try {
       await deleteRecipe(id)
-      navigate('/recipes')
+      navigate('/content/recipes')
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Delete failed')
     } finally {
@@ -163,8 +168,8 @@ export function RecipeDetailPage() {
           onRetry={reload}
         />
         <div className="mt-3 flex justify-center">
-          <Button variant="outline" onClick={() => navigate('/recipes')}>
-            Back to recipes
+          <Button variant="outline" onClick={() => navigate('/content/recipes')}>
+            Back to System Recipe Library
           </Button>
         </div>
       </div>
@@ -175,9 +180,9 @@ export function RecipeDetailPage() {
     <div>
       <div className="mb-4">
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/recipes">
+          <Link to="/content/recipes">
             <ArrowLeft />
-            Recipes
+            System Recipe Library
           </Link>
         </Button>
       </div>
@@ -194,7 +199,7 @@ export function RecipeDetailPage() {
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight">{data.title}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {data.ownerEmail} · {formatDate(data.createdAt)}
+                  System · {data.publishStatus ?? 'published'} · {formatDate(data.createdAt)}
                 </p>
               </div>
               {capability.canWrite ? (

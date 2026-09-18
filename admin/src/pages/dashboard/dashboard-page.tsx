@@ -379,13 +379,15 @@ export function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent activity</CardTitle>
-            <CardDescription>Users, payments, downloads, and content</CardDescription>
+            <CardDescription>Users, payments, downloads, and system ops</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {data.recent.length === 0 ? (
+            {data.recent.filter((item) => item.type !== 'recipe').length === 0 ? (
               <p className="text-sm text-muted-foreground">No recent activity.</p>
             ) : (
-              data.recent.map((item) => (
+              data.recent
+                .filter((item) => item.type !== 'recipe')
+                .map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"

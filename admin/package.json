@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --experimental-strip-types --test src/lib/password-policy.test.ts src/lib/theme.test.ts src/components/layout/nav.test.ts src/components/layout/sidebar-collapse.test.ts src/api/capabilities.test.ts src/pages/dashboard/dashboard-ops.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/password-policy.test.ts src/lib/theme.test.ts src/components/layout/nav.test.ts src/components/layout/sidebar-collapse.test.ts src/api/capabilities.test.ts src/api/ops.test.ts src/pages/dashboard/dashboard-ops.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

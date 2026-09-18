@@ -1,113 +1,63 @@
 # Admin API Contract Matrix
 
 Issue: [#52](https://github.com/natefox2017/cookapp/issues/52) · Parent [#49](https://github.com/natefox2017/cookapp/issues/49)  
-Notion: [Backend & Admin V2 §3 P0-B / §17](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242)  
-Nav scope: Issue [#61](https://github.com/natefox2017/cookapp/issues/61) rolled back #64 hierarchical / planned placeholder IA while Stage 4 Pilot Gate forbids Stage 5–7 Admin surface expansion.  
-Audited against `main` (`8137bbd`, #93/#98/#99) + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-18).
+Notion: [Backend & Admin V2 §14](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242)  
+Nav scope: Issue [#104](https://github.com/natefox2017/cookapp/issues/104) §14 IA rebuild (builds on Gate-released ops [#101](https://github.com/natefox2017/cookapp/issues/101)). Personal surfaces stay out of Admin nav ([#98](https://github.com/natefox2017/cookapp/issues/98) / [#99](https://github.com/natefox2017/cookapp/issues/99)).
 
 ## Rules
 
 1. Admin typed client live paths must match `/functions/v1/<function>/…` (never invent `/admin/…` REST unless an Edge Function exists).
 2. Production / live mode must **not** silently serve mock KPI or catalog data.
-3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”). Live pending pages **hide write buttons** and diagnostics-only Settings fields are **read-only** (`writeCapability`). `writeCapability` allows writes when mock mode is on **or** the typed client already calls `/functions/v1/admin-catalog` for that domain (merge-safe with live catalog #93). Settings **System** stays live diagnostics even when general/units/categories persist.
-4. Admin **nav / formal routes** only expose capabilities already approved for the current Gate (implemented or existing mock UI). Future modules stay in Notion / Issues — not as navigable placeholders. Backend APIs (e.g. #60 `admin-analytics` / `admin-operations`) may ship without Admin nav pages.
-5. Every **live** Admin endpoint is documented in `supabase/openapi/openapi.yaml`.
-6. Mock mode (`VITE_ADMIN_USE_MOCK=true`) is local/dev only — see #51 production hardening.
+3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”).
+4. Admin **nav** follows §14 IA: Dashboard → Users → Commerce → Analytics → Content & AI → Operations → Settings. No user private content browser.
+5. **System Recommended Recipes** share the `recipes` table with `library_kind=system_recommended` (Owner: single table). Admin catalog must not return `user_owned` recipe bodies.
+6. Every **live** Admin endpoint is documented in `supabase/openapi/openapi.yaml`.
+7. Mock mode (`VITE_ADMIN_USE_MOCK=true`) is local/dev only — see #51 production hardening.
 
-## Status legend
+## Navigation (§14 / #104)
 
-| Status | Meaning |
-|--------|---------|
-| **live** | Edge Function deployed; Admin client uses `/functions/v1/…` |
-| **missing** | No Admin Edge Function; live client returns `501`; mock-only UI |
-| **hybrid** | Partial live (Settings: persist general/units/categories via `admin-catalog`; System diagnostics; Security via `admin-auth`) |
-| **planned** | Confirmed in Notion V2; tracked under #49 children — **not** exposed as Admin nav until Gate allows |
-
-## Navigation (current Gate)
-
-Shared source: `admin/src/components/layout/nav.ts` (flat list; no per-page forks).
+Shared source: `admin/src/components/layout/nav.ts`.
 
 | Nav | Route | UI | API status |
 |-----|-------|----|------------|
 | Dashboard | `/` | live | live |
 | Users | `/users` | live | live |
-| Recipes | `/recipes` | live | live (#92) |
-| Ingredients | `/ingredients` | live | live (#92) |
-| Categories | `/categories` | live | live (#92) |
-| Subscription | `/subscription` | live | live |
-| Settings | `/settings` → `/settings/general` | hybrid tabs | hybrid |
-| Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live (#63) |
+| Commerce → Overview | `/commerce` | live | live (`admin-subscriptions`) |
+| Commerce → Subscriptions | `/commerce/subscriptions` | live | live |
+| Commerce → Payments | `/commerce/payments` | live | live (#58) |
+| Commerce → Products & Plans | `/commerce/products` | live | live |
+| Analytics | `/analytics` | live | live (`admin-analytics`) |
+| Content & AI → System Recipe Library | `/content/recipes` | live | live (`admin-catalog/recipes` · system only) |
+| Content & AI → AI Import | `/content/import` | live | live (`admin-recipe-import`) |
+| Content & AI → Import Review | `/content/import-review` | live | live |
+| Content & AI → Taxonomy | `/content/taxonomy` | live | live (ingredients + categories) |
+| Operations → System Health | `/operations/health` | live | live (`admin-operations/health`) |
+| Operations → Jobs & Syncs | `/operations/jobs` | live | live |
+| Operations → Errors & Incidents | `/operations/errors` | live | live (failed jobs aggregate) |
+| Operations → Audit Log | `/operations/audit-log` | live | live (`admin-operations/audit-logs`) |
+| Settings → General / Security / System | `/settings/*` | hybrid | hybrid |
+| Settings → Runtime Config | `/settings/runtime-config` | live | live (`admin-catalog/runtime-config`) |
+| Settings → AI Platform | `/settings/ai-platform` | live | live (`admin-ai`) |
+| Settings → Integrations | `/settings/integrations` | live | live (#63) |
 
-End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections) — confirmed product: those belong in the iOS app (#98/#99). Typed clients / Edge routes may still exist as API-only; old URLs redirect to Dashboard.
+Legacy redirects: `/recipes*` → `/content/*`, `/ingredients`·`/categories` → `/content/taxonomy`, `/subscription` → `/commerce/subscriptions`. Personal surfaces → `/`.
 
-Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/ingredients` · `/data/categories` → flat counterparts; `/collections` · `/grocery` · `/meal-plans` · `/pantry` · `/data/collections` · `/data/grocery` · `/data/meal-plans` · `/data/pantry` → `/`; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
+## Recipes privacy (#104)
 
-## Matrix
+| Rule | Enforcement |
+|------|-------------|
+| Admin list/get/patch/delete recipes | `library_kind = system_recommended` only |
+| User recipe body (ingredients/steps/notes) | **403** if Admin requests a `user_owned` id |
+| Admin AI Import destination | `destination_user_id` null → insert `system_recommended` on same `recipes` table |
+| Taxonomy usage counts | Count system recipes only |
+
+## Matrix (delta vs prior)
 
 | Admin UI route | Client API | Live path | Status | Notes |
 |----------------|------------|-----------|--------|-------|
-| `/login` | `login` | `POST /functions/v1/admin-auth/login` | live | Custom admin bearer |
-| (auth) | `logout` | `POST /functions/v1/admin-auth/logout` | live | |
-| (auth) | `getSession` | `GET /functions/v1/admin-auth/session` | live | |
-| Settings → Security | `changePassword` | `POST /functions/v1/admin-auth/change-password` | live | |
-| `/` Dashboard | `getDashboard` | `GET /functions/v1/admin-dashboard` | live | #60 KPIs with source/freshness; prefers `payment_transactions` / `store_analytics_daily`; Google Play future_reserved |
-| `/users` | `listUsers` / `getUser` / `getUserRegistrationStats` | `GET /functions/v1/admin-users` · `…/:id` · `…/stats` | live | #44 · detail includes `commerceSummary` (#58) |
-| `/subscription` | plans / records / revenue | `…/admin-subscriptions/{plans,records,revenue}` | live | #35 |
-| (API) Payment transactions | `listTransactions` / `getTransaction` | `…/admin-subscriptions/transactions` · `…/transactions/:id` | live | #58 — RC amounts ≠ final financial truth; Admin Payments **page** not shipped |
-| (API) Analytics aggregation | — | `GET /functions/v1/admin-analytics` | live | #60 — backend only; Admin Analytics UI not in nav (#61) |
-| (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 — backend only; Admin Jobs UI not in nav (#61) |
-| `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | `…/admin-catalog/settings` | hybrid | #92 persist general/units/categories; System tab diagnostics; Security via `admin-auth` |
-| `/recipes` | `listRecipes` / CRUD | `…/admin-catalog/recipes` | live | #92 |
-| `/ingredients` | ingredients CRUD | `…/admin-catalog/ingredients` | live | #92 — Admin creates `is_system` rows |
-| `/categories` | taxonomy CRUD | `…/admin-catalog/taxonomy/{kind}` | live | #92 |
-| (no nav) Collections | `listCollections` | `…/admin-catalog/collections` | API only | #98 — not an Admin page; old `/collections` redirects to Dashboard |
-| (no nav) Grocery | grocery users/items | `…/admin-catalog/grocery/*` | API only | #98 — end-user grocery; not an Admin page |
-| (no nav) Meal Plans | `listMealPlans` | `…/admin-catalog/meal-plans` | API only | #98 — not an Admin page |
-| (no nav) Pantry | `listPantry` | `…/admin-catalog/pantry` | API only | #98 — not an Admin page |
-| `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
-| (future) AI Platform / AI Import / Payments UI / Analytics UI / Ops UI | — | backends may exist | planned | Stay out of Admin nav until Gate allows (#61) |
-| Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved; not an Admin nav module |
-| Ops Jobs + Dashboard aggregation | jobs / integrations / analytics | `…/admin-operations/*` · `admin-analytics` · `admin-dashboard` | live | #60 / #47 — APIs live; dedicated Admin pages not shipped |
+| `/content/recipes` | `listRecipes` / CRUD | `…/admin-catalog/recipes` | live | system_recommended filter |
+| `/settings/runtime-config` | `listRuntimeConfig` / `updateRuntimeConfig` | `…/admin-catalog/runtime-config` | live | non-secret knobs; audited |
+| `/operations/health` | `getSystemHealth` | `…/admin-operations/health` | live | integration probes |
+| `/operations/audit-log` | `listAuditLogs` | `…/admin-operations/audit-logs` | live | no secrets in diffs |
 
-## Live Edge Functions (inventory)
-
-| Function | `verify_jwt` | Purpose |
-|----------|--------------|---------|
-| `admin-auth` | false | Login / logout / session / change-password |
-| `admin-catalog` | false | Ops catalog APIs: recipes/ingredients/taxonomy/settings (#92). Collections/grocery/meal-plans/pantry endpoints exist but are **not** Admin nav (#98). |
-| `admin-users` | false | User list, detail, registration mix stats |
-| `admin-dashboard` | false | Ops KPI aggregation (#60 source/freshness; prefers #58/#59 tables) |
-| `admin-analytics` | false | Analytics aggregation (#60) |
-| `admin-operations` | false | Jobs & Syncs + Integrations status (#60) |
-| `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series, payment transactions (#58) |
-| `admin-ai` | false | AI Platform providers / models / routes / usage / health (#53) |
-| `admin-integrations` | false | Integration connection status / test / write-only secrets (#63) |
-| `admin-store-sync` | false | ASC analytics + financial sync (#59) |
-| `admin-recipe-import` | false | Import jobs / batches / review actions (#55/#56) |
-| `store-sync-worker` | false | ASC sync cron worker (#59) |
-| `recipe-import-worker` | false | Import queue worker (#56) |
-| `openapi` | false | Serves OpenAPI JSON |
-| `health` | true | Module probe (end-user JWT) |
-| `delete-account` | true | End-user account purge |
-| `revenuecat-webhook` | false | IAP webhook (also upserts `payment_transactions` #58) |
-| `storage-cleanup-import-artifacts` | false | Import artifact TTL cleanup (#54) |
-
-## Deprecated / forbidden client paths
-
-Do **not** call these in live mode (they were mock-shaped placeholders):
-
-- `/admin/dashboard`
-- `/admin/recipes`, `/admin/recipes/:id`
-- `/admin/collections`, `/admin/ingredients`, `/admin/grocery/*`
-- `/admin/meal-plans`, `/admin/pantry`, `/admin/categories/*`
-- `/admin/settings`
-
-## OpenAPI
-
-Admin auth uses security scheme `AdminBearer` (session token from `admin-auth/login`), not end-user Supabase JWT.
-
-Re-verify:
-
-```bash
-python3 -c "import json,yaml,pathlib; s=yaml.safe_load(pathlib.Path('supabase/openapi/openapi.yaml').read_text()); assert json.loads(pathlib.Path('supabase/openapi/openapi.json').read_text())==s; assert json.loads(pathlib.Path('supabase/functions/openapi/spec.json').read_text())==s; print('paths', len(s['paths']))"
-```
+See earlier rows in git history for auth/users/dashboard/subscriptions/integrations matrix (unchanged).

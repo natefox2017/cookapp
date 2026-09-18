@@ -183,18 +183,20 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
   )
 }
 
-export function CategoriesPage() {
+export function CategoriesPage({ embedded = false }: { embedded?: boolean }) {
   const capability = writeCapability('categories', isMockMode())
   return (
     <div>
-      <PageHeader
-        title="Categories"
-        description={
-          capability.canWrite
-            ? 'Manage cuisine, category, and tag taxonomies.'
-            : 'Live Categories API is pending. Taxonomy is read-only until the contract is live.'
-        }
-      />
+      {!embedded ? (
+        <PageHeader
+          title="Categories"
+          description={
+            capability.canWrite
+              ? 'Manage cuisine, category, and tag taxonomies.'
+              : 'Live Categories API is pending. Taxonomy is read-only until the contract is live.'
+          }
+        />
+      ) : null}
       {capability.reason ? <PendingApiNotice message={capability.reason} /> : null}
       <Tabs defaultValue="cuisine">
         <TabsList>
