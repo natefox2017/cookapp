@@ -1,0 +1,30 @@
+{
+  "43": {
+    "fullfill": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/43-pb-fullfill-442x958.png",
+    "fullfill_sha1": "7988dc73d2092832c87e588daa9e815c4df3acea",
+    "topfit": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/43-pb-topfit-442x958.png",
+    "topfit_sha1": "7988dc73d2092832c87e588daa9e815c4df3acea",
+    "scaled_h": 960
+  },
+  "39": {
+    "fullfill": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/39-pb-fullfill-442x958.png",
+    "fullfill_sha1": "dad60b49dee48cc6daa04eb2379029b41297eeb8",
+    "topfit": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/39-pb-topfit-442x958.png",
+    "topfit_sha1": "dad60b49dee48cc6daa04eb2379029b41297eeb8",
+    "scaled_h": 960
+  },
+  "05": {
+    "fullfill": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/05-pb-fullfill-442x958.png",
+    "fullfill_sha1": "3c33dc4e6b5cf4b4ab0f51ff69a56d6c35cbc490",
+    "topfit": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/05-pb-topfit-442x958.png",
+    "topfit_sha1": "3c33dc4e6b5cf4b4ab0f51ff69a56d6c35cbc490",
+    "scaled_h": 960
+  },
+  "07": {
+    "fullfill": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/07-pb-fullfill-442x958.png",
+    "fullfill_sha1": "d93d53c23361761363e982b9bfe9640fc5aa21ef",
+    "topfit": ".cursor/walkthrough-artifacts/issue10-pixel-pass-batch1-retry/pixelbase/07-pb-topfit-442x958.png",
+    "topfit_sha1": "d93d53c23361761363e982b9bfe9640fc5aa21ef",
+    "scaled_h": 960
+  }
+}

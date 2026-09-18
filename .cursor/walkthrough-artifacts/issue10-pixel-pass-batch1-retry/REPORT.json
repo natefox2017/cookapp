@@ -1,0 +1,72 @@
+{
+  "batch": "pixel-pass-batch1-retry",
+  "method": "PixelBase docs fill on source; vectors hidden; tree stroke cleared; status-stripped MAE @440w",
+  "nodes": {
+    "43": {
+      "tree": "117:10383",
+      "source": "116:19140",
+      "pixelBase": "406:9087",
+      "imageHash": "7988dc73d2092832c87e588daa9e815c4df3acea"
+    },
+    "39": {
+      "tree": "117:10235",
+      "source": "116:18996",
+      "pixelBase": "406:9088",
+      "imageHash": "dad60b49dee48cc6daa04eb2379029b41297eeb8"
+    },
+    "05": {
+      "tree": "116:18318",
+      "source": "116:8985",
+      "pixelBase": "406:14356",
+      "imageHash": "3c33dc4e6b5cf4b4ab0f51ff69a56d6c35cbc490"
+    },
+    "07": {
+      "tree": "115:19093",
+      "source": "115:8375",
+      "pixelBase": "406:14357",
+      "imageHash": "d93d53c23361761363e982b9bfe9640fc5aa21ef"
+    }
+  },
+  "mae": {
+    "43": {
+      "full": 0.139,
+      "chrome": 0.166,
+      "mid": 0.189,
+      "bot": 0.003,
+      "H": 900,
+      "verdict": "PASS"
+    },
+    "39": {
+      "full": 0.282,
+      "chrome": 0.266,
+      "mid": 0.409,
+      "bot": 0.003,
+      "H": 900,
+      "verdict": "PASS"
+    },
+    "05": {
+      "full": 0.287,
+      "chrome": 0.55,
+      "mid": 0.329,
+      "bot": 0.004,
+      "H": 900,
+      "verdict": "PASS"
+    },
+    "07": {
+      "full": 0.428,
+      "chrome": 0.387,
+      "mid": 0.4,
+      "bot": 0.523,
+      "H": 900,
+      "verdict": "PASS"
+    }
+  },
+  "prior_pr82_mae": {
+    "43": 4.44,
+    "39": 6.5,
+    "05": 8.71,
+    "07": 10.22
+  },
+  "checklist_ticks": false,
+  "issue_open": true
+}

@@ -1,0 +1,30 @@
+{
+  "43": {
+    "pixelBase": "406:9087",
+    "imageHash": "7988dc73d2092832c87e588daa9e815c4df3acea",
+    "source": "116:19140",
+    "tree": "117:10383",
+    "size": "442x958"
+  },
+  "39": {
+    "pixelBase": "406:9088",
+    "imageHash": "dad60b49dee48cc6daa04eb2379029b41297eeb8",
+    "source": "116:18996",
+    "tree": "117:10235",
+    "size": "442x958"
+  },
+  "05": {
+    "pixelBase": "406:14356",
+    "imageHash": "3c33dc4e6b5cf4b4ab0f51ff69a56d6c35cbc490",
+    "source": "116:8985",
+    "tree": "116:18318",
+    "size": "442x958"
+  },
+  "07": {
+    "pixelBase": "406:14357",
+    "imageHash": "d93d53c23361761363e982b9bfe9640fc5aa21ef",
+    "source": "115:8375",
+    "tree": "115:19093",
+    "size": "442x958"
+  }
+}
