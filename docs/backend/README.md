@@ -44,6 +44,7 @@ supabase/
     health/
     openapi/
     admin-auth/
+    admin-subscriptions/
 ```
 
 ## API documentation
@@ -90,12 +91,19 @@ Authorization: Bearer <access_token>
 | `health` | yes | Module probe |
 | `openapi` | no | Serve OpenAPI JSON |
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
+| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
 
 ### Admin auth
 
 - Tables: `admin_accounts`, `admin_sessions` (service_role only; no client RLS policies)
 - Default seed: username `admin`, password `admin` (bcrypt via pgcrypto)
 - Endpoints under `/functions/v1/admin-auth/{login,logout,session,change-password}`
+
+### Admin subscriptions
+
+- Table: `subscription_plans` (Apple / Android SKUs, price, billing period)
+- Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
+- Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
 
 ## Migrations
 

@@ -9,7 +9,6 @@ import {
   mockMealPlans,
   mockPantry,
   mockSettings,
-  mockSubscriptions,
   mockTags,
 } from '@/mocks/data'
 import type {
@@ -21,7 +20,6 @@ import type {
   IngredientInput,
   MealPlanEntry,
   PantryItem,
-  SubscriptionRecord,
   TaxonomyItem,
 } from '@/types/admin'
 
@@ -173,11 +171,6 @@ export async function deleteTaxonomyItem(
     })
   }
   return httpRequest(`/admin/categories/${kind}/${id}`, { method: 'DELETE' })
-}
-
-export async function listSubscriptions(): Promise<SubscriptionRecord[]> {
-  if (isMockMode()) return mockRequest(() => mockSubscriptions)
-  return httpRequest('/admin/subscriptions')
 }
 
 export async function getSettings(): Promise<AdminSettings> {
