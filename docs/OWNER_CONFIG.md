@@ -113,8 +113,15 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | Primary Recipe Model | todo | route `recipe_import_text` / `recipe_import_vision` | |
 | Fallback Model | todo | max 3 fallbacks per route | |
 | App Store Connect API configured | todo | P1 Analytics #59；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
-| Analytics access configured | todo | | |
-| Financial Reports access configured | todo | | |
+| `ASC_ISSUER_ID`（Supabase secrets） | todo | App Store Connect API Issuer ID | 2026-09-18 |
+| `ASC_KEY_ID`（Supabase secrets） | todo | ASC API Key ID | 2026-09-18 |
+| `ASC_PRIVATE_KEY_P8`（Supabase secrets）或 Admin PUT credentials | todo | `.p8` PEM；优先 Admin → `store_secrets`（密文）；勿提交 Git | 2026-09-18 |
+| `ASC_VENDOR_NUMBER` | todo | Financial Reports 必需 | 2026-09-18 |
+| `ASC_APP_APPLE_ID` | todo | Analytics Reports API 必需（App 的 Apple ID） | 2026-09-18 |
+| `COOKAPP_STORE_MASTER_KEY`（Supabase secrets） | todo | 32-byte AES（base64）；可复用 `COOKAPP_AI_MASTER_KEY` | 2026-09-18 |
+| `STORE_SYNC_WORKER_SECRET`（Supabase secrets） | todo | Cron/ops for `store-sync-worker` (#59) | 2026-09-18 |
+| Analytics access configured | todo | ASC key role 含 Sales and Reports / Analytics | 2026-09-18 |
+| Financial Reports access configured | todo | ASC key role 含 Finance | 2026-09-18 |
 | Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
 | `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
 | `RECIPE_IMPORT_WORKER_SECRET`（Supabase secrets） | todo | Cron/ops for `recipe-import-worker` (#56) | 2026-09-18 |
@@ -150,3 +157,4 @@ AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 | 2026-09-18 | #54：`STORAGE_CLEANUP_SECRET` for import-artifact TTL cleanup |
 | 2026-09-18 | #53：AI Platform status（Gateway / secret_ref / routes） |
 | 2026-09-18 | #56：`RECIPE_IMPORT_WORKER_SECRET` for Import Queue worker |
+| 2026-09-18 | #59：ASC Analytics/Financial secrets + `STORE_SYNC_WORKER_SECRET` |

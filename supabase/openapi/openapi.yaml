@@ -40,6 +40,7 @@ tags:
 - name: AdminRecipeImport
 - name: Operations
 - name: AdminAI
+- name: AdminStoreSync
 paths:
   /auth/v1/token:
     post:
@@ -1807,6 +1808,290 @@ paths:
       responses:
         '200':
           description: Resolved chain (no secrets)
+  /functions/v1/admin-store-sync/status:
+    get:
+      tags:
+      - AdminStoreSync
+      summary: Store integration connection status
+      description: |
+        Returns App Store Connect + Google Play connection status.
+        Secrets never returned — only `secretConfigured` booleans.
+        Google Play remains `future_reserved` until Android work starts (Issue #59).
+      security:
+      - AdminBearer: []
+      operationId: adminStoreSyncStatus
+      responses:
+        '200':
+          description: Integration status list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreIntegrationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /functions/v1/admin-store-sync/runs:
+    get:
+      tags:
+      - AdminStoreSync
+      summary: List store sync runs
+      description: Unified job model rows from `store_sync_runs` (analytics + financial).
+      security:
+      - AdminBearer: []
+      operationId: adminStoreSyncListRuns
+      parameters:
+      - name: provider
+        in: query
+        schema:
+          type: string
+          enum:
+          - apple_app_store
+          - google_play
+      - name: jobType
+        in: query
+        schema:
+          type: string
+          enum:
+          - store_analytics_sync
+          - financial_report_sync
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      responses:
+        '200':
+          description: Sync run list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StoreSyncRun'
+  /functions/v1/admin-store-sync/analytics/daily:
+    get:
+      tags:
+      - AdminStoreSync
+      summary: Query store_analytics_daily
+      description: |
+        Normalized App Store analytics. `metricValue` may be null when Apple
+        omitted data (privacy threshold). Clients must not coerce null to 0.
+        Not final financial truth — use financial/rows for proceeds.
+      security:
+      - AdminBearer: []
+      operationId: adminStoreAnalyticsDaily
+      parameters:
+      - name: start
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: end
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: platform
+        in: query
+        schema:
+          type: string
+          enum:
+          - ios
+          - android
+      - name: store
+        in: query
+        schema:
+          type: string
+          enum:
+          - app_store
+          - google_play
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 500
+      responses:
+        '200':
+          description: Analytics daily rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreAnalyticsDailyResponse'
+  /functions/v1/admin-store-sync/financial/rows:
+    get:
+      tags:
+      - AdminStoreSync
+      summary: Query financial_report_rows
+      description: |
+        Apple Financial Reports reconciliation rows. Kept separate from analytics —
+        never merge into one "final revenue" field with analytics estimates.
+      security:
+      - AdminBearer: []
+      operationId: adminFinancialReportRows
+      parameters:
+      - name: fiscalPeriod
+        in: query
+        schema:
+          type: string
+          description: Apple fiscal month YYYY-MM
+      - name: store
+        in: query
+        schema:
+          type: string
+          enum:
+          - app_store
+          - google_play
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 500
+      responses:
+        '200':
+          description: Financial report rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialReportRowsResponse'
+  /functions/v1/admin-store-sync/analytics/sync:
+    post:
+      tags:
+      - AdminStoreSync
+      summary: Trigger store analytics sync (Owner)
+      description: |
+        Runs `StoreAnalyticsProvider` for the given provider and records a
+        `store_sync_runs` row. Missing ASC credentials → `skipped_not_configured`
+        with zero invented series. Google Play → `skipped_reserved`.
+      security:
+      - AdminBearer: []
+      operationId: adminStoreAnalyticsSync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSyncRequest'
+      responses:
+        '200':
+          description: Sync run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSyncRunResult'
+        '403':
+          description: Owner role required
+  /functions/v1/admin-store-sync/financial/sync:
+    post:
+      tags:
+      - AdminStoreSync
+      summary: Trigger financial report sync (Owner)
+      description: |
+        Runs `FinancialReportProvider` and upserts `financial_report_rows`.
+        Separate from analytics sync — never writes analytics metrics as proceeds.
+      security:
+      - AdminBearer: []
+      operationId: adminFinancialReportSync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSyncRequest'
+      responses:
+        '200':
+          description: Sync run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSyncRunResult'
+        '403':
+          description: Owner role required
+  /functions/v1/admin-store-sync/integrations/apple_app_store/credentials:
+    put:
+      tags:
+      - AdminStoreSync
+      summary: Set App Store Connect credentials (Owner, write-only)
+      description: |
+        Stores ASC private key ciphertext in `store_secrets`. Never returns plaintext.
+        Non-secret fields (issuerId, keyId, vendorNumber, appAppleId) stored on
+        `store_integrations`. Env fallbacks documented in OWNER_CONFIG.
+      security:
+      - AdminBearer: []
+      operationId: adminStoreSetAppleCredentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleStoreCredentialsWrite'
+      responses:
+        '200':
+          description: Credentials stored (status only)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - apple_app_store
+                  status:
+                    type: string
+                  secretConfigured:
+                    type: boolean
+        '403':
+          description: Owner role required
+  /functions/v1/store-sync-worker:
+    post:
+      tags:
+      - Operations
+      - AdminStoreSync
+      summary: Cron worker tick for Apple store sync
+      description: |
+        Server/cron only. Auth via `Authorization: Bearer <STORE_SYNC_WORKER_SECRET>`.
+        Syncs Apple analytics + financial only. Never auto-syncs Google Play.
+      security:
+      - StoreSyncWorkerBearer: []
+      operationId: storeSyncWorkerTick
+      parameters:
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analytics:
+                  type: boolean
+                  default: true
+                financial:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Worker tick completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  job_type:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StoreSyncRunResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          description: Misconfigured (missing STORE_SYNC_WORKER_SECRET)
 components:
   securitySchemes:
     BearerAuth:
@@ -1836,6 +2121,10 @@ components:
       type: http
       scheme: bearer
       description: RECIPE_IMPORT_WORKER_SECRET (cron / import queue worker only)
+    StoreSyncWorkerBearer:
+      type: http
+      scheme: bearer
+      description: STORE_SYNC_WORKER_SECRET (cron / App Store sync worker only; Issue #59)
   parameters:
     PreferReturn:
       name: Prefer
@@ -3387,6 +3676,329 @@ components:
           - string
           - 'null'
           format: date-time
+    StoreIntegrationStatus:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+          - apple_app_store
+          - google_play
+        displayName:
+          type: string
+        platform:
+          type: string
+          enum:
+          - ios
+          - android
+        store:
+          type: string
+          enum:
+          - app_store
+          - google_play
+        status:
+          type: string
+          enum:
+          - not_configured
+          - configured
+          - degraded
+          - error
+          - future_reserved
+        secretConfigured:
+          type: boolean
+        issuerIdConfigured:
+          type: boolean
+        keyIdConfigured:
+          type: boolean
+        vendorNumberConfigured:
+          type: boolean
+        appAppleIdConfigured:
+          type: boolean
+        lastSuccessAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastErrorAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastError:
+          type:
+          - string
+          - 'null'
+        metadata:
+          type: object
+          additionalProperties: true
+    StoreIntegrationsResponse:
+      type: object
+      properties:
+        integrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoreIntegrationStatus'
+    StoreSyncRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        jobType:
+          type: string
+          enum:
+          - store_analytics_sync
+          - financial_report_sync
+        provider:
+          type: string
+          enum:
+          - apple_app_store
+          - google_play
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - succeeded
+          - failed
+          - skipped_not_configured
+          - skipped_reserved
+        triggeredBy:
+          type: string
+          enum:
+          - manual
+          - cron
+          - worker
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        rowsUpserted:
+          type: integer
+        errorCode:
+          type:
+          - string
+          - 'null'
+        errorMessage:
+          type:
+          - string
+          - 'null'
+        rangeStart:
+          type:
+          - string
+          - 'null'
+          format: date
+        rangeEnd:
+          type:
+          - string
+          - 'null'
+          format: date
+        requestId:
+          type:
+          - string
+          - 'null'
+        correlationId:
+          type:
+          - string
+          - 'null'
+        metadata:
+          type: object
+          additionalProperties: true
+    StoreSyncRunResult:
+      type: object
+      properties:
+        runId:
+          type: string
+          format: uuid
+        jobType:
+          type: string
+        provider:
+          type: string
+        status:
+          type: string
+        rowsUpserted:
+          type: integer
+        errorCode:
+          type:
+          - string
+          - 'null'
+        errorMessage:
+          type:
+          - string
+          - 'null'
+        metadata:
+          type: object
+          additionalProperties: true
+    StoreSyncRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+          - apple_app_store
+          - google_play
+          default: apple_app_store
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+    StoreAnalyticsDailyRow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        metricDate:
+          type: string
+          format: date
+        platform:
+          type: string
+        store:
+          type: string
+        territory:
+          type:
+          - string
+          - 'null'
+        acquisitionSource:
+          type:
+          - string
+          - 'null'
+        metricKey:
+          type: string
+        metricValue:
+          type:
+          - number
+          - 'null'
+          description: Null when Apple omitted / privacy threshold — never invent 0
+        dataStatus:
+          type: string
+          enum:
+          - available
+          - insufficient
+          - not_returned
+          - not_configured
+        providerSource:
+          type: string
+        estimated:
+          type: boolean
+        syncRunId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        syncedAt:
+          type: string
+          format: date-time
+    StoreAnalyticsDailyResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoreAnalyticsDailyRow'
+        note:
+          type: string
+    FinancialReportRow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+        store:
+          type: string
+        fiscalPeriod:
+          type: string
+        reportDate:
+          type:
+          - string
+          - 'null'
+          format: date
+        territory:
+          type:
+          - string
+          - 'null'
+        currency:
+          type:
+          - string
+          - 'null'
+        productId:
+          type:
+          - string
+          - 'null'
+        units:
+          type:
+          - integer
+          - 'null'
+        grossAmount:
+          type:
+          - number
+          - 'null'
+        developerProceeds:
+          type:
+          - number
+          - 'null'
+          description: Confirmed proceeds from financial reports only
+        taxes:
+          type:
+          - number
+          - 'null'
+        adjustments:
+          type:
+          - number
+          - 'null'
+        exchangeRate:
+          type:
+          - number
+          - 'null'
+        reportStatus:
+          type: string
+        providerSource:
+          type: string
+        providerRowKey:
+          type: string
+        syncRunId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        syncedAt:
+          type: string
+          format: date-time
+    FinancialReportRowsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancialReportRow'
+        note:
+          type: string
+    AppleStoreCredentialsWrite:
+      type: object
+      required:
+      - issuerId
+      - keyId
+      - privateKeyPem
+      properties:
+        issuerId:
+          type: string
+        keyId:
+          type: string
+        privateKeyPem:
+          type: string
+          description: ASC .p8 private key PEM (write-only; never returned)
+        vendorNumber:
+          type: string
+        appAppleId:
+          type: string
   headers:
     XRequestId:
       description: Request id for this response (echo or server-generated).
