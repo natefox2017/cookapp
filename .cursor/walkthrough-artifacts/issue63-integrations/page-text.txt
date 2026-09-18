@@ -35,9 +35,6 @@ Mock mode (dev only): statuses are fixtures — Production forbids fake “conne
 Checked Sep 18, 2026
 
 Refresh
-
-Supabase: Mock probe ok (dev only)
-
 Supabase
 
 Mock: local/dev only — not production KPI truth.

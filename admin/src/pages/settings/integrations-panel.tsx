@@ -143,7 +143,10 @@ function IntegrationCard({
 }
 
 export function IntegrationsPanel() {
-  const { data, loading, error, reload } = useAsyncData(() => listIntegrations(), [])
+  const { data, loading, refreshing, error, reload } = useAsyncData(
+    () => listIntegrations(),
+    [],
+  )
   const [testingId, setTestingId] = useState<IntegrationId | null>(null)
   const [testMessage, setTestMessage] = useState<string | null>(null)
   const [secretOpen, setSecretOpen] = useState(false)
@@ -229,7 +232,13 @@ export function IntegrationsPanel() {
             Checked {formatDate(data.checkedAt)}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void reload()}>
+        <Button
+          variant="outline"
+          size="sm"
+          loading={refreshing}
+          disabled={refreshing}
+          onClick={() => void reload()}
+        >
           <RefreshCw className="size-3.5" aria-hidden />
           Refresh
         </Button>
