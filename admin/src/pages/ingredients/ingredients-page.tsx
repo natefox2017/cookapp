@@ -3,8 +3,10 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
   createIngredient,
   deleteIngredient,
+  isMockMode,
   listIngredients,
   updateIngredient,
+  writeCapability,
 } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import type { Ingredient, IngredientInput } from '@/types/admin'
@@ -19,7 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader, PendingApiNotice } from '@/components/ui/page'
 import {
   Table,
   TableBody,
@@ -42,14 +44,17 @@ export function IngredientsPage() {
   const [editing, setEditing] = useState<Ingredient | null>(null)
   const [form, setForm] = useState<IngredientInput>(emptyForm)
   const [saving, setSaving] = useState(false)
+  const capability = writeCapability('ingredients', isMockMode())
 
   function openCreate() {
+    if (!capability.canWrite) return
     setEditing(null)
     setForm(emptyForm)
     setOpen(true)
   }
 
   function openEdit(item: Ingredient) {
+    if (!capability.canWrite) return
     setEditing(item)
     setForm({
       name: item.name,
@@ -85,6 +90,7 @@ export function IngredientsPage() {
   }
 
   async function onDelete(id: string) {
+    if (!capability.canWrite) return
     if (!window.confirm('Delete this ingredient?')) return
     try {
       await deleteIngredient(id)
@@ -98,14 +104,21 @@ export function IngredientsPage() {
     <div>
       <PageHeader
         title="Ingredients"
-        description="Catalog CRUD via /admin/ingredients."
+        description={
+          capability.canWrite
+            ? 'Catalog CRUD via /admin/ingredients.'
+            : 'Live Ingredients API is pending. Catalog is read-only until the contract is live.'
+        }
         actions={
-          <Button onClick={openCreate}>
-            <Plus />
-            Add ingredient
-          </Button>
+          capability.canWrite ? (
+            <Button onClick={openCreate}>
+              <Plus />
+              Add ingredient
+            </Button>
+          ) : null
         }
       />
+      {capability.reason ? <PendingApiNotice message={capability.reason} /> : null}
 
       {loading ? <LoadingBlock label="Loading ingredients…" /> : null}
       {error ? (
@@ -114,12 +127,18 @@ export function IngredientsPage() {
       {!loading && !error && data?.length === 0 ? (
         <EmptyState
           title="No ingredients"
-          description="Create the first catalog ingredient to get started."
+          description={
+            capability.canWrite
+              ? 'Create the first catalog ingredient to get started.'
+              : 'No catalog rows. Live write API is pending.'
+          }
           action={
-            <Button onClick={openCreate}>
-              <Plus />
-              Add ingredient
-            </Button>
+            capability.canWrite ? (
+              <Button onClick={openCreate}>
+                <Plus />
+                Add ingredient
+              </Button>
+            ) : undefined
           }
         />
       ) : null}
@@ -133,7 +152,7 @@ export function IngredientsPage() {
                 <TableHead>Category</TableHead>
                 <TableHead>Unit</TableHead>
                 <TableHead>Alternative Name</TableHead>
-                <TableHead className="w-28">Actions</TableHead>
+                {capability.canWrite ? <TableHead className="w-28">Actions</TableHead> : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,21 +164,23 @@ export function IngredientsPage() {
                   <TableCell className="text-muted-foreground">
                     {item.alternativeName ?? '—'}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => openEdit(item)}>
-                        <Pencil />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Delete"
-                        onClick={() => onDelete(item.id)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {capability.canWrite ? (
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => openEdit(item)}>
+                          <Pencil />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Delete"
+                          onClick={() => onDelete(item.id)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))}
             </TableBody>
@@ -167,7 +188,7 @@ export function IngredientsPage() {
         </div>
       ) : null}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={capability.canWrite && open} onOpenChange={(next) => capability.canWrite && setOpen(next)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editing ? 'Update ingredient' : 'Create ingredient'}</DialogTitle>

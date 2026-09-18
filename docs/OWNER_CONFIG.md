@@ -126,6 +126,7 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
 | `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
 | `RECIPE_IMPORT_WORKER_SECRET`（Supabase secrets） | todo | Cron/ops for `recipe-import-worker` (#56) | 2026-09-18 |
+| `INSTAGRAM_OEMBED_ACCESS_TOKEN` 或 `FACEBOOK_OEMBED_ACCESS_TOKEN`（Supabase secrets） | todo | 可选。有 token 时 Instagram 走官方 oEmbed；缺省则只用公开 OG 标签，失败进 Needs Review | 2026-09-18 |
 | 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
 | 管理后台 URL / 密钥 | todo | 见相关 Issue | |
 
@@ -161,3 +162,4 @@ AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 | 2026-09-18 | #59：ASC Analytics/Financial secrets + `STORE_SYNC_WORKER_SECRET` |
 | 2026-09-18 | #60：Ops jobs + Dashboard aggregation (`admin-operations` / `admin-analytics`) |
 | 2026-09-18 | #63：Admin Integrations connection status (`admin-integrations`) |
+| 2026-09-18 | #61：optional Instagram oEmbed token for Recipe Import source adapters |

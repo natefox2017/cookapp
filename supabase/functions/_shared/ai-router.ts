@@ -448,6 +448,7 @@ export class PlatformAIRouter {
       source_job_id?: string;
       prompt_version?: string;
     },
+    runtime?: { fetchImpl?: typeof fetch; secretStore?: AISecretStore },
   ): Promise<{
     ok: boolean;
     data: unknown | null;
@@ -474,6 +475,9 @@ export class PlatformAIRouter {
         messages: [{ role: "user", content: userContent }],
         requestId: request.source_job_id,
         responseFormat: { type: "json_object" },
+        fetchImpl: runtime?.fetchImpl,
+        secretStore: runtime?.secretStore,
+        sourceJobId: request.source_job_id,
       });
       let data: unknown = result.content;
       if (typeof result.content === "string") {
@@ -591,12 +595,24 @@ export class StubAIRouter implements AIRouter {
   }
 }
 
-let defaultRouter: AIRouter = new StubAIRouter();
+let defaultRouter: AIRouter | null = null;
 
 export function setAIRouter(router: AIRouter): void {
+  if (router instanceof StubAIRouter) {
+    throw new Error("StubAIRouter is test-only and cannot be installed as the default router");
+  }
   defaultRouter = router;
 }
 
 export function getAIRouter(): AIRouter {
+  if (!defaultRouter) {
+    throw new Error(
+      "AIRouter is not configured. Inject PlatformAIRouter(serviceClient) in production; StubAIRouter is test-only.",
+    );
+  }
   return defaultRouter;
+}
+
+export function resetAIRouter(): void {
+  defaultRouter = null;
 }

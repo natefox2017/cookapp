@@ -75,3 +75,14 @@ export function LoadingBlock({ label = 'Loading…' }: { label?: string }) {
     </div>
   )
 }
+
+export function PendingApiNotice({ message }: { message: string }) {
+  return (
+    <div
+      role="status"
+      className="mb-4 rounded-lg border border-dashed bg-card px-3 py-2 text-sm text-muted-foreground"
+    >
+      {message}
+    </div>
+  )
+}
