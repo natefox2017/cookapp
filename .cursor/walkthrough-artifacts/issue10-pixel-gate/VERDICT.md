@@ -28,7 +28,7 @@ DoD: **only pixel-level PASS counts** (PASS* rejected).
 | 32 Add Section | Recording-only prior; no still primary locked |
 | 37 Clipboard | No pack in missing-ref |
 | 46 Export/Share | Owner: system share sheet — do not draw |
-| 47 / 48 | Owner: **do not draw** |
+| 47 / 48 | Owner: **do not draw** — mains cleared + renamed `OWNER SKIP` (2026-09-18) |
 | Search variants SCOPED / Scope All / History Empty | No dedicated crops (vectors restored) |
 | 10 Date Added variant | No dedicated crop |
 
