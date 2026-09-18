@@ -14,7 +14,6 @@ import { PantryPage } from '@/pages/pantry/pantry-page'
 import { CategoriesPage } from '@/pages/categories/categories-page'
 import { SubscriptionPage } from '@/pages/subscription/subscription-page'
 import { SettingsPage } from '@/pages/settings/settings-page'
-import { NotImplementedPage } from '@/pages/placeholders/not-implemented-page'
 
 function ProductionMockBlocked() {
   return (
@@ -33,6 +32,7 @@ function ProductionMockBlocked() {
   )
 }
 
+/** Settings deep-links from #63 (Integrations) + Security/System tabs. */
 const SETTINGS_SECTIONS = new Set(['general', 'security', 'system', 'integrations'])
 
 function SettingsSectionRoute() {
@@ -57,114 +57,33 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
 
-            {/* Recipes */}
+            {/* Compatibility redirects from rolled-back #64 paths (before :id catch-alls) */}
+            <Route path="recipes/import" element={<Navigate to="/recipes" replace />} />
+            <Route path="recipes/import-review" element={<Navigate to="/recipes" replace />} />
+            <Route path="commerce/products" element={<Navigate to="/subscription" replace />} />
+            <Route path="commerce/payments" element={<Navigate to="/subscription" replace />} />
+            <Route path="data/collections" element={<Navigate to="/collections" replace />} />
+            <Route path="data/ingredients" element={<Navigate to="/ingredients" replace />} />
+            <Route path="data/grocery" element={<Navigate to="/grocery" replace />} />
+            <Route path="data/meal-plans" element={<Navigate to="/meal-plans" replace />} />
+            <Route path="data/pantry" element={<Navigate to="/pantry" replace />} />
+            <Route path="data/categories" element={<Navigate to="/categories" replace />} />
+            <Route path="analytics" element={<Navigate to="/" replace />} />
+            <Route path="operations/jobs" element={<Navigate to="/" replace />} />
+            <Route path="operations/audit-log" element={<Navigate to="/" replace />} />
+
             <Route path="recipes" element={<RecipesPage />} />
-            <Route
-              path="recipes/import"
-              element={
-                <NotImplementedPage
-                  title="AI Import"
-                  description="Paste or batch-import recipe URLs through the shared Backend import pipeline."
-                  contractNote="Backend admin-recipe-import exists (#55/#56). Admin typed client + UI are not wired yet — this route is IA-only until the Import Admin module lands."
-                  relatedHref="/recipes"
-                  relatedLabel="Open Recipe Library"
-                />
-              }
-            />
-            <Route
-              path="recipes/import-review"
-              element={
-                <NotImplementedPage
-                  title="Import Review"
-                  description="Human review queue for low-confidence or failed AI imports."
-                  contractNote="Approve/reject/reparse APIs are on admin-recipe-import; Admin UI review board is not implemented yet."
-                  relatedHref="/recipes"
-                  relatedLabel="Open Recipe Library"
-                />
-              }
-            />
             <Route path="recipes/:id" element={<RecipeDetailPage />} />
+            <Route path="collections" element={<CollectionsPage />} />
+            <Route path="ingredients" element={<IngredientsPage />} />
+            <Route path="grocery" element={<GroceryPage />} />
+            <Route path="meal-plans" element={<MealPlansPage />} />
+            <Route path="pantry" element={<PantryPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
 
-            {/* Commerce */}
-            <Route path="commerce/products" element={<SubscriptionPage />} />
-            <Route
-              path="commerce/payments"
-              element={
-                <NotImplementedPage
-                  title="Payments"
-                  description="Normalized payment transactions, refunds, and proceeds (Notion V2 §7)."
-                  contractNote="Tracked under #58. Existing subscription catalog remains under Products · Subscriptions."
-                  relatedHref="/commerce/products"
-                  relatedLabel="Open Products · Subscriptions"
-                />
-              }
-            />
-            <Route path="subscription" element={<Navigate to="/commerce/products" replace />} />
-
-            {/* Analytics */}
-            <Route
-              path="analytics"
-              element={
-                <NotImplementedPage
-                  title="Analytics"
-                  description="Downloads, acquisition, conversion, and import quality — separate from Payments."
-                  contractNote="Planned under #59/#60. Dashboard continues to show only live aggregations."
-                  relatedHref="/"
-                  relatedLabel="Back to Dashboard"
-                />
-              }
-            />
-
-            {/* Operations */}
-            <Route
-              path="operations/jobs"
-              element={
-                <NotImplementedPage
-                  title="Jobs & Syncs"
-                  description="Unified view of import jobs, store syncs, and webhook health."
-                  contractNote="Planned under #60. Backend import queue exists (#56) without an Admin ops console yet."
-                />
-              }
-            />
-            <Route
-              path="operations/audit-log"
-              element={
-                <NotImplementedPage
-                  title="Audit Log"
-                  description="Privileged Admin action history (actor, action, object, redacted diff)."
-                  contractNote="admin_audit_logs + writers shipped in #57. Admin list/read UI is not implemented yet."
-                />
-              }
-            />
-
-            {/* Data */}
-            <Route path="data/collections" element={<CollectionsPage />} />
-            <Route path="data/ingredients" element={<IngredientsPage />} />
-            <Route path="data/grocery" element={<GroceryPage />} />
-            <Route path="data/meal-plans" element={<MealPlansPage />} />
-            <Route path="data/pantry" element={<PantryPage />} />
-            <Route path="data/categories" element={<CategoriesPage />} />
-            <Route path="collections" element={<Navigate to="/data/collections" replace />} />
-            <Route path="ingredients" element={<Navigate to="/data/ingredients" replace />} />
-            <Route path="grocery" element={<Navigate to="/data/grocery" replace />} />
-            <Route path="meal-plans" element={<Navigate to="/data/meal-plans" replace />} />
-            <Route path="pantry" element={<Navigate to="/data/pantry" replace />} />
-            <Route path="categories" element={<Navigate to="/data/categories" replace />} />
-
-            {/* Settings — static planned routes before :section */}
+            {/* Settings — implemented tabs only (#63 Integrations kept; unknown sections → general) */}
             <Route path="settings" element={<Navigate to="/settings/general" replace />} />
-            <Route
-              path="settings/ai-platform"
-              element={
-                <NotImplementedPage
-                  title="AI Platform"
-                  description="Providers, models, routes, usage, and health — single model entry for Admin and App."
-                  contractNote="Backend admin-ai APIs shipped in #53. Admin Settings UI is not wired yet."
-                  relatedHref="/settings/general"
-                  relatedLabel="Open Settings · General"
-                />
-              }
-            />
             <Route path="settings/:section" element={<SettingsSectionRoute />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

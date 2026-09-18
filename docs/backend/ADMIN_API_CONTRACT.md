@@ -1,7 +1,8 @@
 # Admin API Contract Matrix
 
 Issue: [#52](https://github.com/natefox2017/cookapp/issues/52) · Parent [#49](https://github.com/natefox2017/cookapp/issues/49)  
-Nav IA: [#64](https://github.com/natefox2017/cookapp/issues/64) · Notion [Backend & Admin V2 §3 P0-B / §14 / §17](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242)  
+Notion: [Backend & Admin V2 §3 P0-B / §17](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242)  
+Nav scope: Issue [#61](https://github.com/natefox2017/cookapp/issues/61) rolled back #64 hierarchical / planned placeholder IA while Stage 4 Pilot Gate forbids Stage 5–7 Admin surface expansion.  
 Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-18).
 
 ## Rules
@@ -9,7 +10,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 1. Admin typed client live paths must match `/functions/v1/<function>/…` (never invent `/admin/…` REST unless an Edge Function exists).
 2. Production / live mode must **not** silently serve mock KPI or catalog data.
 3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”).
-4. Planned nav leaves without an Admin UI module show **Not implemented** (Issue #64) — reachable IA, not fake completeness.
+4. Admin **nav / formal routes** only expose capabilities already approved for the current Gate (implemented or existing mock UI). Future modules stay in Notion / Issues — not as navigable placeholders. Backend APIs (e.g. #60 `admin-analytics` / `admin-operations`) may ship without Admin nav pages.
 5. Every **live** Admin endpoint is documented in `supabase/openapi/openapi.yaml`.
 6. Mock mode (`VITE_ADMIN_USE_MOCK=true`) is local/dev only — see #51 production hardening.
 
@@ -20,30 +21,28 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | **live** | Edge Function deployed; Admin client uses `/functions/v1/…` |
 | **missing** | No Admin Edge Function; live client returns `501`; mock-only UI |
 | **hybrid** | Partial live (e.g. Settings Security via `admin-auth`; general settings not persisted live) |
-| **planned** | Nav route reserved (Notion V2 §14); Admin UI not implemented — badge **Not implemented** |
+| **planned** | Confirmed in Notion V2; tracked under #49 children — **not** exposed as Admin nav until Gate allows |
 
-## Navigation IA (Issue #64)
+## Navigation (current Gate)
 
-Shared source: `admin/src/components/layout/nav.ts` (no per-page forks).
+Shared source: `admin/src/components/layout/nav.ts` (flat list; no per-page forks).
 
 | Nav | Route | UI | API status |
 |-----|-------|----|------------|
 | Dashboard | `/` | live | live |
 | Users | `/users` | live | live |
-| Recipes → Library | `/recipes` | mock UI | missing |
-| Recipes → AI Import | `/recipes/import` | Not implemented page | planned (backend `admin-recipe-import` exists) |
-| Recipes → Import Review | `/recipes/import-review` | Not implemented page | planned |
-| Commerce → Products · Subscriptions | `/commerce/products` | live (`SubscriptionPage`) | live |
-| Commerce → Payments | `/commerce/payments` | Not implemented page | planned (backend `payment_transactions` #58; Admin list UI pending) |
-| Analytics | `/analytics` | Not implemented page | planned UI; backend `admin-analytics` live (#60) |
-| Operations → Jobs & Syncs | `/operations/jobs` | Not implemented page | planned UI; backend `admin-operations` live (#60) |
-| Operations → Audit Log | `/operations/audit-log` | Not implemented page | planned (table #57; list UI pending) |
-| Data → Collections…Categories | `/data/*` | mock UI | missing |
-| Settings → General / Security / System | `/settings/{general,security,system}` | hybrid | hybrid / live / hybrid |
-| Settings → AI Platform | `/settings/ai-platform` | Not implemented page | planned (backend `admin-ai` exists) |
-| Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live |
+| Recipes | `/recipes` | mock UI | missing |
+| Collections | `/collections` | mock UI | missing |
+| Ingredients | `/ingredients` | mock UI | missing |
+| Grocery | `/grocery` | mock UI | missing |
+| Meal Plans | `/meal-plans` | mock UI | missing |
+| Pantry | `/pantry` | mock UI | missing |
+| Categories | `/categories` | mock UI | missing |
+| Subscription | `/subscription` | live | live |
+| Settings | `/settings` → `/settings/general` | hybrid tabs | hybrid |
+| Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live (#63) |
 
-Legacy redirects (capabilities preserved): `/subscription` → `/commerce/products`; `/collections` → `/data/collections` (same for ingredients, grocery, meal-plans, pantry, categories); `/settings` → `/settings/general`.
+Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/*` → flat counterparts; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
 
 ## Matrix
 
@@ -55,27 +54,22 @@ Legacy redirects (capabilities preserved): `/subscription` → `/commerce/produc
 | Settings → Security | `changePassword` | `POST /functions/v1/admin-auth/change-password` | live | |
 | `/` Dashboard | `getDashboard` | `GET /functions/v1/admin-dashboard` | live | #60 KPIs with source/freshness; prefers `payment_transactions` / `store_analytics_daily`; Google Play future_reserved |
 | `/users` | `listUsers` / `getUser` / `getUserRegistrationStats` | `GET /functions/v1/admin-users` · `…/:id` · `…/stats` | live | #44 · detail includes `commerceSummary` (#58) |
-| `/commerce/products` | plans / records / revenue | `…/admin-subscriptions/{plans,records,revenue}` | live | was `/subscription` |
-| (API) Payment transactions | `listTransactions` / `getTransaction` | `…/admin-subscriptions/transactions` · `…/transactions/:id` | live | #58 — RC amounts ≠ final financial truth |
-| (API) Analytics aggregation | — | `GET /functions/v1/admin-analytics` | live | #60 (Admin Analytics UI later) |
-| (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 Jobs & Syncs + Integrations status |
-| `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: build-time diagnostics only; no persist API |
-| `/recipes` | `listRecipes` / CRUD | — | missing | Library; AI Import UI planned separately |
-| `/data/collections` | `listCollections` | — | missing | Planned Admin Data APIs |
-| `/data/ingredients` | ingredients CRUD | — | missing | |
-| `/data/grocery` | grocery users/items | — | missing | |
-| `/data/meal-plans` | `listMealPlans` | — | missing | |
-| `/data/pantry` | `listPantry` | — | missing | |
-| `/data/categories` | taxonomy CRUD | — | missing | End-user category tables exist via PostgREST; no Admin ops API yet |
-| `/recipes/import` · `/recipes/import-review` | — | `admin-recipe-import/*` (backend) | planned | Backend #55/#56; Admin UI not wired |
-| `/settings/ai-platform` | — | `admin-ai/*` (backend) | planned | Backend #53; Admin UI not wired |
-| `/commerce/payments` | — | `admin-subscriptions/transactions` (API live) | planned | #58 Admin Payments page UI pending |
-| `/analytics` | — | `admin-analytics` + `admin-store-sync/*` (backend) | planned | #59/#60 Admin Analytics page UI pending |
-| `/operations/jobs` | — | `admin-operations/*` (backend) | planned | #60 Admin Jobs UI pending |
-| `/operations/audit-log` | — | `admin_audit_logs` (write path #57) | planned | List/read Admin UI pending |
+| `/subscription` | plans / records / revenue | `…/admin-subscriptions/{plans,records,revenue}` | live | #35 |
+| (API) Payment transactions | `listTransactions` / `getTransaction` | `…/admin-subscriptions/transactions` · `…/transactions/:id` | live | #58 — RC amounts ≠ final financial truth; Admin Payments **page** not shipped |
+| (API) Analytics aggregation | — | `GET /functions/v1/admin-analytics` | live | #60 — backend only; Admin Analytics UI not in nav (#61) |
+| (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 — backend only; Admin Jobs UI not in nav (#61) |
+| `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: build-time diagnostics only; no persist API |
+| `/recipes` | `listRecipes` / CRUD | — | missing | |
+| `/collections` | `listCollections` | — | missing | |
+| `/ingredients` | ingredients CRUD | — | missing | |
+| `/grocery` | grocery users/items | — | missing | |
+| `/meal-plans` | `listMealPlans` | — | missing | |
+| `/pantry` | `listPantry` | — | missing | |
+| `/categories` | taxonomy CRUD | — | missing | End-user category tables exist via PostgREST; no Admin ops API yet |
 | `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
-| Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved |
-| Ops Jobs + Dashboard aggregation | jobs / integrations / analytics | `…/admin-operations/*` · `admin-analytics` · `admin-dashboard` | live | #60 / #47 |
+| (future) AI Platform / AI Import / Payments UI / Analytics UI / Ops UI | — | backends may exist | planned | Stay out of Admin nav until Gate allows (#61) |
+| Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved; not an Admin nav module |
+| Ops Jobs + Dashboard aggregation | jobs / integrations / analytics | `…/admin-operations/*` · `admin-analytics` · `admin-dashboard` | live | #60 / #47 — APIs live; dedicated Admin pages not shipped |
 
 ## Live Edge Functions (inventory)
 
