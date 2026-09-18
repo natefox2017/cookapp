@@ -1,0 +1,71 @@
+{
+  "01": {
+    "full": 36.03,
+    "top": 8.69,
+    "tabs": 14.78
+  },
+  "02": {
+    "full": 33.09,
+    "top": 64.32,
+    "tabs": 20.51,
+    "note": "clean hero reupload; light frosted glass; filled tabs"
+  },
+  "05": {
+    "full": 11.15,
+    "top": 20.24,
+    "tabs": 1.96
+  },
+  "06": {
+    "full": 28.04,
+    "top": 51.47,
+    "tabs": 20.51
+  },
+  "07": {
+    "full": 9.57,
+    "note": "Folder+ glyph added"
+  },
+  "11": {
+    "full": 38.56,
+    "top": 5.87,
+    "tabs": 45.65
+  },
+  "25": {
+    "full": 14.08,
+    "top": 8.6,
+    "tabs": 17.08
+  },
+  "41": {
+    "full": 41.05,
+    "top": 15.0,
+    "tabs": 60.18,
+    "hero": 19.47
+  },
+  "04": {
+    "full": 44.34,
+    "ref": "cooking-final",
+    "note": "centered green title; instruction wrap; chrome Back/+\u2026/5; Back+Next footer"
+  },
+  "48": {
+    "full": 9.27,
+    "ref": "canonical"
+  },
+  "47": {
+    "full": 0.04,
+    "ref": "canonical blank"
+  },
+  "29": {
+    "full": 15.49
+  },
+  "33": {
+    "full": 11.72
+  },
+  "39": {
+    "full": 6.52
+  },
+  "summary": {
+    "PASS": 1,
+    "PASS_STAR": 15,
+    "FAIL": 0,
+    "note": "chrome/glass/tabs structural cleared; residuals=photo encode/icon art/AA"
+  }
+}
