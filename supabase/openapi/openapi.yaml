@@ -981,6 +981,96 @@ paths:
       parameters:
       - $ref: '#/components/parameters/XCorrelationId'
       - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-subscriptions/transactions:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List normalized payment transactions
+      description: |
+        Reads `payment_transactions` (#58). Amounts from RevenueCat are estimated only;
+        `final_proceeds` is null until financial reports (#59). Google Play is schema-reserved
+        — responses include `googlePlay.status=reserved_not_implemented` (no fake Android revenue).
+      operationId: adminListPaymentTransactions
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: store
+        in: query
+        schema:
+          type: string
+          enum:
+          - app_store
+          - google_play
+          - play_store
+        description: play_store accepted as alias for google_play
+      - name: platform
+        in: query
+        schema:
+          type: string
+          enum:
+          - ios
+          - android
+      - name: userId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: eventType
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentTransactions'
+  /functions/v1/admin-subscriptions/transactions/{id}:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: Payment transaction detail
+      operationId: adminGetPaymentTransaction
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransactionDetail'
+        '404':
+          description: Not found
   /functions/v1/admin-recipe-import/jobs:
     get:
       tags:
@@ -2343,10 +2433,270 @@ components:
             type:
             - string
             - 'null'
+          commerceSummary:
+            $ref: '#/components/schemas/UserCommerceSummary'
           payments:
             type: array
+            description: Timeline from payment_transactions (not ad-hoc purchase_events totals)
             items:
-              type: object
+              $ref: '#/components/schemas/UserPaymentRecord'
+    UserCommerceSummary:
+      type: object
+      description: Derived aggregates from view user_commerce_summary only (#58)
+      properties:
+        subscriptionPlan:
+          type:
+          - string
+          - 'null'
+        subscriptionStatus:
+          type:
+          - string
+          - 'null'
+        subscriptionExpiresAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        firstPurchaseAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        lastPurchaseAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        purchaseCount:
+          type: integer
+        refundCount:
+          type: integer
+        grossSpend:
+          type: number
+        refundedAmount:
+          type: number
+        netSpend:
+          type: number
+        estimatedLtvUsd:
+          type: number
+        primaryCurrency:
+          type:
+          - string
+          - 'null'
+        storeTerritory:
+          type:
+          - string
+          - 'null'
+        source:
+          type: string
+          enum:
+          - user_commerce_summary
+    UserPaymentRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        productId:
+          type:
+          - string
+          - 'null'
+        store:
+          type:
+          - string
+          - 'null'
+          enum:
+          - app_store
+          - google_play
+          - play_store
+          - null
+        amount:
+          type:
+          - number
+          - 'null'
+        currency:
+          type:
+          - string
+          - 'null'
+        environment:
+          type:
+          - string
+          - 'null'
+        purchasedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        status:
+          type:
+          - string
+          - 'null'
+        providerSource:
+          type:
+          - string
+          - 'null'
+    PaymentTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        platform:
+          type:
+          - string
+          - 'null'
+          enum:
+          - ios
+          - android
+          - null
+        store:
+          type:
+          - string
+          - 'null'
+          enum:
+          - app_store
+          - google_play
+          - stripe
+          - promotional
+          - rc_billing
+          - unknown
+          - null
+        environment:
+          type:
+          - string
+          - 'null'
+          enum:
+          - sandbox
+          - production
+          - null
+        productId:
+          type:
+          - string
+          - 'null'
+        entitlementId:
+          type:
+          - string
+          - 'null'
+        transactionId:
+          type:
+          - string
+          - 'null'
+        originalTransactionId:
+          type:
+          - string
+          - 'null'
+        orderId:
+          type:
+          - string
+          - 'null'
+          description: Google Play reserved
+        eventType:
+          type: string
+        status:
+          type: string
+        purchaseAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        currency:
+          type:
+          - string
+          - 'null'
+        grossAmount:
+          type:
+          - number
+          - 'null'
+          description: Original currency amount from provider (estimated when source is RevenueCat)
+        refundAmount:
+          type:
+          - number
+          - 'null'
+        estimatedProceeds:
+          type:
+          - number
+          - 'null'
+        finalProceeds:
+          type:
+          - number
+          - 'null'
+          description: Settled proceeds only after financial reports (#59); null for RC rows
+        estimatedGrossUsd:
+          type:
+          - number
+          - 'null'
+        territory:
+          type:
+          - string
+          - 'null'
+        providerSource:
+          type: string
+        providerEventId:
+          type:
+          - string
+          - 'null'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaymentTransactionDetail:
+      allOf:
+      - $ref: '#/components/schemas/PaymentTransaction'
+      - type: object
+        properties:
+          purchaseTokenMasked:
+            type:
+            - string
+            - 'null'
+          amountSource:
+            type: string
+            enum:
+            - estimated_provider
+          finalProceedsNote:
+            type: string
+          user:
+            type:
+            - object
+            - 'null'
+            properties:
+              id:
+                type: string
+                format: uuid
+              displayName:
+                type: string
+              email:
+                type: string
+    PaginatedPaymentTransactions:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentTransaction'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        googlePlay:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+              - reserved_not_implemented
+            note:
+              type: string
     PaginatedAdminUsers:
       type: object
       properties:

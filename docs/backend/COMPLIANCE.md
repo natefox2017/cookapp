@@ -23,13 +23,13 @@ Last reviewed: 2026-09-18 against `main` + live project `semsjyrqjnumpvanibip`.
 | Pantry | PASS | |
 | Categories (10/6/5 seeds) | PASS | Live counts match |
 | Storage private + isolation | PASS | `avatars`, `recipe-covers`, `recipe-images`; + `recipe-import-artifacts` (service_role / TTL, #54) |
-| Subscription + RevenueCat webhook | PASS | `plan`/`status`; `expire_date` via `subscription_status` view |
+| Subscription + RevenueCat webhook | PASS | `plan`/`status`; `expire_date` via `subscription_status` view; `payment_transactions` + `user_commerce_summary` (#58) |
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
 | Engineering (migrations, OpenAPI, errors, logging) | PASS | |
 | No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI |
 | Admin live API contract | PARTIAL | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md) (#52). Live: auth/users/dashboard/subscriptions. Missing domains return `501` in live Admin client |
 | Production mock / default credentials | IN PROGRESS | #51 / PR #62 |
-| AI Platform / AI Import / Audit / Media abstraction | NOT STARTED | #53–#57 · #54 |
+| AI Platform / AI Import / Audit / Media / Commerce normalize | PARTIAL | #53–#57 landed; #58 payments normalize; #59/#60 analytics/jobs pending |
 
 \* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.
 
