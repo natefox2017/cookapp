@@ -36,13 +36,17 @@ function kpiTone(metric?: DashboardKpiMetric) {
 
 function KpiCard({ metric }: { metric?: DashboardKpiMetric }) {
   if (!metric) return null
+  const primary =
+    metric.availability === 'future_reserved' || metric.availability === 'not_configured'
+      ? 'Not Connected'
+      : metric.value == null
+        ? 'No Data'
+        : formatNumber(metric.value)
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardDescription>{metric.label}</CardDescription>
-        <CardTitle className="text-2xl tabular-nums">
-          {metric.value == null ? '—' : formatNumber(metric.value)}
-        </CardTitle>
+        <CardTitle className="text-2xl tabular-nums">{primary}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 text-xs text-muted-foreground">
         <Badge variant={kpiTone(metric)}>{metric.availability}</Badge>

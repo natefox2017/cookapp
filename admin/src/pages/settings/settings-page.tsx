@@ -140,6 +140,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
     tab === 'integrations' ||
     tab === 'ai-platform' ||
     tab === 'runtime-config'
+  const shellTab = tab === 'units' || tab === 'categories' ? 'general' : tab
   const showSettingsSave =
     !liveSettingsTab && (tab === 'system' ? isMockMode() : persist.canWrite)
   const persistNotice =
@@ -170,11 +171,9 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
       />
       {persistNotice ? <PendingApiNotice message={persistNotice} /> : null}
 
-      <Tabs value={tab} onValueChange={onTabChange}>
+      <Tabs value={shellTab} onValueChange={onTabChange}>
         <TabsList className="h-auto min-h-9 flex-wrap justify-start">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="units">Units</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="runtime-config">Runtime Config</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="ai-platform">AI Platform</TabsTrigger>
@@ -183,189 +182,216 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
         </TabsList>
 
         <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>General</CardTitle>
-              <CardDescription>App identity and support contact</CardDescription>
-            </CardHeader>
-            <CardContent className="grid max-w-xl gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="appName">App name</Label>
-                <Input
-                  id="appName"
-                  value={draft.general.appName}
-                  disabled={persistLocked}
-                  readOnly={persistLocked}
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      general: { ...draft.general, appName: event.target.value },
-                    })
-                  }
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="supportEmail">Support email</Label>
-                <Input
-                  id="supportEmail"
-                  value={draft.general.supportEmail}
-                  disabled={persistLocked}
-                  readOnly={persistLocked}
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      general: { ...draft.general, supportEmail: event.target.value },
-                    })
-                  }
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="locale">Default locale</Label>
-                <Input
-                  id="locale"
-                  value={draft.general.defaultLocale}
-                  disabled={persistLocked}
-                  readOnly={persistLocked}
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      general: { ...draft.general, defaultLocale: event.target.value },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <div>
-                  <div id="maintenance-mode-label" className="text-sm font-medium">
-                    Maintenance mode
-                  </div>
-                  <div className="text-xs text-muted-foreground">Disable write traffic when enabled</div>
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={tab === 'general' ? 'default' : 'outline'}
+              onClick={() => setTab('general')}
+            >
+              App
+            </Button>
+            <Button
+              size="sm"
+              variant={tab === 'units' ? 'default' : 'outline'}
+              onClick={() => setTab('units')}
+            >
+              Units
+            </Button>
+            <Button
+              size="sm"
+              variant={tab === 'categories' ? 'default' : 'outline'}
+              onClick={() => setTab('categories')}
+            >
+              Categories
+            </Button>
+          </div>
+          {tab !== 'units' && tab !== 'categories' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>General</CardTitle>
+                <CardDescription>App identity and support contact</CardDescription>
+              </CardHeader>
+              <CardContent className="grid max-w-xl gap-4">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="appName">App name</Label>
+                  <Input
+                    id="appName"
+                    value={draft.general.appName}
+                    disabled={persistLocked}
+                    readOnly={persistLocked}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        general: { ...draft.general, appName: event.target.value },
+                      })
+                    }
+                  />
                 </div>
-                <Switch
-                  id="maintenance-mode"
-                  aria-labelledby="maintenance-mode-label"
-                  checked={draft.general.maintenanceMode}
-                  disabled={persistLocked}
-                  onCheckedChange={(checked) =>
-                    setDraft({
-                      ...draft,
-                      general: { ...draft.general, maintenanceMode: checked },
-                    })
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="units">
-          <Card>
-            <CardHeader>
-              <CardTitle>Units</CardTitle>
-              <CardDescription>Default measurement preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="grid max-w-xl gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="measurement-system">Measurement system</Label>
-                <Select
-                  value={draft.units.measurementSystem}
-                  disabled={persistLocked}
-                  onValueChange={(value) =>
-                    setDraft({
-                      ...draft,
-                      units: {
-                        ...draft.units,
-                        measurementSystem: value as AdminSettings['units']['measurementSystem'],
-                      },
-                    })
-                  }
-                >
-                  <SelectTrigger id="measurement-system">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="metric">Metric</SelectItem>
-                    <SelectItem value="imperial">Imperial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="temperature-unit">Temperature unit</Label>
-                <Select
-                  value={draft.units.temperatureUnit}
-                  disabled={persistLocked}
-                  onValueChange={(value) =>
-                    setDraft({
-                      ...draft,
-                      units: {
-                        ...draft.units,
-                        temperatureUnit: value as AdminSettings['units']['temperatureUnit'],
-                      },
-                    })
-                  }
-                >
-                  <SelectTrigger id="temperature-unit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="celsius">Celsius</SelectItem>
-                    <SelectItem value="fahrenheit">Fahrenheit</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-              <CardDescription>Taxonomy policy toggles</CardDescription>
-            </CardHeader>
-            <CardContent className="grid max-w-xl gap-3">
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <div>
-                  <div id="allow-user-tags-label" className="text-sm font-medium">
-                    Allow user tags
-                  </div>
-                  <div className="text-xs text-muted-foreground">Users may create free-form tags</div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="supportEmail">Support email</Label>
+                  <Input
+                    id="supportEmail"
+                    value={draft.general.supportEmail}
+                    disabled={persistLocked}
+                    readOnly={persistLocked}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        general: { ...draft.general, supportEmail: event.target.value },
+                      })
+                    }
+                  />
                 </div>
-                <Switch
-                  id="allow-user-tags"
-                  aria-labelledby="allow-user-tags-label"
-                  checked={draft.categories.allowUserTags}
-                  disabled={persistLocked}
-                  onCheckedChange={(checked) =>
-                    setDraft({
-                      ...draft,
-                      categories: { ...draft.categories, allowUserTags: checked },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <div>
-                  <div id="require-cuisine-label" className="text-sm font-medium">
-                    Require cuisine
-                  </div>
-                  <div className="text-xs text-muted-foreground">Recipes must set a cuisine</div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="locale">Default locale</Label>
+                  <Input
+                    id="locale"
+                    value={draft.general.defaultLocale}
+                    disabled={persistLocked}
+                    readOnly={persistLocked}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        general: { ...draft.general, defaultLocale: event.target.value },
+                      })
+                    }
+                  />
                 </div>
-                <Switch
-                  id="require-cuisine"
-                  aria-labelledby="require-cuisine-label"
-                  checked={draft.categories.requireCuisine}
-                  disabled={persistLocked}
-                  onCheckedChange={(checked) =>
-                    setDraft({
-                      ...draft,
-                      categories: { ...draft.categories, requireCuisine: checked },
-                    })
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <div>
+                    <div id="maintenance-mode-label" className="text-sm font-medium">
+                      Maintenance mode
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Disable write traffic when enabled
+                    </div>
+                  </div>
+                  <Switch
+                    id="maintenance-mode"
+                    aria-labelledby="maintenance-mode-label"
+                    checked={draft.general.maintenanceMode}
+                    disabled={persistLocked}
+                    onCheckedChange={(checked) =>
+                      setDraft({
+                        ...draft,
+                        general: { ...draft.general, maintenanceMode: checked },
+                      })
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+          {tab === 'units' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Units</CardTitle>
+                <CardDescription>Default measurement preferences (under General)</CardDescription>
+              </CardHeader>
+              <CardContent className="grid max-w-xl gap-4">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="measurement-system">Measurement system</Label>
+                  <Select
+                    value={draft.units.measurementSystem}
+                    disabled={persistLocked}
+                    onValueChange={(value) =>
+                      setDraft({
+                        ...draft,
+                        units: {
+                          ...draft.units,
+                          measurementSystem: value as AdminSettings['units']['measurementSystem'],
+                        },
+                      })
+                    }
+                  >
+                    <SelectTrigger id="measurement-system">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="metric">Metric</SelectItem>
+                      <SelectItem value="imperial">Imperial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="temperature-unit">Temperature unit</Label>
+                  <Select
+                    value={draft.units.temperatureUnit}
+                    disabled={persistLocked}
+                    onValueChange={(value) =>
+                      setDraft({
+                        ...draft,
+                        units: {
+                          ...draft.units,
+                          temperatureUnit: value as AdminSettings['units']['temperatureUnit'],
+                        },
+                      })
+                    }
+                  >
+                    <SelectTrigger id="temperature-unit">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="celsius">Celsius</SelectItem>
+                      <SelectItem value="fahrenheit">Fahrenheit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+          {tab === 'categories' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Categories</CardTitle>
+                <CardDescription>Taxonomy policy toggles (under General)</CardDescription>
+              </CardHeader>
+              <CardContent className="grid max-w-xl gap-3">
+                <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <div>
+                    <div id="allow-user-tags-label" className="text-sm font-medium">
+                      Allow user tags
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Users may create free-form tags
+                    </div>
+                  </div>
+                  <Switch
+                    id="allow-user-tags"
+                    aria-labelledby="allow-user-tags-label"
+                    checked={draft.categories.allowUserTags}
+                    disabled={persistLocked}
+                    onCheckedChange={(checked) =>
+                      setDraft({
+                        ...draft,
+                        categories: { ...draft.categories, allowUserTags: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <div>
+                    <div id="require-cuisine-label" className="text-sm font-medium">
+                      Require cuisine
+                    </div>
+                    <div className="text-xs text-muted-foreground">Recipes must set a cuisine</div>
+                  </div>
+                  <Switch
+                    id="require-cuisine"
+                    aria-labelledby="require-cuisine-label"
+                    checked={draft.categories.requireCuisine}
+                    disabled={persistLocked}
+                    onCheckedChange={(checked) =>
+                      setDraft({
+                        ...draft,
+                        categories: { ...draft.categories, requireCuisine: checked },
+                      })
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
         </TabsContent>
 
         <TabsContent value="runtime-config">

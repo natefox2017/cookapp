@@ -9,7 +9,7 @@ export function TaxonomyPage() {
     <div>
       <PageHeader
         title="Taxonomy"
-        description="Platform taxonomy for System Recommended Recipes — Ingredients, Categories, Cuisine, Tags."
+        description="Platform taxonomy for System Recommended Recipes — Ingredients and Categories (Cuisine / Tags managed under Categories)."
       />
       <Tabs defaultValue="ingredients">
         <TabsList>

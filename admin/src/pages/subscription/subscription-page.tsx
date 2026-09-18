@@ -481,7 +481,7 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
   const cards = [
     { label: 'MRR (est.)', value: formatMoney(data.stats.mrr) },
     { label: 'Apple revenue', value: formatMoney(data.stats.appleRevenue) },
-    { label: 'Android revenue', value: formatMoney(data.stats.androidRevenue) },
+    { label: 'Google Play', value: 'Not Connected' },
     { label: 'Active paid', value: formatNumber(data.stats.activePaid) },
   ]
 
@@ -495,6 +495,9 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold tabular-nums tracking-tight">{card.value}</div>
+              {card.label === 'Google Play' ? (
+                <p className="mt-1 text-xs text-muted-foreground">Future Reserved — never fake Android revenue</p>
+              ) : null}
             </CardContent>
           </Card>
         ))}
@@ -504,7 +507,7 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
         <Card>
           <CardHeader>
             <CardTitle>Monthly revenue</CardTitle>
-            <CardDescription>Apple vs Android amounts</CardDescription>
+            <CardDescription>Apple amounts only · Google Play Future Reserved</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={revenueChartConfig} className="h-64 w-full aspect-auto">
@@ -516,9 +519,6 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
                 <Legend />
                 {(platform === 'all' || platform === 'app_store') && (
                   <Bar dataKey="apple" name="Apple" fill="var(--color-apple)" radius={4} />
-                )}
-                {(platform === 'all' || platform === 'play_store') && (
-                  <Bar dataKey="android" name="Android" fill="var(--color-android)" radius={4} />
                 )}
               </BarChart>
             </ChartContainer>

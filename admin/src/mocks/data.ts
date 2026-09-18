@@ -592,16 +592,16 @@ export const mockSubscriptionRevenue: SubscriptionRevenueData = {
   stats: {
     mrr: 54.97,
     appleRevenue: 119.98,
-    androidRevenue: 49.97,
+    androidRevenue: 0,
     activePaid: 4,
   },
   series: [
-    { month: 'Oct', apple: 39.99, android: 4.99, total: 44.98 },
-    { month: 'Nov', apple: 44.98, android: 9.98, total: 54.96 },
-    { month: 'Dec', apple: 84.97, android: 14.97, total: 99.94 },
-    { month: 'Jan', apple: 44.98, android: 19.96, total: 64.94 },
-    { month: 'Feb', apple: 119.97, android: 44.97, total: 164.94 },
-    { month: 'Mar', apple: 39.99, android: 9.98, total: 49.97 },
+    { month: 'Oct', apple: 39.99, android: 0, total: 39.99 },
+    { month: 'Nov', apple: 44.98, android: 0, total: 44.98 },
+    { month: 'Dec', apple: 84.97, android: 0, total: 84.97 },
+    { month: 'Jan', apple: 44.98, android: 0, total: 44.98 },
+    { month: 'Feb', apple: 119.97, android: 0, total: 119.97 },
+    { month: 'Mar', apple: 39.99, android: 0, total: 39.99 },
   ],
 }
 
@@ -752,9 +752,9 @@ export const mockDashboard: DashboardData = {
     },
     {
       id: 'act_05',
-      type: 'recipe',
-      title: 'Tomato Basil Soup',
-      subtitle: 'Recipe created by alex.chen@example.com',
+      type: 'subscription',
+      title: 'System recipe published',
+      subtitle: 'Tomato Basil Soup · System Recipe Library',
       createdAt: '2026-03-14T16:00:00Z',
     },
   ],

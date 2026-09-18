@@ -28,7 +28,7 @@ export function ErrorsPage() {
   }
 
   const failed = data.data.filter(
-    (job) => job.status === 'failed' || Boolean(job.errorCode) || Boolean(job.errorMessage),
+    (job) => job.status === 'failed' && job.provider !== 'google_play',
   )
 
   return (

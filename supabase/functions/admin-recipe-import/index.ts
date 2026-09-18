@@ -377,19 +377,13 @@ Deno.serve(async (req) => {
     ) {
       const body = await readJson(req);
       const job = await loadJob(admin, parts[1]);
+      // Admin approve: null destination → System Recipe Library (library_kind=system_recommended).
+      // Explicit destinationUserId still allowed for future user-library tooling.
       const destination = body.destinationUserId != null
         ? String(body.destinationUserId)
         : body.destination_user_id != null
         ? String(body.destination_user_id)
-        : job.destination_user_id;
-
-      if (!destination) {
-        throw new AppError(
-          "validation_error",
-          "destinationUserId required to approve import",
-          400,
-        );
-      }
+        : job.destination_user_id ?? null;
 
       await admin.from("recipe_import_jobs").update({
         destination_user_id: destination,
