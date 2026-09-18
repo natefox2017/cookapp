@@ -23,6 +23,8 @@ jobs:
           test -f ios/CookApp/Features/Auth/AuthService.swift
           test -f ios/CookApp/Features/Subscription/SubscriptionService.swift
           echo "iOS foundation paths OK (Xcode build reserved for macOS runners)."
+      - name: Phase 1.5 navigation skeleton checks
+        run: python3 ios/Scripts/verify_navigation_skeleton.py
   # Uncomment when macOS runners / signing are available:
   # xcode-build:
   #   runs-on: macos-15
