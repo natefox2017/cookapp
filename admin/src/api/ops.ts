@@ -1,4 +1,5 @@
 import { ApiError, httpRequest, isMockMode, mockRequest } from '@/api/client'
+import { listIntegrations } from '@/api/integrations'
 import {
   mockAiHealth,
   mockAiModels,
@@ -289,8 +290,6 @@ export async function getSystemHealth(): Promise<SystemHealthPayload> {
     return await httpRequest('/functions/v1/admin-operations/health')
   } catch (err) {
     if (err instanceof ApiError && (err.status === 501 || err.status === 404)) {
-      // Fall back to integrations list probe when dedicated health is missing.
-      const { listIntegrations } = await import('@/api/integrations')
       const integrations = await listIntegrations()
       return {
         generatedAt: integrations.checkedAt,
