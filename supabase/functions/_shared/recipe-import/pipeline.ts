@@ -43,6 +43,8 @@ export interface PipelineJobRow {
   status: JobStatus;
   stage: PipelineStage;
   retry_count: number;
+  /** Admin account that created the job (system imports). */
+  created_by?: string | null;
 }
 
 export interface PipelineDeps {
