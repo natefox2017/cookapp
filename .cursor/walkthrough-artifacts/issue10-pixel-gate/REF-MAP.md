@@ -5,13 +5,15 @@ Every Interaction Tree primary maps to an owner asset. Do not invent MISSING_REF
 | # | Tree label | Source |
 |---|------------|--------|
 | 13 | Recipe Editor | `missing-ref/13-15/IMG_4428.PNG` |
-| 14 | Category Selector | `missing-ref/22/` MP4 @ ~15s |
+| 14 | Category Selector | `missing-ref/22/` MP4 @ ~15s (= `/tmp/ref-frames/22/f05.jpg`, MAE 0 vs crop) |
 | 15 | Cuisine Selector | `missing-ref/13-15/IMG_4438.PNG` |
-| 21 | Add Recipe Menu | `missing-ref/22/` MP4 @ ~1.5s |
-| 23 | Cookbook Return | `cookbook-grid.jpg` |
-| 24 | Groceries | `missing-ref/24-28/` MP4 @ ~16.5s |
-| 28 | New Item | `missing-ref/24-28/IMG_4462.PNG` |
-| 32 | Add Section Menu | `missing-ref/29-32/` MP4 @ ~28.5s |
+| 21 | Add Recipe Menu | `missing-ref/22/` MP4 dense ~1.5s — glass **Browse Web / From Scratch / Enter URL / Scan or Pick** (not How-To menu) |
+| 23 | Cookbook Return | `cookbook-grid.jpg` — keep; frame `16-21/f12` is **Search · Recently Added**, wrong page for 23 |
+| 24 | Groceries | `missing-ref/24-28/` MP4 @ ~16.5s (filled — pack has no zero-row empty) |
+| 28 | New Item | `missing-ref/24-28/IMG_4462.PNG` (= `24-28/f11`) |
+| 32 | Add Section Menu | `missing-ref/29-32/` MP4 @ ~28.5s — expanded Breakfast/Lunch/Dinner; dense `f060` is serving overlay, not 32 |
 | 37 | Clipboard Detection | `settings-general-voice-clipboard.jpg` |
 | 46 | Export | Owner skip (system share) |
 | 47–48 | Acknowledgements / Thanks | Owner skip |
+
+Cross-check: [Map frames to open pages](bc-b03b57e7-1068-5f3d-bff2-e7b54370efd2) — no PixelBase swap required.
