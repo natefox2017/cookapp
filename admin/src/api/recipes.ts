@@ -1,4 +1,5 @@
-import { httpRequest, isMockMode, mockRequest } from '@/api/client'
+import { isMockMode, mockRequest } from '@/api/client'
+import { notImplemented } from '@/api/not-implemented'
 import { mockRecipeDetails, mockRecipes } from '@/mocks/data'
 import type { ListRecipesParams, RecipeDetail, RecipeSummary } from '@/types/admin'
 
@@ -15,13 +16,7 @@ export async function listRecipes(params: ListRecipesParams = {}): Promise<Recip
       })
     })
   }
-
-  const search = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) search.set(key, value)
-  })
-  const qs = search.toString()
-  return httpRequest<RecipeSummary[]>(`/admin/recipes${qs ? `?${qs}` : ''}`)
+  return notImplemented('recipes')
 }
 
 export async function getRecipe(id: string): Promise<RecipeDetail> {
@@ -32,7 +27,7 @@ export async function getRecipe(id: string): Promise<RecipeDetail> {
       return recipe
     })
   }
-  return httpRequest<RecipeDetail>(`/admin/recipes/${id}`)
+  return notImplemented('recipes')
 }
 
 export async function updateRecipe(
@@ -61,10 +56,7 @@ export async function updateRecipe(
       return next
     })
   }
-  return httpRequest<RecipeDetail>(`/admin/recipes/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
+  return notImplemented('recipes')
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
@@ -75,5 +67,5 @@ export async function deleteRecipe(id: string): Promise<void> {
       if (index >= 0) mockRecipes.splice(index, 1)
     })
   }
-  return httpRequest<void>(`/admin/recipes/${id}`, { method: 'DELETE' })
+  return notImplemented('recipes')
 }

@@ -29,6 +29,9 @@ tags:
   - name: Subscription
   - name: System
   - name: AdminAuth
+  - name: AdminUsers
+  - name: AdminDashboard
+  - name: AdminSubscriptions
 
 paths:
   /auth/v1/token:
@@ -652,6 +655,193 @@ paths:
         "200":
           description: Deleted
 
+  /functions/v1/admin-users:
+    get:
+      tags:
+      - AdminUsers
+      summary: List users (paginated, filterable)
+      operationId: adminListUsers
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: subscription
+        in: query
+        schema:
+          type: string
+      - name: registrationProvider
+        in: query
+        schema:
+          type: string
+      - name: deviceType
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminUsers'
+  /functions/v1/admin-users/stats:
+    get:
+      tags:
+      - AdminUsers
+      summary: Registration mix stats
+      operationId: adminUserStats
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistrationStats'
+  /functions/v1/admin-users/{id}:
+    get:
+      tags:
+      - AdminUsers
+      summary: User detail + payment timeline
+      operationId: adminGetUser
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserDetail'
+  /functions/v1/admin-dashboard:
+    get:
+      tags:
+      - AdminDashboard
+      summary: Dashboard KPI aggregation
+      operationId: adminDashboard
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardData'
+  /functions/v1/admin-subscriptions/plans:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription plan products
+      operationId: adminListPlans
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlanProduct'
+    post:
+      tags:
+      - AdminSubscriptions
+      summary: Create subscription plan product
+      operationId: adminCreatePlan
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPlanProduct'
+      responses:
+        '201':
+          description: Created
+  /functions/v1/admin-subscriptions/plans/{id}:
+    put:
+      tags:
+      - AdminSubscriptions
+      summary: Update subscription plan product
+      operationId: adminUpdatePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - AdminSubscriptions
+      summary: Delete subscription plan product
+      operationId: adminDeletePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-subscriptions/records:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription records
+      operationId: adminListSubscriptionRecords
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+  /functions/v1/admin-subscriptions/revenue:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: Subscription revenue series
+      operationId: adminSubscriptionRevenue
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+
 components:
   securitySchemes:
     BearerAuth:
@@ -720,6 +910,173 @@ components:
         expiresAt: { type: string, format: date-time }
         admin:
           $ref: "#/components/schemas/AdminIdentity"
+
+    AdminAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+          description: 'Present after #51 hardening migration'
+    AdminLoginRequest:
+      type: object
+      required:
+      - username
+      - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    AdminLoginResponse:
+      type: object
+      required:
+      - token
+      - expiresAt
+      - admin
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        admin:
+          $ref: '#/components/schemas/AdminAccount'
+    AdminChangePasswordRequest:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        displayName:
+          type: string
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - deleted
+        subscription:
+          type: string
+          enum:
+          - free
+          - pro
+          - lifetime
+        registrationProvider:
+          type: string
+          enum:
+          - apple
+          - google
+          - email
+          - unknown
+        deviceType:
+          type: string
+          enum:
+          - ios
+          - android
+          - web
+          - unknown
+        createdAt:
+          type: string
+          format: date-time
+        favoriteCount:
+          type: integer
+    AdminUserDetail:
+      allOf:
+      - $ref: '#/components/schemas/AdminUser'
+      - type: object
+        properties:
+          registrationIp:
+            type:
+            - string
+            - 'null'
+          payments:
+            type: array
+            items:
+              type: object
+    PaginatedAdminUsers:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUser'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+    UserRegistrationStats:
+      type: object
+      properties:
+        byProvider:
+          type: array
+          items:
+            type: object
+        byDevice:
+          type: array
+          items:
+            type: object
+    DashboardData:
+      type: object
+      description: Ops aggregation from admin-dashboard (#47). Source labels should be preserved by clients.
+      additionalProperties: true
+    SubscriptionPlanProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        planKey:
+          type: string
+        displayName:
+          type: string
+        platform:
+          type: string
+          enum:
+          - app_store
+          - play_store
+        productId:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        billingPeriod:
+          type: string
+          enum:
+          - monthly
+          - yearly
+          - lifetime
+        active:
+          type: boolean
+        description:
+          type:
+          - string
+          - 'null'
+        updatedAt:
+          type: string
+          format: date-time
 
     UserProfile:
       type: object
