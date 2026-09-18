@@ -45,13 +45,15 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Users | `/functions/v1/admin-users/*` | live |
 | Dashboard | `/functions/v1/admin-dashboard` | live |
 | Subscription | `/functions/v1/admin-subscriptions/*` | live |
-| Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories | — | **missing** → live client `501`; sidebar **Pending** |
+| Recipes / Ingredients / Categories | — | **missing** → live client `501`; sidebar **Pending** |
 | Settings → General / Security / System | hybrid | Security via `admin-auth`; general diagnostics-only |
 | Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
 
 Flat navigation (Issue #61 rollback of #64 Stage-4-overreach) in `admin/src/components/layout/nav.ts`:
 
-- Dashboard · Users · Recipes · Collections · Ingredients · Grocery · Meal Plans · Pantry · Categories · Subscription · Settings
+- Dashboard · Users · Recipes · Ingredients · Categories · Subscription · Settings
+
+End-user personal surfaces (Meal Plan, Grocery, Pantry, Collections) are **not** Admin nav — they belong in the iOS app. Old `/meal-plans` · `/grocery` · `/pantry` · `/collections` URLs redirect to Dashboard.
 
 Settings tabs include Integrations (#63). Analytics / Operations / Payments / AI Platform / AI Import are **not** exposed as Admin nav or placeholder pages until Notion Gate allows; former #64 paths redirect to existing pages.
 
@@ -93,12 +95,8 @@ Admin Dashboard UI
 | `/login` | Admin sign-in | yes |
 | `/` | Dashboard | yes (`admin-dashboard`) |
 | `/users` | Users | yes |
-| `/recipes` | Recipe grid + detail | pending |
-| `/collections` | Collections grid | pending |
+| `/recipes` | Recipe catalog + detail | pending |
 | `/ingredients` | Ingredients CRUD | pending |
-| `/grocery` | Grocery | pending |
-| `/meal-plans` | Meal plan | pending |
-| `/pantry` | Pantry | pending |
 | `/categories` | Taxonomy | pending |
 | `/subscription` | Plans · Records · Revenue | yes |
 | `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |

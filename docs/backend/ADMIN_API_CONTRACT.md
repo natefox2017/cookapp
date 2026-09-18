@@ -32,17 +32,15 @@ Shared source: `admin/src/components/layout/nav.ts` (flat list; no per-page fork
 | Dashboard | `/` | live | live |
 | Users | `/users` | live | live |
 | Recipes | `/recipes` | mock UI | missing |
-| Collections | `/collections` | mock UI | missing |
 | Ingredients | `/ingredients` | mock UI | missing |
-| Grocery | `/grocery` | mock UI | missing |
-| Meal Plans | `/meal-plans` | mock UI | missing |
-| Pantry | `/pantry` | mock UI | missing |
 | Categories | `/categories` | mock UI | missing |
 | Subscription | `/subscription` | live | live |
 | Settings | `/settings` → `/settings/general` | hybrid tabs | hybrid |
 | Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live (#63) |
 
-Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/*` → flat counterparts; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
+End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections). Typed clients may still exist for contract / live catalog merge; routes redirect to Dashboard.
+
+Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/ingredients` · `/data/categories` → flat counterparts; `/collections` · `/grocery` · `/meal-plans` · `/pantry` · `/data/collections` · `/data/grocery` · `/data/meal-plans` · `/data/pantry` → `/`; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
 
 ## Matrix
 
@@ -60,11 +58,11 @@ Compatibility redirects (no dead links after #64 rollback): `/commerce/products`
 | (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 — backend only; Admin Jobs UI not in nav (#61) |
 | `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: General/Units/Categories persist when the client calls `admin-catalog`; otherwise diagnostics **read-only**. System stays diagnostics. Security / Integrations stay writable |
 | `/recipes` | `listRecipes` / CRUD | — | missing | Live writes hidden until the typed client calls `admin-catalog` (#61 `writeCapability`; #93 flips this automatically) |
-| `/collections` | `listCollections` | — | missing | |
+| (no nav) Collections | `listCollections` | — | missing | End-user collections — not an Admin page; old `/collections` redirects to Dashboard |
 | `/ingredients` | ingredients CRUD | — | missing | Live writes hidden until `admin-catalog` client lands (#61 `writeCapability`) |
-| `/grocery` | grocery users/items | — | missing | |
-| `/meal-plans` | `listMealPlans` | — | missing | |
-| `/pantry` | `listPantry` | — | missing | |
+| (no nav) Grocery | grocery users/items | — | missing | End-user grocery lists — not an Admin page |
+| (no nav) Meal Plans | `listMealPlans` | — | missing | End-user meal plans — not an Admin page |
+| (no nav) Pantry | `listPantry` | — | missing | End-user pantry — not an Admin page |
 | `/categories` | taxonomy CRUD | — | missing | Live writes hidden until `admin-catalog` client lands (#61 `writeCapability`). End-user category tables exist via PostgREST |
 | `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
 | (future) AI Platform / AI Import / Payments UI / Analytics UI / Ops UI | — | backends may exist | planned | Stay out of Admin nav until Gate allows (#61) |
