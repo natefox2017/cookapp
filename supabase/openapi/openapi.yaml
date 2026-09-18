@@ -2,19 +2,14 @@ openapi: 3.1.0
 info:
   title: CookApp Cloud Backend API
   version: 1.0.0
-  description: 'Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)
-
+  description: |
+    Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)
     with Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).
 
-
     Authentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).
-
     Third-party OAuth tokens are never stored server-side.
 
-
     Project: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`
-
-    '
   contact:
     name: CookApp
 servers:
@@ -42,17 +37,17 @@ tags:
 - name: AdminAI
 - name: AdminStoreSync
 - name: AdminIntegrations
+- name: AdminOperations
+- name: AdminAnalytics
 paths:
   /auth/v1/token:
     post:
       tags:
       - Auth
       summary: Session token exchange / refresh
-      description: 'Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,
-
+      description: |
+        Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,
         Google OAuth, logout, and refresh. Documented for completeness.
-
-        '
       security: []
       responses:
         '200':
@@ -162,11 +157,9 @@ paths:
       tags:
       - AdminAI
       summary: List AI providers
-      description: 'Admin bearer required. Returns providers with `secretConfigured` boolean only —
-
+      description: |
+        Admin bearer required. Returns providers with `secretConfigured` boolean only —
         never plaintext API keys or secret_ref values.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminAiListProviders
@@ -275,11 +268,9 @@ paths:
       tags:
       - AdminAI
       summary: Set provider API key (Owner, write-only)
-      description: 'Stores ciphertext in server-side `ai_secrets`. There is no read-full-secret API.
-
+      description: |
+        Stores ciphertext in server-side `ai_secrets`. There is no read-full-secret API.
         Response only confirms `secretConfigured: true`.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminAiSetProviderSecret
@@ -466,17 +457,12 @@ paths:
       tags:
       - AdminAuth
       summary: Bootstrap Owner credentials
-      description: 'Replaces the default seed account with a strong Owner password.
-
+      description: |
+        Replaces the default seed account with a strong Owner password.
         Requires current default password when a seed row exists.
-
         Production requires header `X-CookApp-Bootstrap-Token` matching
-
         secret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).
-
         Local/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.
-
-        '
       security: []
       parameters:
       - $ref: '#/components/parameters/XCorrelationId'
@@ -524,11 +510,9 @@ paths:
       tags:
       - AdminAuth
       summary: Change admin password
-      description: 'Requires strong password policy (min 12, upper, lower, digit).
-
+      description: |
+        Requires strong password policy (min 12, upper, lower, digit).
         Revokes all sessions for the account and returns a fresh token.
-
-        '
       security:
       - AdminBearer: []
       requestBody:
@@ -572,15 +556,11 @@ paths:
       tags:
       - AdminAuth
       summary: Admin login
-      description: 'Issues a custom admin bearer session (not end-user JWT).
-
+      description: |
+        Issues a custom admin bearer session (not end-user JWT).
         Production rejects default `admin`/`admin` credentials (Issue #51).
-
         Set `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`
-
         only for local/dev.
-
-        '
       security: []
       requestBody:
         required: true
@@ -662,7 +642,7 @@ paths:
     get:
       tags:
       - AdminDashboard
-      summary: Dashboard KPI aggregation
+      summary: Dashboard KPI aggregation (source + freshness; no fake Android zeros)
       operationId: adminDashboard
       security:
       - AdminBearer: []
@@ -676,20 +656,218 @@ paths:
       parameters:
       - $ref: '#/components/parameters/XCorrelationId'
       - $ref: '#/components/parameters/XRequestId'
+  /functions/v1/admin-analytics:
+    get:
+      tags:
+      - AdminAnalytics
+      - AdminDashboard
+      summary: Analytics aggregation (downloads, growth, import quality)
+      description: Real-table analytics (#60). Google Play future_reserved. Missing Apple data is not filled with 0.
+      operationId: adminAnalytics
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsAggregation'
+  /functions/v1/admin-operations/jobs:
+    get:
+      tags:
+      - AdminOperations
+      summary: List unified operational jobs
+      operationId: adminListOperationalJobs
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: jobType
+        in: query
+        schema:
+          type: string
+      - name: provider
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: OK
+  /functions/v1/admin-operations/jobs/run:
+    post:
+      tags:
+      - AdminOperations
+      summary: Manually run an operational job
+      operationId: adminRunOperationalJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - jobType
+              properties:
+                jobType:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Job run result
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /functions/v1/admin-operations/jobs/{jobId}:
+    get:
+      tags:
+      - AdminOperations
+      summary: Inspect an operational job
+      operationId: adminGetOperationalJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationalJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /functions/v1/admin-operations/jobs/{jobId}/retry:
+    post:
+      tags:
+      - AdminOperations
+      summary: Retry a failed operational job
+      operationId: adminRetryOperationalJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Retry result
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /functions/v1/admin-operations/integrations:
+    get:
+      tags:
+      - AdminOperations
+      summary: Integrations health/status
+      description: Not Configured allowed; fake Operational forbidden. Full Settings UI is
+      operationId: adminListIntegrations
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: OK
+  /functions/v1/admin-operations/integrations/{key}/check:
+    post:
+      tags:
+      - AdminOperations
+      summary: Re-probe one integration
+      operationId: adminCheckIntegration
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - supabase
+          - revenuecat
+          - app_store_connect
+          - ai_gateway
+          - google_play
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationStatus'
+  /functions/v1/admin-operations/job-types:
+    get:
+      tags:
+      - AdminOperations
+      summary: List registered operational job types
+      operationId: adminListJobTypes
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: OK
   /functions/v1/admin-integrations:
     get:
       tags:
       - AdminIntegrations
       summary: List integration connection statuses
-      description: 'Returns connected / not_configured / degraded / future_reserved for
-
+      description: |
+        Returns connected / not_configured / degraded / future_reserved for
         Supabase, RevenueCat, App Store Connect, AI Gateway, and Google Play.
-
         Secrets are never returned as plaintext — only `secretConfigured`.
-
         Google Play is always Future Reserved / Not Connected (Issue #63).
-
-        '
       security:
       - AdminBearer: []
       operationId: adminIntegrationsList
@@ -777,15 +955,11 @@ paths:
       tags:
       - AdminIntegrations
       summary: Write-only integration secret (Owner)
-      description: 'Stores ciphertext in `integration_secrets`. There is no read-full-secret API.
-
+      description: |
+        Stores ciphertext in `integration_secrets`. There is no read-full-secret API.
         Response only confirms `secretConfigured: true`. Currently supported for
-
         `app_store_connect`. RevenueCat webhook secret remains Edge env-only;
-
         AI Gateway secrets use `admin-ai`.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminIntegrationsPutSecret
@@ -836,11 +1010,9 @@ paths:
       tags:
       - AdminIntegrations
       summary: Test integration connection
-      description: 'Backend-initiated probe. Admin browser never calls third-party providers
-
+      description: |
+        Backend-initiated probe. Admin browser never calls third-party providers
         directly. Google Play test is rejected (Future Reserved).
-
-        '
       security:
       - AdminBearer: []
       operationId: adminIntegrationsTest
@@ -856,11 +1028,9 @@ paths:
       tags:
       - AdminRecipeImport
       summary: Create batch import and enqueue jobs (async)
-      description: 'Returns immediately. Jobs are processed by recipe-import-worker
-
+      description: |
+        Returns immediately. Jobs are processed by recipe-import-worker
         via Supabase Queues / pgmq (Issue #56). Single-job failure does not block the batch.
-
-        '
       operationId: adminCreateRecipeImportBatch
       security:
       - AdminBearer: []
@@ -993,15 +1163,11 @@ paths:
       tags:
       - AdminRecipeImport
       summary: Create single import job and enqueue for async worker
-      description: 'Shared Backend AI Recipe Import pipeline (Issue #55).
-
+      description: |
+        Shared Backend AI Recipe Import pipeline (Issue #55).
         Exact active source URL returns 409 DUPLICATE.
-
         Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
-
         Job is enqueued on Supabase Queues (pgmq) — Issue #56. Worker runs pipeline asynchronously.
-
-        '
       operationId: adminCreateRecipeImportJob
       security:
       - AdminBearer: []
@@ -1173,13 +1339,10 @@ paths:
       tags:
       - AdminStoreSync
       summary: Query store_analytics_daily
-      description: 'Normalized App Store analytics. `metricValue` may be null when Apple
-
+      description: |
+        Normalized App Store analytics. `metricValue` may be null when Apple
         omitted data (privacy threshold). Clients must not coerce null to 0.
-
         Not final financial truth — use financial/rows for proceeds.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminStoreAnalyticsDaily
@@ -1225,13 +1388,10 @@ paths:
       tags:
       - AdminStoreSync
       summary: Trigger store analytics sync (Owner)
-      description: 'Runs `StoreAnalyticsProvider` for the given provider and records a
-
+      description: |
+        Runs `StoreAnalyticsProvider` for the given provider and records a
         `store_sync_runs` row. Missing ASC credentials → `skipped_not_configured`
-
         with zero invented series. Google Play → `skipped_reserved`.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminStoreAnalyticsSync
@@ -1254,11 +1414,9 @@ paths:
       tags:
       - AdminStoreSync
       summary: Query financial_report_rows
-      description: 'Apple Financial Reports reconciliation rows. Kept separate from analytics —
-
+      description: |
+        Apple Financial Reports reconciliation rows. Kept separate from analytics —
         never merge into one "final revenue" field with analytics estimates.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminFinancialReportRows
@@ -1292,11 +1450,9 @@ paths:
       tags:
       - AdminStoreSync
       summary: Trigger financial report sync (Owner)
-      description: 'Runs `FinancialReportProvider` and upserts `financial_report_rows`.
-
+      description: |
+        Runs `FinancialReportProvider` and upserts `financial_report_rows`.
         Separate from analytics sync — never writes analytics metrics as proceeds.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminFinancialReportSync
@@ -1319,13 +1475,10 @@ paths:
       tags:
       - AdminStoreSync
       summary: Set App Store Connect credentials (Owner, write-only)
-      description: 'Stores ASC private key ciphertext in `store_secrets`. Never returns plaintext.
-
+      description: |
+        Stores ASC private key ciphertext in `store_secrets`. Never returns plaintext.
         Non-secret fields (issuerId, keyId, vendorNumber, appAppleId) stored on
-
         `store_integrations`. Env fallbacks documented in OWNER_CONFIG.
-
-        '
       security:
       - AdminBearer: []
       operationId: adminStoreSetAppleCredentials
@@ -1401,13 +1554,10 @@ paths:
       tags:
       - AdminStoreSync
       summary: Store integration connection status
-      description: 'Returns App Store Connect + Google Play connection status.
-
+      description: |
+        Returns App Store Connect + Google Play connection status.
         Secrets never returned — only `secretConfigured` booleans.
-
         Google Play remains `future_reserved` until Android work starts (Issue #59).
-
-        '
       security:
       - AdminBearer: []
       operationId: adminStoreSyncStatus
@@ -1531,13 +1681,10 @@ paths:
       tags:
       - AdminSubscriptions
       summary: List normalized payment transactions
-      description: 'Reads `payment_transactions` (#58). Amounts from RevenueCat are estimated only;
-
+      description: |
+        Reads `payment_transactions` (#58). Amounts from RevenueCat are estimated only;
         `final_proceeds` is null until financial reports (#59). Google Play is schema-reserved
-
         — responses include `googlePlay.status=reserved_not_implemented` (no fake Android revenue).
-
-        '
       operationId: adminListPaymentTransactions
       security:
       - AdminBearer: []
@@ -1741,17 +1888,12 @@ paths:
       - Operations
       - AdminRecipeImport
       summary: Process recipe import queue (pgmq worker tick)
-      description: 'Operational job type `recipe_import_worker` (Issue #56).
-
+      description: |
+        Operational job type `recipe_import_worker` (Issue #56).
         Reads up to `import_queue_concurrency` messages from Supabase Queues (pgmq),
-
         calls shared `runImportPipeline`, archives on success / poison.
-
         Server/cron only — auth via `Authorization: Bearer <RECIPE_IMPORT_WORKER_SECRET>`.
-
         Concurrency / VT / max attempts come from `runtime_config` (not secrets).
-
-        '
       operationId: recipeImportWorkerTick
       security:
       - WorkerBearer: []
@@ -1803,11 +1945,9 @@ paths:
       tags:
       - Subscription
       summary: RevenueCat webhook
-      description: 'Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
-
+      description: |
+        Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
         JWT verification disabled; service role used internally.
-
-        '
       security:
       - WebhookBearer: []
       responses:
@@ -1823,17 +1963,12 @@ paths:
       - Storage
       - Operations
       summary: Cleanup expired recipe-import-artifacts
-      description: 'Operational job type `storage_cleanup_import_artifacts`.
-
+      description: |
+        Operational job type `storage_cleanup_import_artifacts`.
         Deletes Storage objects whose `recipe_import_artifact_objects.expires_at`
-
         has passed and marks rows deleted. Server/cron only — auth via
-
         `Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.
-
         Never uses permanent signed URLs; never returns service_role secrets.
-
-        '
       operationId: storageCleanupImportArtifacts
       security:
       - CleanupBearer: []
@@ -1866,11 +2001,9 @@ paths:
       - Operations
       - AdminStoreSync
       summary: Cron worker tick for Apple store sync
-      description: 'Server/cron only. Auth via `Authorization: Bearer <STORE_SYNC_WORKER_SECRET>`.
-
+      description: |
+        Server/cron only. Auth via `Authorization: Bearer <STORE_SYNC_WORKER_SECRET>`.
         Syncs Apple analytics + financial only. Never auto-syncs Google Play.
-
-        '
       security:
       - StoreSyncWorkerBearer: []
       operationId: storeSyncWorkerTick
@@ -2212,13 +2345,10 @@ paths:
       tags:
       - Recipe
       summary: Recipe List / Detail
-      description: 'List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
-
+      description: |
+        List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
         Update: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).
-
         Delete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).
-
-        '
       operationId: listRecipes
       parameters:
       - name: id
@@ -2317,8 +2447,7 @@ paths:
       tags:
       - Subscription
       summary: Get own subscription row
-      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped
-        `expire_date`.
+      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.
       responses:
         '200':
           description: Subscription entitlement
@@ -2430,13 +2559,10 @@ components:
       name: X-Request-Id
       in: header
       required: false
-      description: 'Client-supplied request id. When omitted, the server generates a UUID.
-
+      description: |
+        Client-supplied request id. When omitted, the server generates a UUID.
         Echoed on every Admin / webhook response and included in structured logs
-
         and `admin_audit_logs.request_id`.
-
-        '
       schema:
         type: string
         maxLength: 128
@@ -2444,9 +2570,8 @@ components:
       name: X-Correlation-Id
       in: header
       required: false
-      description: 'Cross-service correlation id. Defaults to `X-Request-Id` when omitted.
-
-        '
+      description: |
+        Cross-service correlation id. Defaults to `X-Request-Id` when omitted.
       schema:
         type: string
         maxLength: 128
@@ -2454,11 +2579,9 @@ components:
       name: X-Job-Id
       in: header
       required: false
-      description: 'Optional async job / sync run id (import jobs, provider syncs, webhook
-
+      description: |
+        Optional async job / sync run id (import jobs, provider syncs, webhook
         event id). Stored on audit rows and structured logs when present.
-
-        '
       schema:
         type: string
         maxLength: 128
@@ -2470,13 +2593,10 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorBody'
     ErrorEnvelope:
-      description: 'Unified Edge Function error body. Always includes `request_id` (may be
-
+      description: |
+        Unified Edge Function error body. Always includes `request_id` (may be
         null only on legacy paths that predate Issue #57). Secrets are never
-
         returned in `details`.
-
-        '
       headers:
         X-Request-Id:
           $ref: '#/components/headers/XRequestId'
@@ -3611,9 +3731,8 @@ components:
       required:
       - error
       - request_id
-      description: 'Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).
-
-        '
+      description: |
+        Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).
       properties:
         error:
           type: object
@@ -3642,9 +3761,8 @@ components:
           description: Same value as `X-Request-Id` response header
     AdminAuditLog:
       type: object
-      description: 'Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.
-
-        '
+      description: |
+        Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.
       properties:
         id:
           type: string
@@ -3660,11 +3778,9 @@ components:
           - 'null'
         action:
           type: string
-          description: 'e.g. admin.login, subscription_plan.update, ai.provider.update,
-
+          description: |
+            e.g. admin.login, subscription_plan.update, ai.provider.update,
             recipe.delete, user.admin_action, integration.config_update
-
-            '
         object_type:
           type: string
         object_id:
@@ -3706,11 +3822,9 @@ components:
           format: date-time
     MediaObjectMetadata:
       type: object
-      description: 'Postgres metadata pattern for object storage (never base64/blobs).
-
+      description: |
+        Postgres metadata pattern for object storage (never base64/blobs).
         Used by MediaStorageProvider and recipe_import_artifact_objects.
-
-        '
       required:
       - storage_provider
       - bucket
@@ -3731,11 +3845,9 @@ components:
           - recipe-import-artifacts
         object_key:
           type: string
-          description: 'Provider-agnostic object key. Import artifacts use `{job_id}/…`.
-
+          description: |
+            Provider-agnostic object key. Import artifacts use `{job_id}/…`.
             User media use `{user_id}/…`.
-
-            '
         mime_type:
           type: string
         size_bytes:
@@ -3793,11 +3905,9 @@ components:
                 type: string
     AiProvider:
       type: object
-      description: 'AI provider registry row. `secretConfigured` indicates a server-side secret exists;
-
+      description: |
+        AI provider registry row. `secretConfigured` indicates a server-side secret exists;
         plaintext keys and secret_ref are never returned.
-
-        '
       properties:
         id:
           type: string
@@ -4602,11 +4712,9 @@ components:
       - testSupported
       - secretWriteSupported
       - reserved
-      description: 'Integration connection status for Admin Settings → Integrations (Issue #63).
-
+      description: |
+        Integration connection status for Admin Settings → Integrations (Issue #63).
         `secretConfigured` is boolean only — plaintext secrets are never returned.
-
-        '
       properties:
         id:
           $ref: '#/components/schemas/IntegrationId'
@@ -4673,6 +4781,63 @@ components:
           type: string
         integration:
           $ref: '#/components/schemas/IntegrationStatus'
+    KpiMetric:
+      type: object
+      required:
+      - key
+      - label
+      - value
+      - source
+      - freshness
+      - availability
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        value:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        source:
+          type:
+          - string
+          - 'null'
+        freshness:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        availability:
+          type: string
+          enum:
+          - available
+          - estimated
+          - no_data
+          - not_configured
+          - schema_pending
+          - future_reserved
+        estimated:
+          type: boolean
+        note:
+          type:
+          - string
+          - 'null'
+        dateRange:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+    OperationalJob:
+      type: object
+      additionalProperties: true
+    AnalyticsAggregation:
+      type: object
+      additionalProperties: true
   headers:
     XRequestId:
       description: Request id for this response (echo or server-generated).

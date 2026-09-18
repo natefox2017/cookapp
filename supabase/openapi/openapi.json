@@ -77,6 +77,12 @@
     },
     {
       "name": "AdminIntegrations"
+    },
+    {
+      "name": "AdminOperations"
+    },
+    {
+      "name": "AdminAnalytics"
     }
   ],
   "paths": {
@@ -1060,7 +1066,7 @@
         "tags": [
           "AdminDashboard"
         ],
-        "summary": "Dashboard KPI aggregation",
+        "summary": "Dashboard KPI aggregation (source + freshness; no fake Android zeros)",
         "operationId": "adminDashboard",
         "security": [
           {
@@ -1087,6 +1093,363 @@
             "$ref": "#/components/parameters/XRequestId"
           }
         ]
+      }
+    },
+    "/functions/v1/admin-analytics": {
+      "get": {
+        "tags": [
+          "AdminAnalytics",
+          "AdminDashboard"
+        ],
+        "summary": "Analytics aggregation (downloads, growth, import quality)",
+        "description": "Real-table analytics (#60). Google Play future_reserved. Missing Apple data is not filled with 0.",
+        "operationId": "adminAnalytics",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsAggregation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/jobs": {
+      "get": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "List unified operational jobs",
+        "operationId": "adminListOperationalJobs",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "jobType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/jobs/run": {
+      "post": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "Manually run an operational job",
+        "operationId": "adminRunOperationalJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "jobType"
+                ],
+                "properties": {
+                  "jobType": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job run result"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "Inspect an operational job",
+        "operationId": "adminGetOperationalJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationalJob"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/jobs/{jobId}/retry": {
+      "post": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "Retry a failed operational job",
+        "operationId": "adminRetryOperationalJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retry result"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/integrations": {
+      "get": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "Integrations health/status",
+        "description": "Not Configured allowed; fake Operational forbidden. Full Settings UI is",
+        "operationId": "adminListIntegrations",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/integrations/{key}/check": {
+      "post": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "Re-probe one integration",
+        "operationId": "adminCheckIntegration",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "supabase",
+                "revenuecat",
+                "app_store_connect",
+                "ai_gateway",
+                "google_play"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-operations/job-types": {
+      "get": {
+        "tags": [
+          "AdminOperations"
+        ],
+        "summary": "List registered operational job types",
+        "operationId": "adminListJobTypes",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/functions/v1/admin-integrations": {
@@ -7025,6 +7388,85 @@
             "$ref": "#/components/schemas/IntegrationStatus"
           }
         }
+      },
+      "KpiMetric": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "value",
+          "source",
+          "freshness",
+          "availability"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "freshness": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "available",
+              "estimated",
+              "no_data",
+              "not_configured",
+              "schema_pending",
+              "future_reserved"
+            ]
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dateRange": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "OperationalJob": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "AnalyticsAggregation": {
+        "type": "object",
+        "additionalProperties": true
       }
     },
     "headers": {

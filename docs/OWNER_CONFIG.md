@@ -112,7 +112,7 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | AI API Secret configured | todo | server-side `secret_ref` only；Admin 仅见 `secretConfigured` | |
 | Primary Recipe Model | todo | route `recipe_import_text` / `recipe_import_vision` | |
 | Fallback Model | todo | max 3 fallbacks per route | |
-| App Store Connect API configured | todo | P1 Analytics #59 + Integrations #63；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
+| App Store Connect API configured | todo | P1 Analytics #59 + Integrations #63 / ops status #60；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
 | Integrations status page | done | Settings → Integrations (`admin-integrations`); Google Play Future Reserved | 2026-09-18 |
 | `ASC_ISSUER_ID`（Supabase secrets） | todo | App Store Connect API Issuer ID | 2026-09-18 |
 | `ASC_KEY_ID`（Supabase secrets） | todo | ASC API Key ID | 2026-09-18 |
@@ -122,7 +122,7 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | `COOKAPP_STORE_MASTER_KEY`（Supabase secrets） | todo | 32-byte AES（base64）；可复用 `COOKAPP_AI_MASTER_KEY` | 2026-09-18 |
 | `STORE_SYNC_WORKER_SECRET`（Supabase secrets） | todo | Cron/ops for `store-sync-worker` (#59) | 2026-09-18 |
 | Analytics access configured | todo | ASC key role 含 Sales and Reports / Analytics | 2026-09-18 |
-| Financial Reports access configured | todo | ASC key role 含 Finance | 2026-09-18 |
+| Financial Reports access configured | todo | ASC key role 含 Finance | 2026-09-18
 | Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
 | `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
 | `RECIPE_IMPORT_WORKER_SECRET`（Supabase secrets） | todo | Cron/ops for `recipe-import-worker` (#56) | 2026-09-18 |
@@ -159,4 +159,5 @@ AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 | 2026-09-18 | #53：AI Platform status（Gateway / secret_ref / routes） |
 | 2026-09-18 | #56：`RECIPE_IMPORT_WORKER_SECRET` for Import Queue worker |
 | 2026-09-18 | #59：ASC Analytics/Financial secrets + `STORE_SYNC_WORKER_SECRET` |
+| 2026-09-18 | #60：Ops jobs + Dashboard aggregation (`admin-operations` / `admin-analytics`) |
 | 2026-09-18 | #63：Admin Integrations connection status (`admin-integrations`) |

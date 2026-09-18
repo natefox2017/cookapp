@@ -69,6 +69,12 @@ verify_jwt = false
 [functions.admin-dashboard]
 verify_jwt = false
 
+[functions.admin-analytics]
+verify_jwt = false
+
+[functions.admin-operations]
+verify_jwt = false
+
 [functions.admin-recipe-import]
 verify_jwt = false
 

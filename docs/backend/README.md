@@ -55,6 +55,8 @@ supabase/
     admin-auth/
     admin-users/
     admin-dashboard/
+    admin-analytics/
+    admin-operations/
     admin-subscriptions/
     storage-cleanup-import-artifacts/
     admin-ai/          # AI Platform Admin APIs (#53)
@@ -72,6 +74,7 @@ supabase/
 - Auth/IAP ops: [`AUTH_AND_IAP.md`](../AUTH_AND_IAP.md)
 - Media storage: [`MEDIA_STORAGE.md`](./MEDIA_STORAGE.md)
 - Store analytics: [`STORE_ANALYTICS.md`](./STORE_ANALYTICS.md)
+- Aggregation contracts (#60 / #58 / #59): [`AGGREGATION_CONTRACTS.md`](./AGGREGATION_CONTRACTS.md)
 
 ### Spec path ↔ PostgREST
 
@@ -112,7 +115,9 @@ Authorization: Bearer <access_token>
 | `openapi` | no | Serve OpenAPI JSON |
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password (+ audit) |
 | `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
-| `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
+| `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation (#60 source/freshness; prefers #58/#59; no fake Android) |
+| `admin-analytics` | no (custom admin bearer) | Analytics aggregation (#60) |
+| `admin-operations` | no (custom admin bearer) | Jobs & Syncs + Integrations status (#60) |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue / payment transactions (#58) |
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) + enqueue (#56) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
@@ -170,6 +175,17 @@ deno test --allow-env supabase/functions/_shared/recipe-import/
 ```bash
 deno test --allow-env supabase/functions/_shared/recipe-import/queue_test.ts
 ```
+### Operations / Aggregation (Issue #60)
+
+- Tables: `operational_jobs`, `integration_connection_status`; view `v_operational_jobs`
+- Contracts for #58/#59: [`AGGREGATION_CONTRACTS.md`](./AGGREGATION_CONTRACTS.md)
+- Dashboard / Analytics prefer `payment_transactions` + `store_analytics_daily` when present; otherwise honest interim sources
+- Google Play: Future Reserved — never fake zeros / Operational
+- Endpoints: `/functions/v1/admin-dashboard`, `/admin-analytics`, `/admin-operations/{jobs,integrations}`
+```bash
+deno test --allow-env supabase/functions/_shared/operations/
+```
+
 ### Audit log + observability (Issue #57)
 - Table: `admin_audit_logs` (service_role only; secret-redacted before/after diffs)
 - Shared helpers: `_shared/logger.ts` (redaction), `_shared/request-context.ts`, `_shared/audit.ts`, `_shared/monitor.ts`

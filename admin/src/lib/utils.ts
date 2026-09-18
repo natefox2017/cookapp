@@ -17,11 +17,13 @@ export function formatDate(value: string | Date) {
   }).format(date)
 }
 
-export function formatNumber(value: number) {
+export function formatNumber(value: number | null | undefined) {
+  if (value == null || Number.isNaN(value)) return '—'
   return new Intl.NumberFormat('en-US').format(value)
 }
 
-export function formatMoney(value: number, currency = 'USD') {
+export function formatMoney(value: number | null | undefined, currency = 'USD') {
+  if (value == null || Number.isNaN(value)) return '—'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,

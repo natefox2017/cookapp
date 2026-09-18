@@ -144,3 +144,12 @@ jobs:
           test -f supabase/migrations/20260918130000_payment_transactions.sql
           test -f docs/backend/PAYMENTS.md
           echo "Commerce payment_transactions paths OK"
+      - name: Operations / aggregation unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/operations/
+          test -f supabase/functions/admin-operations/index.ts
+          test -f supabase/functions/admin-analytics/index.ts
+          test -f supabase/migrations/20260918140000_operational_jobs.sql
+          test -f docs/backend/AGGREGATION_CONTRACTS.md
+          echo "Operations aggregation paths OK"
