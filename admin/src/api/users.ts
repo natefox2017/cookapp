@@ -18,9 +18,9 @@ const BASE = '/functions/v1/admin-users'
 
 export async function getDashboard(): Promise<DashboardData> {
   if (isMockMode()) {
-    return mockRequest(() => mockDashboard)
+    return mockRequest(() => structuredClone(mockDashboard))
   }
-  return httpRequest<DashboardData>('/admin/dashboard')
+  return httpRequest<DashboardData>('/functions/v1/admin-dashboard')
 }
 
 export async function getUserRegistrationStats(): Promise<UserRegistrationStats> {

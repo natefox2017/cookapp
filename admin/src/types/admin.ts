@@ -225,6 +225,18 @@ export interface DashboardStats {
   totalRecipes: number
   collections: number
   favorites: number
+  /** Users created in the current calendar month (UTC). */
+  newUsersThisMonth: number
+  activePaidUsers: number
+  suspendedUsers: number
+  revenueTotal: number
+  revenueMrr: number
+  revenueApple: number
+  revenueAndroid: number
+  paymentTransactions: number
+  downloadsTotal: number
+  downloadsIos: number
+  downloadsAndroid: number
 }
 
 export interface GrowthPoint {
@@ -233,9 +245,36 @@ export interface GrowthPoint {
   recipes: number
 }
 
+export interface DashboardSeriesPoint {
+  month: string
+  users: number
+  recipes: number
+  revenue: number
+  revenueApple: number
+  revenueAndroid: number
+  downloadsIos: number
+  downloadsAndroid: number
+}
+
+export interface DashboardBreakdownItem {
+  key: string
+  label: string
+  value: number
+}
+
+export interface DashboardRecentPayment {
+  id: string
+  userLabel: string
+  eventType: string
+  store: string
+  amount: number | null
+  currency: string | null
+  createdAt: string
+}
+
 export interface RecentActivity {
   id: string
-  type: 'user' | 'recipe' | 'collection' | 'subscription'
+  type: 'user' | 'recipe' | 'collection' | 'subscription' | 'payment' | 'download'
   title: string
   subtitle: string
   createdAt: string
@@ -244,7 +283,14 @@ export interface RecentActivity {
 export interface DashboardData {
   stats: DashboardStats
   growth: GrowthPoint[]
+  series: DashboardSeriesPoint[]
+  userBreakdown: {
+    byRegistrationType: DashboardBreakdownItem[]
+    byDeviceType: DashboardBreakdownItem[]
+    byPlan: DashboardBreakdownItem[]
+  }
   recent: RecentActivity[]
+  recentPayments: DashboardRecentPayment[]
 }
 
 export interface AdminSettings {
