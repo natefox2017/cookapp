@@ -106,34 +106,26 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | `COOKAPP_ADMIN_BOOTSTRAP_TOKEN`（Supabase secrets） | todo | 一次性强随机 token；Bootstrap 请求头 `X-CookApp-Bootstrap-Token`；用完可轮换/删除 | |
 | `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS` | n/a | 仅当 `COOKAPP_ADMIN_ENV=development`；Production 即使误设也为 false | |
 | Admin live API base URL | todo | `VITE_ADMIN_API_BASE_URL`；Production build 禁止 `VITE_ADMIN_USE_MOCK=true` | |
-| AI Gateway Base URL | todo | Backend V2 AI Platform（#53）；密钥只进 Supabase secrets | 2026-09-18 |
-| AI Protocol | todo | 首期 OpenAI-compatible | |
-| AI API Secret configured | todo | server-side secret_ref only | |
-| Primary Recipe Model | todo | via AI routes | |
-| Fallback Model | todo | | |
-| App Store Connect API configured | todo | P1 Analytics #59；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
-| Analytics access configured | todo | | |
-| Financial Reports access configured | todo | | |
-| Admin live API base URL | todo | `VITE_ADMIN_API_BASE_URL` | |
-| `COOKAPP_AI_MASTER_KEY`（Supabase secrets） | todo | 32-byte AES key (base64)；`supabase secrets set COOKAPP_AI_MASTER_KEY=...` | |
-| AI Gateway Base URL | todo | Admin → Settings → AI Platform → Providers | |
+| `COOKAPP_AI_MASTER_KEY`（Supabase secrets） | todo | 32-byte AES key (base64)；`supabase secrets set COOKAPP_AI_MASTER_KEY=...` | 2026-09-18 |
+| AI Gateway Base URL | todo | Admin → Settings → AI Platform → Providers；密钥只进 Supabase secrets | 2026-09-18 |
 | AI Protocol | todo | 首期 `openai_compatible` only | |
 | AI API Secret configured | todo | server-side `secret_ref` only；Admin 仅见 `secretConfigured` | |
 | Primary Recipe Model | todo | route `recipe_import_text` / `recipe_import_vision` | |
 | Fallback Model | todo | max 3 fallbacks per route | |
-| App Store Connect API configured | todo | P1 Analytics | |
+| App Store Connect API configured | todo | P1 Analytics #59；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
+| Analytics access configured | todo | | |
+| Financial Reports access configured | todo | | |
 | Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
+| `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
+| 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
+| 管理后台 URL / 密钥 | todo | 见相关 Issue | |
 
 角色约定（server-side）：
 - **Owner**：AI secrets/provider、Financial、Admin accounts
-- **Admin**：运营管理
+- **Admin**：运营管理（不可写 AI secrets）
 - `operator` / `readonly`：预留
 
-契约矩阵：`docs/backend/ADMIN_API_CONTRACT.md`
-| 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
-| 管理后台 URL / 密钥 | todo | 见相关 Issue | |
-| `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
-- **Admin**：运营管理（不可写 AI secrets）
+契约矩阵：`docs/backend/ADMIN_API_CONTRACT.md`  
 AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 
 ---
