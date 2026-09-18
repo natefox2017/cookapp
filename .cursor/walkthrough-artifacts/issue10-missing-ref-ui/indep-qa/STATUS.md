@@ -1,32 +1,21 @@
-# Independent QA — pack not complete until every listed page PASSES
+# Independent QA status (follow-up)
 
-Owner: 需求一直清楚。未完成原因是对照未闭环 + PixelBase/填满底图盖住正式层，不是约定含糊。
+Stale FAILs from captures **before** source hides (PixelBase / filled Meal Plan on 21/31/32) are not the current instances. Live follow-up stills: `*-follow-*.png`.
 
-## Independent compare files
+| Page | Prior file | Follow-up still | Next |
+|------|------------|-----------------|------|
+| 04 | FAIL shell/1/23 | `04-follow-116-18290.png` — 1/21, split Close/Next, greens | re-QA |
+| 10 | PASS | — | done |
+| 13 | FAIL condensed (pre-expand) | editor source now 4315px with full steps | re-QA |
+| 14 | missing file; FAIL vs 4452 | `14-follow-119-12208.png` — + / ✓ / Category / float search | re-QA |
+| 15 | PASS | — | done |
+| 16–17 | PASS | — | done |
+| 18 | FAIL servings in bitmap | masks on cards | re-QA |
+| 21 | FAIL PixelBase (stale) | `21-follow-119-13222.png` Cookbook+popover | re-QA |
+| 22 | FAIL cover glyph | `22-follow-119-13349.png` | re-QA |
+| 28 | PASS | — | done |
+| 31 | FAIL filled (stale) | `31-follow-119-12435.png` empty+menu | re-QA |
+| 32 | FAIL PixelBase (stale) | `32-follow-119-12521.png` nested menu | re-QA |
+| 35–38, 42, 44–45 | PASS | — | done |
 
-| Page | File | Last known |
-|------|------|------------|
-| 04 | `04.md` | FAIL greens — redone range fills; re-QA required |
-| 08 | `08.md` | PASS |
-| 09 | `09.md` | PASS |
-| 10 | `10.md` | PASS |
-| 12 | `12.md` | PASS |
-| 13 | `13.md` | FAIL condensed steps — source expanded; re-QA required |
-| 14 | (missing) | QA required |
-| 15 | (missing) | QA required |
-| 16 | `16.md` | PASS |
-| 17 | `17.md` | PASS |
-| 18 | `18.md` | FAIL servings/title — masks on source; re-QA required |
-| 21 | `21.md` | FAIL PixelBase — Cookbook+popover visible; re-QA required |
-| 22 | (missing) | QA required |
-| 28 | `28.md` | PASS |
-| 31 | `31.md` | FAIL filled calendar — empty+menu; re-QA required |
-| 32 | `32.md` | FAIL stacked PixelBase — nested menu on empty; re-QA required |
-| 35 | `35.md` | PASS |
-| 36 | `36.md` | PASS |
-| 38 | `38.md` | PASS |
-| 42 | `42.md` | PASS |
-| 44 | `44.md` | PASS |
-| 45 | `45.md` | PASS |
-
-47/48 not drawn (owner). Do not edit Bottom NAV `77:237`. Never `resetOverrides()`.
+47/48 not drawn. Do not edit `77:237`. Never `resetOverrides()`.
