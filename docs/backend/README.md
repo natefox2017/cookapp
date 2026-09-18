@@ -108,10 +108,11 @@ Authorization: Bearer <access_token>
 | `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
 | `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
-| `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) |
+| `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) + enqueue (#56) |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue (+ audit) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
+| `recipe-import-worker` | no (`RECIPE_IMPORT_WORKER_SECRET`) | pgmq Import Queue worker tick (#56) |
 
 ### Admin auth
 
@@ -136,9 +137,20 @@ Shared Backend pipeline for Admin + future iOS (single pipeline — no Admin-onl
 - Deterministic schema.org/JSON-LD extract before AI; anti-hallucination (missing→null, inferred flagged)
 - Exact active source URL → HTTP 409 / job status `duplicate`
 - Endpoints under `/functions/v1/admin-recipe-import/{jobs,batches,…}`
-- Async queue worker is **#56** (batch creates pending jobs only)
+- Async queue: **Supabase Queues (pgmq)** + `recipe-import-worker` — see [`IMPORT_QUEUE.md`](./IMPORT_QUEUE.md) (#56)
 ```bash
 deno test --allow-env supabase/functions/_shared/recipe-import/
+```
+
+### Import Queue / Worker (Issue #56)
+
+- Queue: Supabase Queues / `pgmq` queue `recipe_import` (Apache-2.0)
+- Abstraction: `_shared/recipe-import/queue.ts` (`ImportQueue` / `PgmqImportQueue`)
+- Worker: `recipe-import-worker` (Bearer `RECIPE_IMPORT_WORKER_SECRET`)
+- Runtime knobs in `runtime_config` (concurrency / VT / max attempts / confidence) — not secrets
+- Batch + retry enqueue immediately; worker calls shared `runImportPipeline` from #55
+```bash
+deno test --allow-env supabase/functions/_shared/recipe-import/queue_test.ts
 ```
 ### Audit log + observability (Issue #57)
 - Table: `admin_audit_logs` (service_role only; secret-redacted before/after diffs)
