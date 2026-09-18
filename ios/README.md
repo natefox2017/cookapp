@@ -47,12 +47,18 @@ open CookApp.xcodeproj
 python3 ios/Scripts/verify_navigation_skeleton.py
 ```
 
-On macOS, also run unit tests after `xcodegen generate`:
+**Owner note (2026-09-18):** iOS Build / `xcodebuild` / device runs are **deferred** until a usable test environment is confirmed. Do not treat missing Xcode results as a Phase 1.5 failure. When Owner re-enables testing:
 
 ```bash
+xcodegen generate
 xcodebuild -scheme CookApp -destination 'platform=iOS Simulator,name=iPhone 16' test
 ```
 
+## Status
+
+- Phase 1.5 skeleton: **done** — Issue [#42](https://github.com/natefox2017/cookapp/issues/42) / PR [#45](https://github.com/natefox2017/cookapp/pull/45) on `main`
+- Next chrome-only Issue (not business UI): [#87](https://github.com/natefox2017/cookapp/issues/87) Liquid Glass D1–D3
+
 ## Out of scope (Phase 1.5)
 
-Formal Figma UI, recipe/grocery/meal-plan business logic, business Supabase APIs, mock business data, AI, custom Liquid Glass chrome.
+Formal Figma business UI, recipe/grocery/meal-plan business logic, business Supabase APIs, mock business data, AI. Custom Liquid Glass chrome is tracked separately in #87 (not part of the skeleton).

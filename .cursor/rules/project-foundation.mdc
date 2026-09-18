@@ -18,13 +18,16 @@ https://app.notion.com/p/3dee1df1f5a781b897b9f36c641b4708
 ## Current phase
 
 Phase 1 = **technical foundation** (complete for Cloud Backend / Local Admin shell).  
-iOS: Phase 1 complete; Phase 1.5 Navigation Skeleton & Screen Shells only (Notion).  
+iOS: Phase 1 complete; **Phase 1.5 Navigation Skeleton & Screen Shells merged** ([#42](https://github.com/natefox2017/cookapp/issues/42)/[#45](https://github.com/natefox2017/cookapp/pull/45)).  
+Next allowed iOS chrome work (not business UI): Liquid Glass D1–D3 kit — [#87](https://github.com/natefox2017/cookapp/issues/87).  
+Formal business UI / data / API / AI remain blocked until Owner opens that phase.
 
 **Backend/Admin V2** (operational expansion) is required and tracked under GitHub [#49](https://github.com/natefox2017/cookapp/issues/49) — AI Platform, AI Import, Analytics/Payments, Audit, Media abstraction.  
 Do **not** treat mock Admin pages or missing Admin APIs as production-complete.  
 Contract matrix: `docs/backend/ADMIN_API_CONTRACT.md`.
 
-Forbidden without a matching Issue under #49 / product confirmation: inventing business AI features, fake production KPIs, Google Play “live” mock revenue.
+Forbidden without a matching Issue under #49 / product confirmation: inventing business AI features, fake production KPIs, Google Play “live” mock revenue.  
+iOS Build/Test is Owner-deferred until a test environment is ready — do not claim Build PASS.
 
 ## Locked stack
 
