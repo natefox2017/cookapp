@@ -1,7 +1,5 @@
 import {
   CreditCard,
-  Heart,
-  Library,
   CookingPot,
   Smartphone,
   Users,
@@ -119,12 +117,11 @@ export function DashboardPage() {
       value: formatNumber(data.stats.paymentTransactions),
       icon: CreditCard,
     },
-  ]
-
-  const contentCards = [
-    { label: 'Recipes', value: data.stats.totalRecipes, icon: CookingPot },
-    { label: 'Collections', value: data.stats.collections, icon: Library },
-    { label: 'Favorites', value: data.stats.favorites, icon: Heart },
+    {
+      label: 'Recipes',
+      value: formatNumber(data.stats.totalRecipes),
+      icon: CookingPot,
+    },
   ]
 
   return (
@@ -181,7 +178,7 @@ export function DashboardPage() {
       </section>
 
       <section className="mt-6 space-y-3">
-        <h2 className="text-sm font-semibold tracking-tight">Downloads & content</h2>
+        <h2 className="text-sm font-semibold tracking-tight">Downloads & catalog</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {downloadCards.map((card) => {
             const Icon = card.icon
@@ -194,24 +191,6 @@ export function DashboardPage() {
                 <CardContent>
                   <div className="text-2xl font-semibold tabular-nums tracking-tight">
                     {card.value}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {contentCards.map((card) => {
-            const Icon = card.icon
-            return (
-              <Card key={card.label}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardDescription>{card.label}</CardDescription>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-semibold tabular-nums tracking-tight">
-                    {formatNumber(card.value)}
                   </div>
                 </CardContent>
               </Card>
