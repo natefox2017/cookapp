@@ -15,6 +15,8 @@ import type {
   SubscriptionRecord,
   SubscriptionRevenueData,
   TaxonomyItem,
+  UserPaymentRecord,
+  UserRegistrationStats,
 } from '@/types/admin'
 
 export const mockUsers: AdminUser[] = [
@@ -28,6 +30,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 18,
     createdAt: '2025-11-12T10:00:00Z',
     status: 'active',
+    registrationProvider: 'apple',
+    deviceType: 'ios',
   },
   {
     id: 'usr_02',
@@ -39,6 +43,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 23,
     createdAt: '2026-01-04T15:30:00Z',
     status: 'active',
+    registrationProvider: 'google',
+    deviceType: 'ios',
   },
   {
     id: 'usr_03',
@@ -50,6 +56,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 64,
     createdAt: '2025-08-21T08:15:00Z',
     status: 'active',
+    registrationProvider: 'apple',
+    deviceType: 'ios',
   },
   {
     id: 'usr_04',
@@ -61,6 +69,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 9,
     createdAt: '2026-02-18T12:00:00Z',
     status: 'suspended',
+    registrationProvider: 'google',
+    deviceType: 'android',
   },
   {
     id: 'usr_05',
@@ -72,8 +82,90 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 11,
     createdAt: '2026-03-02T19:45:00Z',
     status: 'active',
+    registrationProvider: 'email',
+    deviceType: 'web',
   },
 ]
+
+const mockPaymentsByUser: Record<string, UserPaymentRecord[]> = {
+  usr_01: [
+    {
+      id: 'pay_01a',
+      eventType: 'INITIAL_PURCHASE',
+      productId: 'com.natefox.cookapp.pro.yearly',
+      store: 'app_store',
+      amount: 39.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2025-12-01T16:20:00Z',
+    },
+    {
+      id: 'pay_01b',
+      eventType: 'RENEWAL',
+      productId: 'com.natefox.cookapp.pro.yearly',
+      store: 'app_store',
+      amount: 39.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2026-12-01T16:20:00Z',
+    },
+  ],
+  usr_02: [],
+  usr_03: [
+    {
+      id: 'pay_03a',
+      eventType: 'NON_RENEWING_PURCHASE',
+      productId: 'com.natefox.cookapp.lifetime',
+      store: 'app_store',
+      amount: 79.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2025-09-15T11:05:00Z',
+    },
+  ],
+  usr_04: [
+    {
+      id: 'pay_04a',
+      eventType: 'INITIAL_PURCHASE',
+      productId: 'cookapp_pro_monthly',
+      store: 'play_store',
+      amount: 4.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2026-01-01T09:00:00Z',
+    },
+    {
+      id: 'pay_04b',
+      eventType: 'CANCELLATION',
+      productId: 'cookapp_pro_monthly',
+      store: 'play_store',
+      amount: null,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2026-03-20T14:30:00Z',
+    },
+  ],
+  usr_05: [
+    {
+      id: 'pay_05a',
+      eventType: 'INITIAL_PURCHASE',
+      productId: 'cookapp_pro_monthly',
+      store: 'play_store',
+      amount: 0,
+      currency: 'USD',
+      environment: 'sandbox',
+      purchasedAt: '2026-03-10T08:15:00Z',
+    },
+  ],
+}
+
+const mockRegistrationIps: Record<string, string | null> = {
+  usr_01: '203.0.113.24',
+  usr_02: '198.51.100.17',
+  usr_03: '192.0.2.88',
+  usr_04: '203.0.113.91',
+  usr_05: '198.51.100.44',
+}
 
 export const mockUserDetails: Record<string, AdminUserDetail> = Object.fromEntries(
   mockUsers.map((user) => [
@@ -83,9 +175,46 @@ export const mockUserDetails: Record<string, AdminUserDetail> = Object.fromEntri
       lastLoginAt: '2026-03-15T09:20:00Z',
       locale: 'en-US',
       timezone: 'America/Los_Angeles',
+      registrationIp: mockRegistrationIps[user.id] ?? null,
+      payments: mockPaymentsByUser[user.id] ?? [],
     },
   ]),
 )
+
+export function computeMockUserRegistrationStats(
+  users: AdminUser[] = mockUsers,
+): UserRegistrationStats {
+  const providerOrder = ['apple', 'google', 'email', 'unknown'] as const
+  const deviceOrder = ['ios', 'android', 'web', 'unknown'] as const
+  const providerLabels = {
+    apple: 'Apple',
+    google: 'Google',
+    email: 'Email',
+    unknown: 'Unknown',
+  } as const
+  const deviceLabels = {
+    ios: 'iOS',
+    android: 'Android',
+    web: 'Web',
+    unknown: 'Unknown',
+  } as const
+
+  const byProvider = providerOrder.map((key) => ({
+    key,
+    label: providerLabels[key],
+    count: users.filter((user) => user.registrationProvider === key).length,
+  }))
+  const byDevice = deviceOrder.map((key) => ({
+    key,
+    label: deviceLabels[key],
+    count: users.filter((user) => user.deviceType === key).length,
+  }))
+
+  return { total: users.length, byProvider, byDevice }
+}
+
+export const mockUserRegistrationStats: UserRegistrationStats =
+  computeMockUserRegistrationStats()
 
 export const mockRecipes: RecipeSummary[] = [
   {

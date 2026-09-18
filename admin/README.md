@@ -41,6 +41,16 @@ Copy `.env.example` to `.env` if needed:
 
 Bearer token sessions (7-day TTL). Change password from **Settings → Security**.
 
+## Users API
+
+| Action | Endpoint |
+|--------|----------|
+| List (+ provider/device filters) | `GET /functions/v1/admin-users` |
+| Detail (+ IP / payments) | `GET /functions/v1/admin-users/:id` |
+| Registration mix stats | `GET /functions/v1/admin-users/stats` |
+
+`profiles` stores `registration_ip`, `registration_provider`, `device_type`. Payment timeline comes from `purchase_events`.
+
 ## Architecture
 
 ```
@@ -56,7 +66,7 @@ Admin Dashboard UI
 |-------|--------|
 | `/login` | Admin sign-in |
 | `/` | Dashboard |
-| `/users` | Users + detail sheet |
+| `/users` | Users + provider/device filters, registration stats, payment history |
 | `/recipes` | Recipe grid + detail |
 | `/collections` | Collections grid |
 | `/ingredients` | Ingredients CRUD table |
@@ -71,6 +81,6 @@ Sidebar collapses via header / rail control (persisted).
 
 ## Related
 
-- GitHub Issue #12 · #32
+- GitHub Issue #12 · #32 · #35 · #44
 - Cloud backend Issue #11
-- Notion: Local Admin Dashboard system boundary
+- Notion: Local Admin Dashboard system boundary · Analytics, Payments & User Intelligence Architecture
