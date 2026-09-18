@@ -1,7 +1,16 @@
-import { isMockMode, mockRequest } from '@/api/client'
-import { notImplemented } from '@/api/not-implemented'
+import { httpRequest, isMockMode, mockRequest } from '@/api/client'
 import { mockRecipeDetails, mockRecipes } from '@/mocks/data'
 import type { ListRecipesParams, RecipeDetail, RecipeSummary } from '@/types/admin'
+
+function recipesQuery(params: ListRecipesParams) {
+  const qs = new URLSearchParams()
+  if (params.q?.trim()) qs.set('q', params.q.trim())
+  if (params.cuisine) qs.set('cuisine', params.cuisine)
+  if (params.category) qs.set('category', params.category)
+  if (params.tag) qs.set('tag', params.tag)
+  const encoded = qs.toString()
+  return encoded ? `?${encoded}` : ''
+}
 
 export async function listRecipes(params: ListRecipesParams = {}): Promise<RecipeSummary[]> {
   if (isMockMode()) {
@@ -16,7 +25,7 @@ export async function listRecipes(params: ListRecipesParams = {}): Promise<Recip
       })
     })
   }
-  return notImplemented('recipes')
+  return httpRequest(`/functions/v1/admin-catalog/recipes${recipesQuery(params)}`)
 }
 
 export async function getRecipe(id: string): Promise<RecipeDetail> {
@@ -27,7 +36,7 @@ export async function getRecipe(id: string): Promise<RecipeDetail> {
       return recipe
     })
   }
-  return notImplemented('recipes')
+  return httpRequest(`/functions/v1/admin-catalog/recipes/${id}`)
 }
 
 export async function updateRecipe(
@@ -56,7 +65,10 @@ export async function updateRecipe(
       return next
     })
   }
-  return notImplemented('recipes')
+  return httpRequest(`/functions/v1/admin-catalog/recipes/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
@@ -67,5 +79,5 @@ export async function deleteRecipe(id: string): Promise<void> {
       if (index >= 0) mockRecipes.splice(index, 1)
     })
   }
-  return notImplemented('recipes')
+  await httpRequest(`/functions/v1/admin-catalog/recipes/${id}`, { method: 'DELETE' })
 }

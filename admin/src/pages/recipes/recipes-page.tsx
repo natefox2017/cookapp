@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Trash2 } from 'lucide-react'
-import { deleteRecipe, getRecipe, isMockMode, listRecipes, writeCapability } from '@/api'
+import {
+  deleteRecipe,
+  getRecipe,
+  isMockMode,
+  listRecipes,
+  listTaxonomy,
+  writeCapability,
+} from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +32,9 @@ export function RecipesPage() {
   const [cuisine, setCuisine] = useState('all')
   const [category, setCategory] = useState('all')
 
+  const cuisines = useAsyncData(() => listTaxonomy('cuisine'), [])
+  const categories = useAsyncData(() => listTaxonomy('category'), [])
+
   const params = useMemo(
     () => ({
       q: debouncedQ,
@@ -40,7 +50,7 @@ export function RecipesPage() {
     <div>
       <PageHeader
         title="Recipes"
-        description="Mock-only until Admin Recipes / AI Import APIs ship (see ADMIN_API_CONTRACT.md)."
+        description="User recipes from CookApp. Empty until members save recipes."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -56,12 +66,11 @@ export function RecipesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All cuisines</SelectItem>
-            <SelectItem value="Japanese">Japanese</SelectItem>
-            <SelectItem value="Italian">Italian</SelectItem>
-            <SelectItem value="Mexican">Mexican</SelectItem>
-            <SelectItem value="Thai">Thai</SelectItem>
-            <SelectItem value="Mediterranean">Mediterranean</SelectItem>
-            <SelectItem value="American">American</SelectItem>
+            {(cuisines.data ?? []).map((item) => (
+              <SelectItem key={item.id} value={item.name}>
+                {item.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={category} onValueChange={setCategory}>
@@ -70,9 +79,11 @@ export function RecipesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>
-            <SelectItem value="Breakfast">Breakfast</SelectItem>
-            <SelectItem value="Lunch">Lunch</SelectItem>
-            <SelectItem value="Dinner">Dinner</SelectItem>
+            {(categories.data ?? []).map((item) => (
+              <SelectItem key={item.id} value={item.name}>
+                {item.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -94,12 +105,14 @@ export function RecipesPage() {
           >
             <Card className="overflow-hidden transition-shadow hover:shadow-md">
               <div className="aspect-[16/10] overflow-hidden bg-muted">
-                <img
-                  src={recipe.coverUrl}
-                  alt={recipe.title}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
+                {recipe.coverUrl ? (
+                  <img
+                    src={recipe.coverUrl}
+                    alt={recipe.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : null}
               </div>
               <CardContent className="space-y-3 p-4">
                 <div>
@@ -178,7 +191,11 @@ export function RecipeDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="overflow-hidden rounded-xl border bg-card">
-          <img src={data.coverUrl} alt={data.title} className="aspect-[16/10] w-full object-cover" />
+          {data.coverUrl ? (
+            <img src={data.coverUrl} alt={data.title} className="aspect-[16/10] w-full object-cover" />
+          ) : (
+            <div className="aspect-[16/10] w-full bg-muted" />
+          )}
           <div className="space-y-3 p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>

@@ -50,6 +50,13 @@ describe('admin nav (Issue #61 — #64 IA rollback)', () => {
     }
   })
 
+  it('marks ops catalog pages as live (Issue #92)', () => {
+    const live = navItems.filter((item) => item.apiStatus === 'live').map((item) => item.href)
+    for (const href of ['/', '/users', '/recipes', '/ingredients', '/categories', '/subscription']) {
+      assert.equal(live.includes(href), true, `expected live nav ${href}`)
+    }
+  })
+
   it('keeps Settings as hybrid entry (Integrations lives in Settings tabs via #63)', () => {
     const settings = navItems.find((item) => item.href === '/settings')
     assert.ok(settings)

@@ -153,3 +153,9 @@ jobs:
           test -f supabase/migrations/20260918140000_operational_jobs.sql
           test -f docs/backend/AGGREGATION_CONTRACTS.md
           echo "Operations aggregation paths OK"
+      - name: Admin catalog mapper unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/admin-catalog/
+          test -f supabase/functions/admin-catalog/index.ts
+          echo "Admin catalog paths OK"

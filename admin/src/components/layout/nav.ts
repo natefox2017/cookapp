@@ -28,9 +28,9 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/', icon: LayoutDashboard, apiStatus: 'live' },
   { title: 'Users', href: '/users', icon: Users, apiStatus: 'live' },
-  { title: 'Recipes', href: '/recipes', icon: CookingPot, apiStatus: 'mock_only' },
-  { title: 'Ingredients', href: '/ingredients', icon: Carrot, apiStatus: 'mock_only' },
-  { title: 'Categories', href: '/categories', icon: Tags, apiStatus: 'mock_only' },
+  { title: 'Recipes', href: '/recipes', icon: CookingPot, apiStatus: 'live' },
+  { title: 'Ingredients', href: '/ingredients', icon: Carrot, apiStatus: 'live' },
+  { title: 'Categories', href: '/categories', icon: Tags, apiStatus: 'live' },
   { title: 'Subscription', href: '/subscription', icon: CreditCard, apiStatus: 'live' },
   { title: 'Settings', href: '/settings', icon: Settings, apiStatus: 'hybrid' },
 ]
