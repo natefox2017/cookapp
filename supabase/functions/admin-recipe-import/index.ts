@@ -1,24 +1,26 @@
 // Admin Recipe Import API — shared Backend AI Recipe Import pipeline.
 // Auth: custom admin bearer via requireAdminSession.
 // Deploy: supabase functions deploy admin-recipe-import --project-ref semsjyrqjnumpvanibip
-// Issue: #55
+// Issues: #55 (pipeline), #56 (async ImportQueue via Supabase Queues / pgmq)
 //
 // Depends on AI Platform (#53) + MediaStorage (#54) via shared interfaces/stubs.
-// Full async queue worker is #56 — single jobs run inline here.
+// Long work is enqueued; recipe-import-worker runs runImportPipeline asynchronously.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
 import { requireAdminSession } from "../_shared/admin-session.ts";
+import {
+  resolveRequestContext,
+  requestIdHeaders,
+} from "../_shared/request-context.ts";
 import { resolveSource } from "../_shared/recipe-import/source-resolver.ts";
 import { canonicalizeUrl } from "../_shared/ssrf.ts";
-import {
-  runImportPipeline,
-  type PipelineJobRow,
-} from "../_shared/recipe-import/pipeline.ts";
+import type { PipelineJobRow } from "../_shared/recipe-import/pipeline.ts";
 import type { PipelineStage } from "../_shared/recipe-import/types.ts";
 import { STAGE_ORDER } from "../_shared/recipe-import/types.ts";
+import { createImportQueue } from "../_shared/recipe-import/queue.ts";
 
 function routeParts(req: Request): string[] {
   const url = new URL(req.url);
@@ -165,9 +167,16 @@ Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
 
+  const ctx = resolveRequestContext(req);
+  const headers = {
+    ...publicCorsHeaders,
+    ...requestIdHeaders(ctx),
+  };
+
   try {
     const session = await requireAdminSession(req);
     const admin = createServiceClient();
+    const queue = createImportQueue(admin);
     const parts = routeParts(req);
     const method = req.method.toUpperCase();
     const resource = (parts[0] ?? "").toLowerCase();
@@ -188,10 +197,15 @@ Deno.serve(async (req) => {
       if (status) q = q.eq("status", status);
       const { data, error } = await q;
       if (error) throw new AppError("internal_error", error.message, 500);
-      return json({ jobs: (data ?? []).map((r) => mapJob(r as Record<string, unknown>)) });
+      return json(
+        { jobs: (data ?? []).map((r) => mapJob(r as Record<string, unknown>)) },
+        200,
+        headers,
+        ctx,
+      );
     }
 
-    // POST /jobs — create single + run inline
+    // POST /jobs — create single + enqueue (async worker)
     if (resource === "jobs" && parts.length === 1 && method === "POST") {
       const body = await readJson(req);
       const prepared = prepareSource(body);
@@ -241,11 +255,21 @@ Deno.serve(async (req) => {
       }
 
       const job = inserted as unknown as PipelineJobRow;
-      const result = await runImportPipeline(job, { admin });
+      const msgId = await queue.enqueue({
+        job_id: job.id,
+        from_stage: "resolve",
+        correlation_id: ctx.correlationId,
+      });
       const fresh = await loadJob(admin, job.id);
       return json(
-        { job: mapJob(fresh as unknown as Record<string, unknown>), result },
+        {
+          job: mapJob(fresh as unknown as Record<string, unknown>),
+          queued: msgId != null,
+          queueMsgId: msgId,
+        },
         201,
+        headers,
+        ctx,
       );
     }
 
@@ -265,14 +289,19 @@ Deno.serve(async (req) => {
         .eq("job_id", job.id)
         .order("created_at", { ascending: true });
 
-      return json({
-        job: mapJob(job as unknown as Record<string, unknown>),
-        result: result ?? null,
-        artifacts: artifacts ?? [],
-      });
+      return json(
+        {
+          job: mapJob(job as unknown as Record<string, unknown>),
+          result: result ?? null,
+          artifacts: artifacts ?? [],
+        },
+        200,
+        headers,
+        ctx,
+      );
     }
 
-    // POST /jobs/:id/retry
+    // POST /jobs/:id/retry — enqueue from stage (async)
     if (
       resource === "jobs" && parts.length === 3 && parts[2] === "retry" &&
       method === "POST"
@@ -288,17 +317,27 @@ Deno.serve(async (req) => {
         completed_at: null,
       }).eq("id", job.id);
 
-      const refreshed = await loadJob(admin, job.id);
-      const result = await runImportPipeline(refreshed, { admin }, { fromStage });
-      await refreshBatch(admin, refreshed.batch_id);
-      const fresh = await loadJob(admin, job.id);
-      return json({
-        job: mapJob(fresh as unknown as Record<string, unknown>),
-        result,
+      const msgId = await queue.enqueue({
+        job_id: job.id,
+        from_stage: fromStage,
+        correlation_id: ctx.correlationId,
       });
+      await refreshBatch(admin, job.batch_id);
+      const fresh = await loadJob(admin, job.id);
+      return json(
+        {
+          job: mapJob(fresh as unknown as Record<string, unknown>),
+          queued: msgId != null,
+          queueMsgId: msgId,
+          fromStage,
+        },
+        202,
+        headers,
+        ctx,
+      );
     }
 
-    // POST /jobs/:id/reparse — retry from parse stage
+    // POST /jobs/:id/reparse — enqueue from parse stage
     if (
       resource === "jobs" && parts.length === 3 && parts[2] === "reparse" &&
       method === "POST"
@@ -311,19 +350,27 @@ Deno.serve(async (req) => {
         error_message: null,
         completed_at: null,
       }).eq("id", job.id);
-      const refreshed = await loadJob(admin, job.id);
-      const result = await runImportPipeline(refreshed, { admin }, {
-        fromStage: "parse",
+      const msgId = await queue.enqueue({
+        job_id: job.id,
+        from_stage: "parse",
+        correlation_id: ctx.correlationId,
       });
-      await refreshBatch(admin, refreshed.batch_id);
+      await refreshBatch(admin, job.batch_id);
       const fresh = await loadJob(admin, job.id);
-      return json({
-        job: mapJob(fresh as unknown as Record<string, unknown>),
-        result,
-      });
+      return json(
+        {
+          job: mapJob(fresh as unknown as Record<string, unknown>),
+          queued: msgId != null,
+          queueMsgId: msgId,
+          fromStage: "parse",
+        },
+        202,
+        headers,
+        ctx,
+      );
     }
 
-    // POST /jobs/:id/approve — import review result
+    // POST /jobs/:id/approve — enqueue review import
     if (
       resource === "jobs" && parts.length === 3 && parts[2] === "approve" &&
       method === "POST"
@@ -353,8 +400,6 @@ Deno.serve(async (req) => {
         completed_at: null,
       }).eq("id", job.id);
 
-      const refreshed = await loadJob(admin, job.id);
-      // Skip duplicate re-block on self; run from import if result exists
       const { data: existingResult } = await admin
         .from("recipe_import_results")
         .select("id")
@@ -362,13 +407,24 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       const fromStage: PipelineStage = existingResult ? "quality" : "resolve";
-      const result = await runImportPipeline(refreshed, { admin }, { fromStage });
-      await refreshBatch(admin, refreshed.batch_id);
-      const fresh = await loadJob(admin, job.id);
-      return json({
-        job: mapJob(fresh as unknown as Record<string, unknown>),
-        result,
+      const msgId = await queue.enqueue({
+        job_id: job.id,
+        from_stage: fromStage,
+        correlation_id: ctx.correlationId,
       });
+      await refreshBatch(admin, job.batch_id);
+      const fresh = await loadJob(admin, job.id);
+      return json(
+        {
+          job: mapJob(fresh as unknown as Record<string, unknown>),
+          queued: msgId != null,
+          queueMsgId: msgId,
+          fromStage,
+        },
+        202,
+        headers,
+        ctx,
+      );
     }
 
     // POST /jobs/:id/reject
@@ -387,10 +443,15 @@ Deno.serve(async (req) => {
       }).eq("id", job.id);
       await refreshBatch(admin, job.batch_id);
       const fresh = await loadJob(admin, job.id);
-      return json({ job: mapJob(fresh as unknown as Record<string, unknown>) });
+      return json(
+        { job: mapJob(fresh as unknown as Record<string, unknown>) },
+        200,
+        headers,
+        ctx,
+      );
     }
 
-    // POST /batches — create batch (jobs pending; worker is #56)
+    // POST /batches — create batch + enqueue all (returns immediately)
     if (resource === "batches" && parts.length === 1 && method === "POST") {
       const body = await readJson(req);
       const urlsRaw = body.urls ?? body.sourceUrls ?? [];
@@ -463,6 +524,14 @@ Deno.serve(async (req) => {
         }
       }
 
+      const queueMsgIds = await queue.enqueueMany(
+        jobIds.map((id) => ({
+          job_id: id,
+          from_stage: "resolve" as const,
+          correlation_id: ctx.correlationId,
+        })),
+      );
+
       await refreshBatch(admin, batch.id as string);
       const { data: freshBatch } = await admin
         .from("recipe_import_batches")
@@ -475,14 +544,16 @@ Deno.serve(async (req) => {
           batch: mapBatch((freshBatch ?? batch) as Record<string, unknown>),
           jobIds,
           skipped,
-          note:
-            "Batch jobs are pending. Full async queue worker is Issue #56. Use POST /jobs/:id/retry to process individually.",
+          queuedCount: queueMsgIds.length,
+          queueMsgIds,
         },
         201,
+        headers,
+        ctx,
       );
     }
 
-    // GET /batches/:id
+    // GET /batches/:id — batch summary + jobs
     if (resource === "batches" && parts.length === 2 && method === "GET") {
       await refreshBatch(admin, parts[1]);
       const { data: batch, error } = await admin
@@ -497,14 +568,19 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("batch_id", parts[1])
         .order("created_at", { ascending: true });
-      return json({
-        batch: mapBatch(batch as Record<string, unknown>),
-        jobs: (jobs ?? []).map((j) => mapJob(j as Record<string, unknown>)),
-      });
+      return json(
+        {
+          batch: mapBatch(batch as Record<string, unknown>),
+          jobs: (jobs ?? []).map((j) => mapJob(j as Record<string, unknown>)),
+        },
+        200,
+        headers,
+        ctx,
+      );
     }
 
     throw new AppError("not_found", "Unknown admin-recipe-import route", 404);
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, headers, ctx);
   }
 });

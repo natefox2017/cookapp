@@ -111,3 +111,11 @@ jobs:
         run: |
           set -euo pipefail
           deno test --allow-env supabase/functions/_shared/ai_platform_test.ts supabase/functions/_shared/ai_router_fallback_test.ts
+      - name: Import queue / worker unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/recipe-import/queue_test.ts
+          test -f supabase/functions/recipe-import-worker/index.ts
+          test -f docs/backend/IMPORT_QUEUE.md
+          test -f supabase/migrations/20260918060000_recipe_import_queue.sql
+          echo "Import queue worker paths OK"

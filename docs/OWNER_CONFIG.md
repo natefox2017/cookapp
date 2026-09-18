@@ -117,6 +117,7 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | Financial Reports access configured | todo | | |
 | Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
 | `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
+| `RECIPE_IMPORT_WORKER_SECRET`（Supabase secrets） | todo | Cron/ops for `recipe-import-worker` (#56) | 2026-09-18 |
 | 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
 | 管理后台 URL / 密钥 | todo | 见相关 Issue | |
 
@@ -148,3 +149,4 @@ AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 | 2026-09-18 | #51 hardening + #52 Admin API contract；AI/ASC/Storage placeholders |
 | 2026-09-18 | #54：`STORAGE_CLEANUP_SECRET` for import-artifact TTL cleanup |
 | 2026-09-18 | #53：AI Platform status（Gateway / secret_ref / routes） |
+| 2026-09-18 | #56：`RECIPE_IMPORT_WORKER_SECRET` for Import Queue worker |
