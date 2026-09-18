@@ -1026,12 +1026,14 @@ paths:
     post:
       tags:
       - AdminRecipeImport
-      summary: Create single import job and run pipeline
+      summary: Create single import job and enqueue for async worker
       description: 'Shared Backend AI Recipe Import pipeline (Issue #55).
 
         Exact active source URL returns 409 DUPLICATE.
 
         Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
+
+        Job is enqueued on Supabase Queues (pgmq) — Issue #56. Worker runs pipeline asynchronously.
 
         '
       operationId: adminCreateRecipeImportJob
@@ -1045,7 +1047,7 @@ paths:
               $ref: '#/components/schemas/RecipeImportCreateRequest'
       responses:
         '201':
-          description: Job created and pipeline executed
+          description: Job created and enqueued (pending)
           content:
             application/json:
               schema:
@@ -1053,9 +1055,12 @@ paths:
                 properties:
                   job:
                     $ref: '#/components/schemas/RecipeImportJob'
-                  result:
-                    type: object
-                    additionalProperties: true
+                  queued:
+                    type: boolean
+                  queueMsgId:
+                    type:
+                    - integer
+                    - 'null'
         '409':
           description: Exact URL duplicate
           content:
@@ -1101,7 +1106,7 @@ paths:
     post:
       tags:
       - AdminRecipeImport
-      summary: Retry job from a pipeline stage
+      summary: Enqueue retry from a pipeline stage
       operationId: adminRetryRecipeImportJob
       security:
       - AdminBearer: []
@@ -1118,13 +1123,28 @@ paths:
                 fromStage:
                   $ref: '#/components/schemas/RecipeImportStage'
       responses:
-        '200':
-          description: Retry result
+        '202':
+          description: Retry enqueued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  queued:
+                    type: boolean
+                  queueMsgId:
+                    type:
+                    - integer
+                    - 'null'
+                  fromStage:
+                    $ref: '#/components/schemas/RecipeImportStage'
   /functions/v1/admin-recipe-import/jobs/{jobId}/reparse:
     post:
       tags:
       - AdminRecipeImport
-      summary: Re-run AI parse from parse stage
+      summary: Enqueue re-run AI parse from parse stage
       operationId: adminReparseRecipeImportJob
       security:
       - AdminBearer: []
@@ -1133,13 +1153,13 @@ paths:
       - $ref: '#/components/parameters/XRequestId'
       - $ref: '#/components/parameters/RecipeImportJobId'
       responses:
-        '200':
-          description: Reparse result
+        '202':
+          description: Reparse enqueued
   /functions/v1/admin-recipe-import/jobs/{jobId}/approve:
     post:
       tags:
       - AdminRecipeImport
-      summary: Approve needs-review job and import
+      summary: Approve needs-review job and enqueue import
       operationId: adminApproveRecipeImportJob
       security:
       - AdminBearer: []
@@ -1157,8 +1177,8 @@ paths:
                   type: string
                   format: uuid
       responses:
-        '200':
-          description: Approve / import result
+        '202':
+          description: Approve / import enqueued
   /functions/v1/admin-recipe-import/jobs/{jobId}/reject:
     post:
       tags:
@@ -1186,7 +1206,12 @@ paths:
     post:
       tags:
       - AdminRecipeImport
-      summary: Create batch import (jobs pending; queue worker
+      summary: Create batch import and enqueue jobs (async)
+      description: 'Returns immediately. Jobs are processed by recipe-import-worker
+
+        via Supabase Queues / pgmq (Issue #56). Single-job failure does not block the batch.
+
+        '
       operationId: adminCreateRecipeImportBatch
       security:
       - AdminBearer: []
@@ -1209,7 +1234,34 @@ paths:
                   format: uuid
       responses:
         '201':
-          description: Batch created with pending jobs
+          description: Batch created; jobs enqueued pending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch:
+                    $ref: '#/components/schemas/RecipeImportBatch'
+                  jobIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                  skipped:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        reason:
+                          type: string
+                  queuedCount:
+                    type: integer
+                  queueMsgIds:
+                    type: array
+                    items:
+                      type: integer
       parameters:
       - $ref: '#/components/parameters/XCorrelationId'
       - $ref: '#/components/parameters/XRequestId'
@@ -1233,6 +1285,80 @@ paths:
       responses:
         '200':
           description: Batch summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch:
+                    $ref: '#/components/schemas/RecipeImportBatch'
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportJob'
+  /functions/v1/recipe-import-worker:
+    post:
+      tags:
+      - Operations
+      - AdminRecipeImport
+      summary: Process recipe import queue (pgmq worker tick)
+      description: 'Operational job type `recipe_import_worker` (Issue #56).
+
+        Reads up to `import_queue_concurrency` messages from Supabase Queues (pgmq),
+
+        calls shared `runImportPipeline`, archives on success / poison.
+
+        Server/cron only — auth via `Authorization: Bearer <RECIPE_IMPORT_WORKER_SECRET>`.
+
+        Concurrency / VT / max attempts come from `runtime_config` (not secrets).
+
+        '
+      operationId: recipeImportWorkerTick
+      security:
+      - WorkerBearer: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recoverStale:
+                  type: boolean
+                  default: true
+                  description: Re-enqueue pending jobs older than 60s
+      responses:
+        '200':
+          description: Worker tick result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  job_type:
+                    type: string
+                  claimed:
+                    type: integer
+                  processed:
+                    type: integer
+                  succeeded:
+                    type: integer
+                  failed:
+                    type: integer
+                  poisoned:
+                    type: integer
+                  skipped:
+                    type: integer
+                  recovered:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - $ref: '#/components/parameters/XJobId'
   /functions/v1/storage-cleanup-import-artifacts:
     post:
       tags:
@@ -1301,6 +1427,10 @@ components:
       type: http
       scheme: bearer
       description: STORAGE_CLEANUP_SECRET (cron / operations worker only)
+    WorkerBearer:
+      type: http
+      scheme: bearer
+      description: RECIPE_IMPORT_WORKER_SECRET (cron / import queue worker only)
   parameters:
     PreferReturn:
       name: Prefer
@@ -2035,6 +2165,35 @@ components:
           type: string
           format: uuid
       description: Provide sourceUrl and/or sourceText (text paste fallback).
+    RecipeImportBatch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        total:
+          type: integer
+        imported:
+          type: integer
+        needsReview:
+          type: integer
+        failed:
+          type: integer
+        duplicate:
+          type: integer
+        createdBy:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
     RecipeImportJob:
       type: object
       properties:
