@@ -10,9 +10,11 @@ Live vs mock path matrix: [`docs/backend/ADMIN_API_CONTRACT.md`](../docs/backend
 ## Stack
 
 - React + TypeScript + Vite
-- Tailwind CSS + shadcn/ui-style primitives
+- Tailwind CSS + shadcn/ui (default zinc / black-white theme)
 - Lucide Icons
 - Recharts
+
+Dark mode is the default and paints the **full shell** (sidebar + content). Toggle light/dark from the header; preference is stored in `localStorage` (`cookapp-admin-theme`). Sidebar collapse lives only in the header — do not add a second rail control.
 
 ## Run locally
 
@@ -103,7 +105,7 @@ Admin Dashboard UI
 | `/subscription` | Plans · Records · Revenue | yes |
 | `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |
 
-Sidebar collapses via header / rail control (persisted). In live mode, pending modules show a **Pending** badge.
+Sidebar collapses via the header control only (persisted). In live mode, pending modules show a **Pending** badge.
 
 ## Related
 
