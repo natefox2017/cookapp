@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { validateAdminPassword } from '@/lib/password-policy'
 
 export function SettingsPage() {
   const { data, loading, error, reload } = useAsyncData(() => getSettings(), [])
@@ -65,8 +66,9 @@ export function SettingsPage() {
       setPasswordError('New password and confirmation do not match')
       return
     }
-    if (newPassword.length < 4) {
-      setPasswordError('New password must be at least 4 characters')
+    const strength = validateAdminPassword(newPassword)
+    if (!strength.ok) {
+      setPasswordError(strength.message ?? 'Weak password')
       return
     }
     setPasswordSaving(true)
@@ -312,7 +314,9 @@ export function SettingsPage() {
               <CardTitle>Security</CardTitle>
               <CardDescription>
                 Change the admin console password for{' '}
-                <span className="font-mono">{admin?.username ?? 'admin'}</span>
+                <span className="font-mono">{admin?.username ?? 'admin'}</span>.
+                Requires 12+ characters with upper, lower, and a digit. All sessions
+                are revoked on change.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -384,7 +388,7 @@ export function SettingsPage() {
                     Mock mode
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Controlled by VITE_ADMIN_USE_MOCK at build time
+                    Dev-only. Production builds forbid mock KPI/data (Issue #51).
                   </div>
                 </div>
                 <Switch

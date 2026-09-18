@@ -27,19 +27,22 @@ Copy `.env.example` to `.env` if needed:
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `VITE_ADMIN_USE_MOCK` | `true` | Use in-memory mock API + mock auth |
-| `VITE_ADMIN_API_BASE_URL` | empty | Supabase project URL when mock is off (e.g. `https://semsjyrqjnumpvanibip.supabase.co`) |
+| `VITE_ADMIN_USE_MOCK` | `true` in Vite **DEV** only | In-memory mock API + mock auth. Production builds forbid `true` (Issue #51). |
+| `VITE_ADMIN_API_BASE_URL` | _(empty)_ | Live Supabase project origin when mock is off |
+
+Default local credentials `admin` / `admin` are **dev-only**. Production must bootstrap a strong Owner password via `POST /functions/v1/admin-auth/bootstrap` and set `COOKAPP_ADMIN_ENV=production` (default).
 
 ## Auth
 
 | Action | Endpoint |
 |--------|----------|
 | Login | `POST /functions/v1/admin-auth/login` |
+| Bootstrap Owner | `POST /functions/v1/admin-auth/bootstrap` |
 | Logout | `POST /functions/v1/admin-auth/logout` |
 | Session | `GET /functions/v1/admin-auth/session` |
 | Change password | `POST /functions/v1/admin-auth/change-password` |
 
-Bearer token sessions (7-day TTL). Change password from **Settings → Security**.
+Bearer token sessions (7-day TTL). Change password from **Settings → Security**. Strong password required (12+ with upper/lower/digit).
 
 ## Users API
 
