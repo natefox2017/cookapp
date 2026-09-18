@@ -56,9 +56,11 @@ import SwiftUI
         items: [
             GlassMenuItem(id: "a", title: "New Folder", systemImage: "folder.badge.plus"),
             GlassMenuItem(id: "b", title: "Disabled", isDisabled: true),
+            GlassMenuItem(id: "d", title: "Saving", systemImage: "square.and.arrow.down", isLoading: true),
             .separator(id: "s"),
             GlassMenuItem(id: "c", title: "Delete", systemImage: "trash", role: .destructive),
         ],
+        overMedia: true,
         onSelect: { _ in }
     )
     .padding()

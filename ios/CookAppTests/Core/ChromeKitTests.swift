@@ -17,6 +17,18 @@ struct ChromeTokenTests {
         #expect(DesignTokens.Chrome.headerButtonGap == 8)
         #expect(DesignTokens.Chrome.barHorizontalInset >= 16)
         #expect(DesignTokens.Chrome.clusterBlendSpacing < DesignTokens.Chrome.tabToSearchGap)
+        #expect(DesignTokens.Chrome.tabCapsuleWidth == 308)
+        #expect(DesignTokens.Chrome.searchCircleSize == 60)
+        #expect(
+            DesignTokens.Chrome.tabCapsuleWidth
+                + DesignTokens.Chrome.tabToSearchGap
+                + DesignTokens.Chrome.searchCircleSize == 376
+        )
+        #expect(DesignTokens.Chrome.tabCapsuleMinWidth >= 4 * DesignTokens.Chrome.minimumHitTarget)
+        #expect(DesignTokens.Chrome.tabIconSlotHeight == 22)
+        #expect(DesignTokens.Chrome.tabIconLabelSpacing == 2)
+        #expect(DesignTokens.Chrome.menuGlyphWidth == 20)
+        #expect(DesignTokens.Chrome.pressedFillOpacity == 0.08)
     }
 
     @Test func motionDurationsMatchFreeze() {

@@ -175,6 +175,11 @@ struct ChromePressButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .background {
+                if configuration.isPressed && isEnabled {
+                    Color.primary.opacity(DesignTokens.Chrome.pressedFillOpacity)
+                }
+            }
             .scaleEffect(
                 configuration.isPressed && isEnabled
                     ? DesignTokens.Motion.pressScale

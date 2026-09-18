@@ -70,7 +70,7 @@ Concrete values live in `ios/CookApp/Core/Theme/DesignTokens.swift` (one file).
 | Surface / page | Content layer backgrounds | `secondarySystemGroupedBackground` / `systemGroupedBackground` |
 | Glass regular / clear | Floating chrome only | iOS 26 `Glass.regular` / `.clear`; fallback `ultraThinMaterial` |
 | Chrome solid fallback | Reduce Transparency / Increase Contrast | `cookChromeSolid` + stronger separator |
-| Tab bar height / search circle | D1 | 62 / 60, gap 8, insets 16 |
+| Tab bar height / search circle | D1 | 62 / 60, capsule 308, gap 8 (cluster 376), min inset 16 |
 | Hit target | All chrome controls | ≥44 |
 | Header button / gap | D2 | 44 / 8 |
 | Radii | Cards, tab selection, pills | 16 / 14 / capsule |

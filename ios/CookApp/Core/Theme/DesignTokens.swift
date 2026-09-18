@@ -24,6 +24,7 @@ enum DesignTokens {
         static let meta = Font.subheadline
         static let caption = Font.caption
         static let tabLabel = Font.caption2.weight(.medium)
+        static let tabIcon = Font.body.weight(.semibold)
         static let chromeButton = Font.callout.weight(.semibold)
         static let menuItem = Font.body
     }
@@ -38,8 +39,12 @@ enum DesignTokens {
         static let barTopPadding: CGFloat = 8
         static let barBottomPadding: CGFloat = 8
         static let tabSlotSpacing: CGFloat = 0
+        static let tabCapsuleWidth: CGFloat = 308
+        static let tabCapsuleMinWidth: CGFloat = 192
         static let tabCapsuleHorizontalPadding: CGFloat = 8
         static let tabCapsuleVerticalPadding: CGFloat = 6
+        static let tabIconLabelSpacing: CGFloat = 2
+        static let tabIconSlotHeight: CGFloat = 22
         static let headerButtonSize: CGFloat = 44
         static let headerButtonGap: CGFloat = 8
         static let headerIconToLabelGap: CGFloat = 6
@@ -47,16 +52,17 @@ enum DesignTokens {
         static let menuMinWidth: CGFloat = 220
         static let menuItemHeight: CGFloat = 44
         static let menuHorizontalPadding: CGFloat = 16
+        static let menuGlyphWidth: CGFloat = 20
         /// Keep sibling glasses from morphing into one blob at the 8pt gap.
         static let clusterBlendSpacing: CGFloat = 2
         static let hairlineWidth: CGFloat = 1
         static let contrastBorderWidth: CGFloat = 1.5
         static let hairlineOpacity: Double = 0.10
         static let contrastBorderOpacity: Double = 0.36
-        static let mediaScrimOpacity: CGFloat = 0.28
+        static let mediaScrimOpacity: Double = 0.28
         static let disabledOpacity: Double = 0.45
-        static let selectedTintOpacity: Double = 0.12
         static let hoverLiftOpacity: Double = 0.06
+        static let pressedFillOpacity: Double = 0.08
         static let menuScale: CGFloat = 0.94
     }
 
@@ -81,4 +87,6 @@ extension Color {
     static let cookSeparator = Color(.separator)
     /// Solid chrome fallback for Reduce Transparency / Increase Contrast (White-first, semantic).
     static let cookChromeSolid = Color(.secondarySystemGroupedBackground)
+    /// Selected tab slot fill — light grey, not a brand-green slab.
+    static let cookTabSelectionFill = Color(.tertiarySystemFill)
 }

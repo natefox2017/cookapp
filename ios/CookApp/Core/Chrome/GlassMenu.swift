@@ -24,6 +24,7 @@ struct GlassMenuItem: Identifiable, Equatable, Sendable {
     var systemImage: String?
     var role: Role = .normal
     var isDisabled: Bool = false
+    var isLoading: Bool = false
 
     static func separator(id: String) -> GlassMenuItem {
         GlassMenuItem(id: id, title: "", role: .separator, isDisabled: true)
@@ -88,16 +89,22 @@ struct GlassMenuButton: View {
     var systemImage: String
     var accessibilityLabel: String
     var items: [GlassMenuItem]
+    var overMedia: Bool = false
+    var isDisabled: Bool = false
+    var isLoading: Bool = false
     var onSelect: (GlassMenuItem) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var presenter = GlassMenuPresenter()
-    @State private var pressedItemID: String?
+    @State private var hoveredItemID: String?
 
     var body: some View {
         GlassHeaderButton(
             systemImage: systemImage,
             accessibilityLabel: accessibilityLabel,
+            overMedia: overMedia,
+            isDisabled: isDisabled,
+            isLoading: isLoading,
             isMenuHostHighlighted: presenter.highlightsHost,
             action: toggle
         )
@@ -143,16 +150,25 @@ struct GlassMenuButton: View {
     }
 
     private func menuRow(_ item: GlassMenuItem) -> some View {
-        Button {
-            guard !item.isDisabled else { return }
+        let isEnabled = !item.isDisabled && !item.isLoading
+        return Button {
+            guard isEnabled else { return }
             onSelect(item)
             dismiss()
         } label: {
             HStack(spacing: DesignTokens.Chrome.headerIconToLabelGap) {
-                if let systemImage = item.systemImage {
-                    Image(systemName: systemImage)
-                        .frame(width: 20)
+                ZStack {
+                    if let systemImage = item.systemImage {
+                        Image(systemName: systemImage)
+                            .opacity(item.isLoading ? 0 : 1)
+                    }
+                    if item.isLoading {
+                        ProgressView()
+                            .controlSize(.mini)
+                    }
                 }
+                .frame(width: DesignTokens.Chrome.menuGlyphWidth)
+
                 Text(item.title)
                     .font(DesignTokens.Typography.menuItem)
                 Spacer(minLength: 0)
@@ -162,27 +178,22 @@ struct GlassMenuButton: View {
             .frame(minHeight: DesignTokens.Chrome.menuItemHeight)
             .contentShape(Rectangle())
             .background {
-                if pressedItemID == item.id {
-                    Color.primary.opacity(0.08)
+                if hoveredItemID == item.id && isEnabled {
+                    Color.primary.opacity(DesignTokens.Chrome.hoverLiftOpacity)
                 }
             }
             .opacity(item.isDisabled ? DesignTokens.Chrome.disabledOpacity : 1)
         }
-        .buttonStyle(.plain)
-        .disabled(item.isDisabled)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    if !item.isDisabled { pressedItemID = item.id }
-                }
-                .onEnded { _ in
-                    pressedItemID = nil
-                }
-        )
+        .buttonStyle(ChromePressButtonStyle(isEnabled: isEnabled, reduceMotion: reduceMotion))
+        .disabled(!isEnabled)
+        .onHover { hovering in
+            hoveredItemID = hovering && isEnabled ? item.id : (hoveredItemID == item.id ? nil : hoveredItemID)
+        }
         .accessibilityLabel(item.title)
     }
 
     private func toggle() {
+        guard !isDisabled && !isLoading else { return }
         let animation = Animation.easeInOut(duration: GlassMenuTransition.duration)
         if presenter.phase.isVisible {
             dismiss()

@@ -10,24 +10,40 @@ struct FloatingTabChrome: View {
     var isSearchLoading: Bool = false
 
     var body: some View {
-        HStack(alignment: .center, spacing: DesignTokens.Chrome.tabToSearchGap) {
-            FloatingTabBar(
-                selectedTab: $selectedTab,
-                disabledTabs: disabledTabs,
-                loadingTab: loadingTab
+        GeometryReader { geo in
+            let availableCapsule = geo.size.width
+                - (DesignTokens.Chrome.barHorizontalInset * 2)
+                - DesignTokens.Chrome.tabToSearchGap
+                - DesignTokens.Chrome.searchCircleSize
+            let capsuleWidth = min(
+                DesignTokens.Chrome.tabCapsuleWidth,
+                max(DesignTokens.Chrome.tabCapsuleMinWidth, availableCapsule)
             )
-            GlassHeaderButton(
-                systemImage: "magnifyingglass",
-                accessibilityLabel: "Search",
-                size: DesignTokens.Chrome.searchCircleSize,
-                isDisabled: isSearchDisabled,
-                isLoading: isSearchLoading,
-                action: onSearch
-            )
-            .accessibilityIdentifier("chrome.search")
+
+            HStack(alignment: .center, spacing: 0) {
+                Spacer(minLength: DesignTokens.Chrome.barHorizontalInset)
+                HStack(alignment: .center, spacing: DesignTokens.Chrome.tabToSearchGap) {
+                    FloatingTabBar(
+                        selectedTab: $selectedTab,
+                        disabledTabs: disabledTabs,
+                        loadingTab: loadingTab
+                    )
+                    .frame(width: capsuleWidth, height: DesignTokens.Chrome.tabBarHeight)
+                    GlassHeaderButton(
+                        systemImage: "magnifyingglass",
+                        accessibilityLabel: "Search",
+                        size: DesignTokens.Chrome.searchCircleSize,
+                        isDisabled: isSearchDisabled,
+                        isLoading: isSearchLoading,
+                        action: onSearch
+                    )
+                    .accessibilityIdentifier("chrome.search")
+                }
+                .cookGlassCluster(spacing: DesignTokens.Chrome.clusterBlendSpacing)
+                Spacer(minLength: DesignTokens.Chrome.barHorizontalInset)
+            }
         }
-        .cookGlassCluster(spacing: DesignTokens.Chrome.clusterBlendSpacing)
-        .padding(.horizontal, DesignTokens.Chrome.barHorizontalInset)
+        .frame(height: DesignTokens.Chrome.tabBarHeight)
         .padding(.top, DesignTokens.Chrome.barTopPadding)
         .padding(.bottom, DesignTokens.Chrome.barBottomPadding)
         .accessibilityElement(children: .contain)
@@ -77,17 +93,17 @@ struct FloatingTabBar: View {
                 selectedTab = tab
             }
         } label: {
-            VStack(spacing: 2) {
+            VStack(spacing: DesignTokens.Chrome.tabIconLabelSpacing) {
                 ZStack {
                     Image(systemName: isSelected ? tab.selectedSystemImage : tab.systemImage)
-                        .font(.body.weight(.semibold))
+                        .font(DesignTokens.Typography.tabIcon)
                         .opacity(isLoading ? 0 : 1)
                     if isLoading {
                         ProgressView()
                             .controlSize(.mini)
                     }
                 }
-                .frame(height: 22)
+                .frame(height: DesignTokens.Chrome.tabIconSlotHeight)
                 Text(tab.title)
                     .font(DesignTokens.Typography.tabLabel)
                     .lineLimit(1)
@@ -100,7 +116,7 @@ struct FloatingTabBar: View {
             .background {
                 if isSelected {
                     RoundedRectangle(cornerRadius: DesignTokens.Radius.tabSelection, style: .continuous)
-                        .fill(Color.cookBrand.opacity(DesignTokens.Chrome.selectedTintOpacity))
+                        .fill(Color.cookTabSelectionFill)
                         .matchedGeometryEffect(id: "tabSelection", in: tabNamespace)
                 }
             }
