@@ -89,6 +89,37 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | 字段 | 状态 | 填写值 / 备注 | 更新日期 |
 |------|------|---------------|----------|
 | Apple 内购 Shared Secret / ASC API（若 RC 需要） | todo | | |
+| 监控（Sentry / Analytics）DSN | n/a | Phase 后续 · #57 correlation IDs first | |
+| 管理后台 URL / 密钥 | todo | 见 §6 Admin；生产禁止默认 `admin`/`admin`（#51） | |
+
+---
+
+## 6. Admin Dashboard（Issue #51 · #52）
+
+| 字段 | 状态 | 填写值 / 备注 | 更新日期 |
+|------|------|---------------|----------|
+| Production Admin Owner username | todo | 勿使用默认 `admin`/`admin` | |
+| Production Owner password（强密码） | todo | 仅存 Secrets / 密码管理器；用 `POST /functions/v1/admin-auth/bootstrap` | 2026-09-18 |
+| `COOKAPP_ADMIN_ENV`（Supabase secrets） | todo | Production 设为 `production`（默认即 production） | |
+| `COOKAPP_ADMIN_BOOTSTRAP_TOKEN`（Supabase secrets） | todo | 一次性强随机 token；Bootstrap 请求头 `X-CookApp-Bootstrap-Token`；用完可轮换/删除 | |
+| `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS` | n/a | 仅当 `COOKAPP_ADMIN_ENV=development`；Production 即使误设也为 false | |
+| Admin live API base URL | todo | `VITE_ADMIN_API_BASE_URL`；Production build 禁止 `VITE_ADMIN_USE_MOCK=true` | |
+| AI Gateway Base URL | todo | Backend V2 AI Platform（#53）；密钥只进 Supabase secrets | 2026-09-18 |
+| AI Protocol | todo | 首期 OpenAI-compatible | |
+| AI API Secret configured | todo | server-side secret_ref only | |
+| Primary Recipe Model | todo | via AI routes | |
+| Fallback Model | todo | | |
+| App Store Connect API configured | todo | P1 Analytics #59；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
+| Analytics access configured | todo | | |
+| Financial Reports access configured | todo | | |
+| Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
+
+角色约定（server-side）：
+- **Owner**：AI secrets/provider、Financial、Admin accounts
+- **Admin**：运营管理
+- `operator` / `readonly`：预留
+
+契约矩阵：`docs/backend/ADMIN_API_CONTRACT.md`
 | 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
 | 管理后台 URL / 密钥 | todo | 见相关 Issue | |
 | `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
@@ -110,4 +141,5 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | 日期 | 说明 |
 |------|------|
 | 2026-09-17 | 初版：汇总 Apple / Google / RevenueCat / Secrets |
+| 2026-09-18 | #51 hardening + #52 Admin API contract；AI/ASC/Storage placeholders |
 | 2026-09-18 | #54：`STORAGE_CLEANUP_SECRET` for import-artifact TTL cleanup |

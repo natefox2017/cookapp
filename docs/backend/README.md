@@ -2,9 +2,10 @@
 
 Supabase Cloud project: `cookapp` / `semsjyrqjnumpvanibip`  
 URL: `https://semsjyrqjnumpvanibip.supabase.co`  
-Issue: [#11 Cloud Backend](https://github.com/natefox2017/cookapp/issues/11)
+Issue: [#11 Cloud Backend](https://github.com/natefox2017/cookapp/issues/11)  
+Status: **Foundation Complete / V2 Operational Expansion Required** ([#49](https://github.com/natefox2017/cookapp/issues/49))
 
-Server-only. No Admin Dashboard UI lives in this repository.
+Server-only. No Admin Dashboard UI lives in this repository (`admin/` is the separate Local Admin app).
 
 ## Responsibilities
 
@@ -15,6 +16,7 @@ Server-only. No Admin Dashboard UI lives in this repository.
 | API | PostgREST `/rest/v1/*` + Edge Functions `/functions/v1/*` |
 | Files | Private Storage buckets via `MediaStorageProvider` (Supabase); `{user_id}/…` for user media; `{job_id}/…` for import artifacts |
 | Subscriptions | RevenueCat webhook → `subscriptions` / `purchase_events` |
+| Admin ops | Custom bearer Edge Functions (`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`) |
 
 ## Modules
 
@@ -27,8 +29,14 @@ Server-only. No Admin Dashboard UI lives in this repository.
 - **Meal Plan** — `meal_plans` (`breakfast` \| `lunch` \| `dinner`)
 - **Pantry** — `pantry_items`
 - **Category** — `cuisines`, `meal_categories`, `tags` (seeded, read-only)
+- **Storage** — buckets `avatars`, `recipe-covers`, `recipe-images` (V2: `MediaStorageProvider` + import artifacts — #54)
 - **Storage** — buckets `avatars`, `recipe-covers`, `recipe-images`, `recipe-import-artifacts` (private TTL)
 - **Subscription** — `subscriptions`, view `subscription_status` (`plan` / `status` / `expire_date`)
+
+### V2 confirmed (not Phase 1 foundation)
+
+Tracked under [#49](https://github.com/natefox2017/cookapp/issues/49): AI Platform · AI Recipe Import · Store Analytics · Payments/Financial · Jobs/Syncs · Audit/Monitoring.  
+Do not treat mock Admin pages as production-complete.
 
 ## Layout
 
@@ -44,6 +52,8 @@ supabase/
     health/
     openapi/
     admin-auth/
+    admin-users/
+    admin-dashboard/
     admin-subscriptions/
     storage-cleanup-import-artifacts/
 ```
@@ -52,6 +62,7 @@ supabase/
 
 - OpenAPI: [`supabase/openapi/openapi.yaml`](../../supabase/openapi/openapi.yaml)
 - Live JSON: `GET /functions/v1/openapi` (no JWT)
+- Admin contract matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md)
 - Auth/IAP ops: [`AUTH_AND_IAP.md`](../AUTH_AND_IAP.md)
 - Media storage: [`MEDIA_STORAGE.md`](./MEDIA_STORAGE.md)
 
@@ -93,13 +104,16 @@ Authorization: Bearer <access_token>
 | `health` | yes | Module probe |
 | `openapi` | no | Serve OpenAPI JSON |
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
+| `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
+| `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 
 ### Admin auth
 
 - Tables: `admin_accounts`, `admin_sessions` (service_role only; no client RLS policies)
-- Default seed: username `admin`, password `admin` (bcrypt via pgcrypto)
+- Default seed `admin`/`admin` is **local/dev only** — production hardening: [#51](https://github.com/natefox2017/cookapp/issues/51)
 - Endpoints under `/functions/v1/admin-auth/{login,logout,session,change-password}`
 
 ### Admin subscriptions
@@ -107,6 +121,25 @@ Authorization: Bearer <access_token>
 - Table: `subscription_plans` (Apple / Android SKUs, price, billing period)
 - Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
+- Google Play: Future Reserved — do not display mock Android revenue as live ops data
+
+### Admin Recipe Import (Issue #55)
+
+Shared Backend pipeline for Admin + future iOS (single pipeline — no Admin-only parser):
+
+`SourceResolver → ContentExtractor → Media/TextNormalizer → RecipeAIParser(route_key) → SchemaValidator → RecipeQualityValidator → DuplicateDetector → RecipeImporter`
+
+- Tables: `recipe_import_jobs`, `recipe_import_batches`, `recipe_import_results`, `recipe_import_artifacts`
+- Bucket: `recipe-import-artifacts` (private; accessed via `MediaStorageProvider` — #54)
+- AI via `AIRouter` (`route_key` only — #53); never a second AI client / hardcoded Storage URL
+- Deterministic schema.org/JSON-LD extract before AI; anti-hallucination (missing→null, inferred flagged)
+- Exact active source URL → HTTP 409 / job status `duplicate`
+- Endpoints under `/functions/v1/admin-recipe-import/{jobs,batches,…}`
+- Async queue worker is **#56** (batch creates pending jobs only)
+
+```bash
+deno test --allow-env supabase/functions/_shared/recipe-import/
+```
 
 ## Migrations
 
@@ -115,7 +148,8 @@ Apply in filename order under `supabase/migrations/`. Cloud apply is done via Su
 ## Spec compliance
 
 Module-by-module checklist vs the Cloud Backend Development Specification:
-[`COMPLIANCE.md`](./COMPLIANCE.md).
+[`COMPLIANCE.md`](./COMPLIANCE.md).  
+Admin live vs mock matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md).
 
 ## Error shape (Edge Functions)
 

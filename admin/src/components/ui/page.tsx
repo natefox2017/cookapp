@@ -51,12 +51,14 @@ export function ErrorState({
   description: string
   onRetry?: () => void
 }) {
+  const pending =
+    /not implemented/i.test(description) || /live admin api/i.test(description)
   return (
     <EmptyState
-      title={title}
+      title={pending ? 'Live API pending' : title}
       description={description}
       action={
-        onRetry ? (
+        onRetry && !pending ? (
           <Button variant="outline" onClick={onRetry}>
             Retry
           </Button>

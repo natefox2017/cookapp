@@ -2,220 +2,438 @@ openapi: 3.1.0
 info:
   title: CookApp Cloud Backend API
   version: 1.0.0
-  description: |
-    Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)
+  description: 'Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)
+
     with Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).
 
+
     Authentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).
+
     Third-party OAuth tokens are never stored server-side.
 
+
     Project: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`
+
+    '
   contact:
     name: CookApp
 servers:
-  - url: https://semsjyrqjnumpvanibip.supabase.co
-    description: Supabase Cloud
+- url: https://semsjyrqjnumpvanibip.supabase.co
+  description: Supabase Cloud
 tags:
-  - name: Auth
-  - name: User
-  - name: Recipe
-  - name: Collection
-  - name: Ingredient
-  - name: Grocery
-  - name: MealPlan
-  - name: Pantry
-  - name: Category
-  - name: Storage
-  - name: Operations
-  - name: Subscription
-  - name: System
-
+- name: Auth
+- name: User
+- name: Recipe
+- name: Collection
+- name: Ingredient
+- name: Grocery
+- name: MealPlan
+- name: Pantry
+- name: Category
+- name: Storage
+- name: Subscription
+- name: System
+- name: AdminAuth
+- name: AdminUsers
+- name: AdminDashboard
+- name: AdminSubscriptions
+- name: AdminRecipeImport
+- name: Operations
 paths:
   /auth/v1/token:
     post:
-      tags: [Auth]
+      tags:
+      - Auth
       summary: Session token exchange / refresh
-      description: |
-        Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,
+      description: 'Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,
+
         Google OAuth, logout, and refresh. Documented for completeness.
+
+        '
       security: []
       responses:
-        "200":
+        '200':
           description: Session issued
-
   /functions/v1/delete-account:
     post:
-      tags: [Auth, User]
+      tags:
+      - Auth
+      - User
       summary: Delete account
       description: Purges user storage objects and deletes the auth user (cascades all owned rows).
       operationId: deleteAccount
       responses:
-        "200":
+        '200':
           description: Account deleted
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok: { type: boolean }
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /functions/v1/revenuecat-webhook:
     post:
-      tags: [Subscription]
+      tags:
+      - Subscription
       summary: RevenueCat webhook
-      description: |
-        Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
-        JWT verification disabled; service role used internally.
-      security:
-        - WebhookBearer: []
-      responses:
-        "200":
-          description: Event received
+      description: 'Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
 
+        JWT verification disabled; service role used internally.
+
+        '
+      security:
+      - WebhookBearer: []
+      responses:
+        '200':
+          description: Event received
   /functions/v1/health:
     get:
-      tags: [System]
+      tags:
+      - System
       summary: Backend health / module probe
       responses:
-        "200":
+        '200':
           description: Healthy
+  /functions/v1/admin-auth/login:
+    post:
+      tags:
+      - AdminAuth
+      summary: Admin login
+      description: 'Issues a custom admin bearer session (not end-user JWT).
 
+        Production rejects default `admin`/`admin` credentials (Issue #51).
+
+        Set `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`
+
+        only for local/dev.
+
+        '
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - username
+              - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionPayload'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Default credentials blocked in production
+  /functions/v1/admin-auth/bootstrap:
+    post:
+      tags:
+      - AdminAuth
+      summary: Bootstrap Owner credentials
+      description: 'Replaces the default seed account with a strong Owner password.
+
+        Requires current default password when a seed row exists.
+
+        Production requires header `X-CookApp-Bootstrap-Token` matching
+
+        secret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).
+
+        Local/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.
+
+        '
+      security: []
+      parameters:
+      - name: X-CookApp-Bootstrap-Token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - newPassword
+              properties:
+                username:
+                  type: string
+                  default: admin
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 12
+                currentPassword:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Owner bootstrapped and session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionPayload'
+        '400':
+          description: Weak password or invalid bootstrap state
+        '401':
+          description: Current default password incorrect
+        '409':
+          description: Bootstrap not available
+  /functions/v1/admin-auth/logout:
+    post:
+      tags:
+      - AdminAuth
+      summary: Admin logout
+      description: Revokes the current admin bearer session.
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /functions/v1/admin-auth/session:
+    get:
+      tags:
+      - AdminAuth
+      summary: Current admin session
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - admin
+                properties:
+                  admin:
+                    $ref: '#/components/schemas/AdminIdentity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /functions/v1/admin-auth/change-password:
+    post:
+      tags:
+      - AdminAuth
+      summary: Change admin password
+      description: 'Requires strong password policy (min 12, upper, lower, digit).
+
+        Revokes all sessions for the account and returns a fresh token.
+
+        '
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - currentPassword
+              - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 12
+      responses:
+        '200':
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/AdminSessionPayload'
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+        '400':
+          description: Weak password
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /rest/v1/profiles:
     get:
-      tags: [User]
+      tags:
+      - User
       summary: GET User Profile
       operationId: getUserProfile
       parameters:
-        - $ref: "#/components/parameters/PreferReturn"
-        - name: id
-          in: query
-          schema: { type: string, format: uuid }
-          description: Filter `eq.<user_id>` (own id only under RLS)
+      - $ref: '#/components/parameters/PreferReturn'
+      - name: id
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Filter `eq.<user_id>` (own id only under RLS)
       responses:
-        "200":
+        '200':
           description: Profile rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/UserProfile"
+                  $ref: '#/components/schemas/UserProfile'
     patch:
-      tags: [User]
+      tags:
+      - User
       summary: UPDATE User Profile
       operationId: updateUserProfile
       parameters:
-        - $ref: "#/components/parameters/PreferReturn"
+      - $ref: '#/components/parameters/PreferReturn'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserProfileUpdate"
+              $ref: '#/components/schemas/UserProfileUpdate'
       responses:
-        "200":
+        '200':
           description: Updated profile
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/UserProfile"
-
+                  $ref: '#/components/schemas/UserProfile'
   /rest/v1/recipes:
     get:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Recipe List / Detail
-      description: |
-        List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
+      description: 'List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).
+
         Update: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).
+
         Delete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).
+
+        '
       operationId: listRecipes
       parameters:
-        - name: id
-          in: query
-          description: Filter e.g. `eq.<uuid>` for single recipe
-          schema: { type: string }
-        - name: order
-          in: query
-          schema: { type: string, example: "created_at.desc" }
-        - name: select
-          in: query
-          schema: { type: string, example: "*" }
+      - name: id
+        in: query
+        description: Filter e.g. `eq.<uuid>` for single recipe
+        schema:
+          type: string
+      - name: order
+        in: query
+        schema:
+          type: string
+          example: created_at.desc
+      - name: select
+        in: query
+        schema:
+          type: string
+          example: '*'
       responses:
-        "200":
+        '200':
           description: Own recipes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Recipe"
+                  $ref: '#/components/schemas/Recipe'
     post:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Create Recipe
       operationId: createRecipe
       parameters:
-        - $ref: "#/components/parameters/PreferReturn"
+      - $ref: '#/components/parameters/PreferReturn'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecipeCreate"
+              $ref: '#/components/schemas/RecipeCreate'
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Update Recipe
       operationId: updateRecipe
       parameters:
-        - name: id
-          in: query
-          required: true
-          schema: { type: string, example: "eq.<uuid>" }
-        - $ref: "#/components/parameters/PreferReturn"
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: eq.<uuid>
+      - $ref: '#/components/parameters/PreferReturn'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecipeCreate"
+              $ref: '#/components/schemas/RecipeCreate'
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Recipe]
+      tags:
+      - Recipe
       summary: Delete Recipe
       operationId: deleteRecipe
       parameters:
-        - name: id
-          in: query
-          required: true
-          schema: { type: string, example: "eq.<uuid>" }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: eq.<uuid>
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/collections:
     get:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: GET Collections
       operationId: listCollections
       responses:
-        "200":
+        '200':
           description: Own collections
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Collection"
+                  $ref: '#/components/schemas/Collection'
     post:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: POST Collection
       operationId: createCollection
       requestBody:
@@ -223,304 +441,754 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CollectionCreate"
+              $ref: '#/components/schemas/CollectionCreate'
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: UPDATE Collection
       operationId: updateCollection
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: DELETE Collection
       operationId: deleteCollection
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/collection_recipes:
     get:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: List recipes in collections
       responses:
-        "200":
+        '200':
           description: Membership rows
     post:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: Add recipe to collection
       responses:
-        "201":
+        '201':
           description: Added
     delete:
-      tags: [Collection]
+      tags:
+      - Collection
       summary: Remove recipe from collection
       responses:
-        "204":
+        '204':
           description: Removed
-
   /rest/v1/ingredients:
     get:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: List ingredients (system + own)
       responses:
-        "200":
+        '200':
           description: Ingredient catalog
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Ingredient"
+                  $ref: '#/components/schemas/Ingredient'
     post:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: Create user ingredient
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: Update own user ingredient
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Ingredient]
+      tags:
+      - Ingredient
       summary: Delete own user ingredient
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/grocery_lists:
     get:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: GET Grocery Lists
       responses:
-        "200":
+        '200':
           description: Lists
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/GroceryList"
+                  $ref: '#/components/schemas/GroceryList'
     post:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: Create grocery list
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: UPDATE Grocery List
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: DELETE Grocery List
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/grocery_items:
     get:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: List grocery items
       responses:
-        "200":
+        '200':
           description: Items
     post:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: POST Item
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: UPDATE Item
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Grocery]
+      tags:
+      - Grocery
       summary: DELETE Item
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/meal_plans:
     get:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: List meal plans
       responses:
-        "200":
+        '200':
           description: Meal plan entries
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/MealPlan"
+                  $ref: '#/components/schemas/MealPlan'
     post:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: Create meal plan entry
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: Update meal plan entry
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [MealPlan]
+      tags:
+      - MealPlan
       summary: Delete meal plan entry
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/pantry_items:
     get:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: List pantry items
       responses:
-        "200":
+        '200':
           description: Pantry
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PantryItem"
+                  $ref: '#/components/schemas/PantryItem'
     post:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: Create pantry item
       responses:
-        "201":
+        '201':
           description: Created
     patch:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: Update pantry item
       responses:
-        "200":
+        '200':
           description: Updated
     delete:
-      tags: [Pantry]
+      tags:
+      - Pantry
       summary: Delete pantry item
       responses:
-        "204":
+        '204':
           description: Deleted
-
   /rest/v1/cuisines:
     get:
-      tags: [Category]
+      tags:
+      - Category
       summary: List cuisines
       responses:
-        "200":
+        '200':
           description: Cuisine catalog
-
   /rest/v1/meal_categories:
     get:
-      tags: [Category]
+      tags:
+      - Category
       summary: List meal categories
       responses:
-        "200":
+        '200':
           description: Meal category catalog
-
   /rest/v1/tags:
     get:
-      tags: [Category]
+      tags:
+      - Category
       summary: List tags
       responses:
-        "200":
+        '200':
           description: Tag catalog
-
   /rest/v1/subscriptions:
     get:
-      tags: [Subscription]
+      tags:
+      - Subscription
       summary: Get own subscription row
-      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.
+      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped
+        `expire_date`.
       responses:
-        "200":
+        '200':
           description: Subscription entitlement
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriptionRow"
-
+                  $ref: '#/components/schemas/SubscriptionRow'
   /rest/v1/subscription_status:
     get:
-      tags: [Subscription]
+      tags:
+      - Subscription
       summary: Get subscription status (plan / status / expire_date)
       responses:
-        "200":
+        '200':
           description: Simplified subscription view matching Subscription Service contract
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriptionStatus"
-
+                  $ref: '#/components/schemas/SubscriptionStatus'
   /storage/v1/object/{bucket}/{user_id}/{object}:
     parameters:
-      - name: bucket
+    - name: bucket
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - avatars
+        - recipe-covers
+        - recipe-images
+    - name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: object
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - Storage
+      summary: Upload object (private bucket, path must start with auth user id)
+      responses:
+        '200':
+          description: Uploaded
+    get:
+      tags:
+      - Storage
+      summary: Download / signed access to own object
+      responses:
+        '200':
+          description: Object bytes
+    delete:
+      tags:
+      - Storage
+      summary: Delete own object
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-users:
+    get:
+      tags:
+      - AdminUsers
+      summary: List users (paginated, filterable)
+      operationId: adminListUsers
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: subscription
+        in: query
+        schema:
+          type: string
+      - name: registrationProvider
+        in: query
+        schema:
+          type: string
+      - name: deviceType
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminUsers'
+  /functions/v1/admin-users/stats:
+    get:
+      tags:
+      - AdminUsers
+      summary: Registration mix stats
+      operationId: adminUserStats
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistrationStats'
+  /functions/v1/admin-users/{id}:
+    get:
+      tags:
+      - AdminUsers
+      summary: User detail + payment timeline
+      operationId: adminGetUser
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
         in: path
         required: true
         schema:
           type: string
-          enum: [avatars, recipe-covers, recipe-images]
-          description: |
-            User media buckets only. AI import artifacts use private
-            `recipe-import-artifacts` via MediaStorageProvider (service_role);
-            clients must not upload there directly.
-      - name: user_id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
-      - name: object
-        in: path
-        required: true
-        schema: { type: string }
-    post:
-      tags: [Storage]
-      summary: Upload object (private bucket, path must start with auth user id)
+          format: uuid
       responses:
-        "200":
-          description: Uploaded
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserDetail'
+  /functions/v1/admin-dashboard:
     get:
-      tags: [Storage]
-      summary: Download / signed access to own object
+      tags:
+      - AdminDashboard
+      summary: Dashboard KPI aggregation
+      operationId: adminDashboard
+      security:
+      - AdminBearer: []
       responses:
-        "200":
-          description: Object bytes
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardData'
+  /functions/v1/admin-subscriptions/plans:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription plan products
+      operationId: adminListPlans
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlanProduct'
+    post:
+      tags:
+      - AdminSubscriptions
+      summary: Create subscription plan product
+      operationId: adminCreatePlan
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPlanProduct'
+      responses:
+        '201':
+          description: Created
+  /functions/v1/admin-subscriptions/plans/{id}:
+    put:
+      tags:
+      - AdminSubscriptions
+      summary: Update subscription plan product
+      operationId: adminUpdatePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Updated
     delete:
-      tags: [Storage]
-      summary: Delete own object
+      tags:
+      - AdminSubscriptions
+      summary: Delete subscription plan product
+      operationId: adminDeletePlan
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
-        "200":
+        '200':
           description: Deleted
+  /functions/v1/admin-subscriptions/records:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: List subscription records
+      operationId: adminListSubscriptionRecords
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+  /functions/v1/admin-subscriptions/revenue:
+    get:
+      tags:
+      - AdminSubscriptions
+      summary: Subscription revenue series
+      operationId: adminSubscriptionRevenue
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: OK
+  /functions/v1/admin-recipe-import/jobs:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: List recipe import jobs
+      operationId: adminListRecipeImportJobs
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - running
+          - imported
+          - needs_review
+          - failed
+          - rejected
+          - duplicate
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      responses:
+        '200':
+          description: Job list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Create single import job and run pipeline
+      description: 'Shared Backend AI Recipe Import pipeline (Issue #55).
 
+        Exact active source URL returns 409 DUPLICATE.
+
+        Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
+
+        '
+      operationId: adminCreateRecipeImportJob
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeImportCreateRequest'
+      responses:
+        '201':
+          description: Job created and pipeline executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  result:
+                    type: object
+                    additionalProperties: true
+        '409':
+          description: Exact URL duplicate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+  /functions/v1/admin-recipe-import/jobs/{jobId}:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: Get import job detail
+      operationId: adminGetRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      responses:
+        '200':
+          description: Job + result + artifact metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/RecipeImportJob'
+                  result:
+                    oneOf:
+                    - $ref: '#/components/schemas/RecipeImportResult'
+                    - type: 'null'
+                  artifacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecipeImportArtifact'
+        '404':
+          description: Not found
+  /functions/v1/admin-recipe-import/jobs/{jobId}/retry:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Retry job from a pipeline stage
+      operationId: adminRetryRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromStage:
+                  $ref: '#/components/schemas/RecipeImportStage'
+      responses:
+        '200':
+          description: Retry result
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reparse:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Re-run AI parse from parse stage
+      operationId: adminReparseRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      responses:
+        '200':
+          description: Reparse result
+  /functions/v1/admin-recipe-import/jobs/{jobId}/approve:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Approve needs-review job and import
+      operationId: adminApproveRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destinationUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Approve / import result
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reject:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Reject import job
+      operationId: adminRejectRecipeImportJob
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/RecipeImportJobId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Rejected job
+  /functions/v1/admin-recipe-import/batches:
+    post:
+      tags:
+      - AdminRecipeImport
+      summary: Create batch import (jobs pending; queue worker
+      operationId: adminCreateRecipeImportBatch
+      security:
+      - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - urls
+              properties:
+                urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                destinationUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Batch created with pending jobs
+  /functions/v1/admin-recipe-import/batches/{batchId}:
+    get:
+      tags:
+      - AdminRecipeImport
+      summary: Get batch summary + jobs
+      operationId: adminGetRecipeImportBatch
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: batchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Batch summary
   /functions/v1/storage-cleanup-import-artifacts:
     post:
-      tags: [Storage, Operations]
+      tags:
+      - Storage
+      - Operations
       summary: Cleanup expired recipe-import-artifacts
-      description: |
-        Operational job type `storage_cleanup_import_artifacts`.
+      description: 'Operational job type `storage_cleanup_import_artifacts`.
+
         Deletes Storage objects whose `recipe_import_artifact_objects.expires_at`
+
         has passed and marks rows deleted. Server/cron only — auth via
+
         `Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.
+
         Never uses permanent signed URLs; never returns service_role secrets.
+
+        '
       operationId: storageCleanupImportArtifacts
       security:
-        - CleanupBearer: []
+      - CleanupBearer: []
       requestBody:
         required: false
         content:
@@ -534,17 +1202,16 @@ paths:
                   maximum: 1000
                   default: 200
       responses:
-        "200":
+        '200':
           description: Cleanup run result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorageCleanupResult"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "500":
+                $ref: '#/components/schemas/StorageCleanupResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
           description: Misconfigured (missing STORAGE_CLEANUP_SECRET)
-
 components:
   securitySchemes:
     BearerAuth:
@@ -556,16 +1223,20 @@ components:
       type: http
       scheme: bearer
       description: REVENUECAT_WEBHOOK_SECRET
-    CleanupBearer:
-      type: http
-      scheme: bearer
-      description: STORAGE_CLEANUP_SECRET (cron / operations worker only)
     Apikey:
       type: apiKey
       in: header
       name: apikey
       description: Supabase anon key (required alongside JWT for PostgREST)
-
+    AdminBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Admin Dashboard session token from admin-auth/login (not end-user JWT)
+    CleanupBearer:
+      type: http
+      scheme: bearer
+      description: STORAGE_CLEANUP_SECRET (cron / operations worker only)
   parameters:
     PreferReturn:
       name: Prefer
@@ -573,15 +1244,20 @@ components:
       schema:
         type: string
         example: return=representation
-
+    RecipeImportJobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     Unauthorized:
       description: Missing or invalid session
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ErrorBody"
-
+            $ref: '#/components/schemas/ErrorBody'
   schemas:
     ErrorBody:
       type: object
@@ -589,214 +1265,837 @@ components:
         error:
           type: object
           properties:
-            code: { type: string }
-            message: { type: string }
+            code:
+              type: string
+            message:
+              type: string
             details: {}
-
+    AdminIdentity:
+      type: object
+      required:
+      - id
+      - username
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+          enum:
+          - owner
+          - admin
+          - operator
+          - readonly
+        mustChangePassword:
+          type: boolean
+    AdminSessionPayload:
+      type: object
+      required:
+      - token
+      - expiresAt
+      - admin
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        admin:
+          $ref: '#/components/schemas/AdminIdentity'
+    AdminAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+          description: 'Present after #51 hardening migration'
+    AdminLoginRequest:
+      type: object
+      required:
+      - username
+      - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    AdminLoginResponse:
+      type: object
+      required:
+      - token
+      - expiresAt
+      - admin
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        admin:
+          $ref: '#/components/schemas/AdminAccount'
+    AdminChangePasswordRequest:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        displayName:
+          type: string
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - deleted
+        subscription:
+          type: string
+          enum:
+          - free
+          - pro
+          - lifetime
+        registrationProvider:
+          type: string
+          enum:
+          - apple
+          - google
+          - email
+          - unknown
+        deviceType:
+          type: string
+          enum:
+          - ios
+          - android
+          - web
+          - unknown
+        createdAt:
+          type: string
+          format: date-time
+        favoriteCount:
+          type: integer
+    AdminUserDetail:
+      allOf:
+      - $ref: '#/components/schemas/AdminUser'
+      - type: object
+        properties:
+          registrationIp:
+            type:
+            - string
+            - 'null'
+          payments:
+            type: array
+            items:
+              type: object
+    PaginatedAdminUsers:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUser'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+    UserRegistrationStats:
+      type: object
+      properties:
+        byProvider:
+          type: array
+          items:
+            type: object
+        byDevice:
+          type: array
+          items:
+            type: object
+    DashboardData:
+      type: object
+      description: Ops aggregation from admin-dashboard (#47). Source labels should be preserved by clients.
+      additionalProperties: true
+    SubscriptionPlanProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        planKey:
+          type: string
+        displayName:
+          type: string
+        platform:
+          type: string
+          enum:
+          - app_store
+          - play_store
+        productId:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        billingPeriod:
+          type: string
+          enum:
+          - monthly
+          - yearly
+          - lifetime
+        active:
+          type: boolean
+        description:
+          type:
+          - string
+          - 'null'
+        updatedAt:
+          type: string
+          format: date-time
     UserProfile:
       type: object
-      required: [id, created_at, updated_at]
+      required:
+      - id
+      - created_at
+      - updated_at
       properties:
-        id: { type: string, format: uuid }
-        email: { type: [string, "null"], format: email }
-        avatar: { type: [string, "null"] }
-        display_name: { type: [string, "null"] }
-        locale: { type: [string, "null"] }
-        timezone: { type: [string, "null"] }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+        id:
+          type: string
+          format: uuid
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+        avatar:
+          type:
+          - string
+          - 'null'
+        display_name:
+          type:
+          - string
+          - 'null'
+        locale:
+          type:
+          - string
+          - 'null'
+        timezone:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     UserProfileUpdate:
       type: object
       properties:
-        display_name: { type: string }
-        avatar: { type: string }
-        locale: { type: string }
-        timezone: { type: string }
-
+        display_name:
+          type: string
+        avatar:
+          type: string
+        locale:
+          type: string
+        timezone:
+          type: string
     RecipeIngredient:
       type: object
       properties:
-        name: { type: string }
-        amount: { type: [number, "null"] }
-        unit: { type: [string, "null"] }
-        note: { type: [string, "null"] }
-
+        name:
+          type: string
+        amount:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        note:
+          type:
+          - string
+          - 'null'
     RecipeStep:
       type: object
       properties:
-        order: { type: integer }
-        description: { type: string }
-        image: { type: [string, "null"] }
-        timer: { type: [integer, "null"], description: Seconds }
-
+        order:
+          type: integer
+        description:
+          type: string
+        image:
+          type:
+          - string
+          - 'null'
+        timer:
+          type:
+          - integer
+          - 'null'
+          description: Seconds
     Nutrition:
       type: object
       properties:
-        calories: { type: [number, "null"] }
-        protein: { type: [number, "null"] }
-        fat: { type: [number, "null"] }
-        carbohydrates: { type: [number, "null"] }
-
+        calories:
+          type:
+          - number
+          - 'null'
+        protein:
+          type:
+          - number
+          - 'null'
+        fat:
+          type:
+          - number
+          - 'null'
+        carbohydrates:
+          type:
+          - number
+          - 'null'
     Recipe:
       type: object
-      required: [id, user_id, title, created_at, updated_at]
+      required:
+      - id
+      - user_id
+      - title
+      - created_at
+      - updated_at
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        title: { type: string }
-        description: { type: [string, "null"] }
-        cover_image: { type: [string, "null"] }
-        cuisine: { type: [string, "null"] }
-        category: { type: [string, "null"] }
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        cover_image:
+          type:
+          - string
+          - 'null'
+        cuisine:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
         tags:
           type: array
-          items: { type: string }
+          items:
+            type: string
         ingredients:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeIngredient"
+            $ref: '#/components/schemas/RecipeIngredient'
         steps:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeStep"
+            $ref: '#/components/schemas/RecipeStep'
         nutrition:
-          $ref: "#/components/schemas/Nutrition"
-        cooking_time: { type: [integer, "null"] }
-        servings: { type: [integer, "null"] }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+          $ref: '#/components/schemas/Nutrition'
+        cooking_time:
+          type:
+          - integer
+          - 'null'
+        servings:
+          type:
+          - integer
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     RecipeCreate:
       type: object
-      required: [title]
+      required:
+      - title
       properties:
-        title: { type: string }
-        description: { type: string }
-        cover_image: { type: string }
-        cuisine: { type: string }
-        category: { type: string }
+        title:
+          type: string
+        description:
+          type: string
+        cover_image:
+          type: string
+        cuisine:
+          type: string
+        category:
+          type: string
         tags:
           type: array
-          items: { type: string }
+          items:
+            type: string
         ingredients:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeIngredient"
+            $ref: '#/components/schemas/RecipeIngredient'
         steps:
           type: array
           items:
-            $ref: "#/components/schemas/RecipeStep"
+            $ref: '#/components/schemas/RecipeStep'
         nutrition:
-          $ref: "#/components/schemas/Nutrition"
-        cooking_time: { type: integer }
-        servings: { type: integer }
-
+          $ref: '#/components/schemas/Nutrition'
+        cooking_time:
+          type: integer
+        servings:
+          type: integer
     Collection:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        name: { type: string }
-        cover: { type: [string, "null"] }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        cover:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     CollectionCreate:
       type: object
-      required: [name]
+      required:
+      - name
       properties:
-        name: { type: string }
-        cover: { type: string }
-
+        name:
+          type: string
+        cover:
+          type: string
     Ingredient:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        name: { type: string }
-        category: { type: [string, "null"] }
-        unit: { type: [string, "null"] }
-        alternative_name: { type: [string, "null"] }
-        user_id: { type: [string, "null"], format: uuid }
-        is_system: { type: boolean }
-
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type:
+          - string
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        alternative_name:
+          type:
+          - string
+          - 'null'
+        user_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        is_system:
+          type: boolean
     GroceryList:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        name: { type: string }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     GroceryItem:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        list_id: { type: string, format: uuid }
-        ingredient: { type: string }
-        quantity: { type: [number, "null"] }
-        unit: { type: [string, "null"] }
-        category: { type: [string, "null"] }
-        completed: { type: boolean }
-        sort_order: { type: integer }
-
+        id:
+          type: string
+          format: uuid
+        list_id:
+          type: string
+          format: uuid
+        ingredient:
+          type: string
+        quantity:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
+        completed:
+          type: boolean
+        sort_order:
+          type: integer
     MealPlan:
       type: object
       description: Spec field `date` is stored as `plan_date` (Postgres reserved-word safe).
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        plan_date: { type: string, format: date }
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        plan_date:
+          type: string
+          format: date
         meal_type:
           type: string
-          enum: [breakfast, lunch, dinner]
-        recipe_id: { type: string, format: uuid }
-
+          enum:
+          - breakfast
+          - lunch
+          - dinner
+        recipe_id:
+          type: string
+          format: uuid
     PantryItem:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        ingredient: { type: string }
-        quantity: { type: [number, "null"] }
-        unit: { type: [string, "null"] }
-        expiration_date: { type: [string, "null"], format: date }
-
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        ingredient:
+          type: string
+        quantity:
+          type:
+          - number
+          - 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+        expiration_date:
+          type:
+          - string
+          - 'null'
+          format: date
     SubscriptionRow:
       type: object
       description: Raw `subscriptions` table row (PostgREST).
       properties:
-        user_id: { type: string, format: uuid }
-        plan: { type: [string, "null"] }
-        entitlement_id: { type: [string, "null"] }
-        product_id: { type: [string, "null"] }
+        user_id:
+          type: string
+          format: uuid
+        plan:
+          type:
+          - string
+          - 'null'
+        entitlement_id:
+          type:
+          - string
+          - 'null'
+        product_id:
+          type:
+          - string
+          - 'null'
         status:
           type: string
-          enum: [active, trialing, cancelled, expired, billing_issue, none]
-        expires_at: { type: [string, "null"], format: date-time }
-        will_renew: { type: [boolean, "null"] }
-        latest_event_timestamp_ms: { type: [integer, "null"] }
-
+          enum:
+          - active
+          - trialing
+          - cancelled
+          - expired
+          - billing_issue
+          - none
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        will_renew:
+          type:
+          - boolean
+          - 'null'
+        latest_event_timestamp_ms:
+          type:
+          - integer
+          - 'null'
     SubscriptionStatus:
       type: object
       description: View `subscription_status` — matches Subscription Service contract.
       properties:
-        user_id: { type: string, format: uuid }
-        plan: { type: [string, "null"] }
+        user_id:
+          type: string
+          format: uuid
+        plan:
+          type:
+          - string
+          - 'null'
         status:
           type: string
-          enum: [active, trialing, cancelled, expired, billing_issue, none]
-        expire_date: { type: [string, "null"], format: date-time }
-        updated_at: { type: string, format: date-time }
-
+          enum:
+          - active
+          - trialing
+          - cancelled
+          - expired
+          - billing_issue
+          - none
+        expire_date:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    RecipeImportStage:
+      type: string
+      enum:
+      - resolve
+      - extract
+      - normalize
+      - parse
+      - validate
+      - quality
+      - duplicate
+      - import
+      - done
+    RecipeImportErrorCode:
+      type: string
+      enum:
+      - RESOLVE_FAILED
+      - FETCH_FAILED
+      - EXTRACT_FAILED
+      - AI_PARSE_FAILED
+      - SCHEMA_INVALID
+      - QUALITY_VALIDATION_FAILED
+      - DUPLICATE
+      - IMPORT_FAILED
+      - SSRF_BLOCKED
+      - SOURCE_UNSUPPORTED
+      - MISSING_DESTINATION
+    RecipeImportCreateRequest:
+      type: object
+      properties:
+        sourceUrl:
+          type: string
+          format: uri
+        sourceText:
+          type: string
+        destinationUserId:
+          type: string
+          format: uuid
+      description: Provide sourceUrl and/or sourceText (text paste fallback).
+    RecipeImportJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        batchId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        sourceType:
+          type: string
+          enum:
+          - web
+          - tiktok
+          - instagram
+          - youtube
+          - xiaohongshu
+          - text
+        sourceUrl:
+          type:
+          - string
+          - 'null'
+        canonicalUrl:
+          type:
+          - string
+          - 'null'
+        sourceExternalId:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - imported
+          - needs_review
+          - failed
+          - rejected
+          - duplicate
+        stage:
+          $ref: '#/components/schemas/RecipeImportStage'
+        confidence:
+          type:
+          - number
+          - 'null'
+        duplicateStatus:
+          type: string
+          enum:
+          - none
+          - exact
+          - similar
+          - marked
+        recipeId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        errorCode:
+          oneOf:
+          - $ref: '#/components/schemas/RecipeImportErrorCode'
+          - type: 'null'
+        errorMessage:
+          type:
+          - string
+          - 'null'
+        retryCount:
+          type: integer
+        routeKey:
+          type:
+          - string
+          - 'null'
+        aiProvider:
+          type:
+          - string
+          - 'null'
+        aiModel:
+          type:
+          - string
+          - 'null'
+        promptVersion:
+          type:
+          - string
+          - 'null'
+        schemaVersion:
+          type: string
+        destinationUserId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        startedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    RecipeImportResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        job_id:
+          type: string
+          format: uuid
+        schema_version:
+          type: string
+        structured_recipe:
+          type: object
+          additionalProperties: true
+        validation_result:
+          type: object
+          additionalProperties: true
+        confidence:
+          type: object
+          additionalProperties: true
+        evidence:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+    RecipeImportArtifact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        artifact_type:
+          type: string
+        storage_provider:
+          type:
+          - string
+          - 'null'
+        bucket:
+          type:
+          - string
+          - 'null'
+        object_key:
+          type:
+          - string
+          - 'null'
+        mime_type:
+          type:
+          - string
+          - 'null'
+        size_bytes:
+          type:
+          - integer
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
     MediaObjectMetadata:
       type: object
-      description: |
-        Postgres metadata pattern for object storage (never base64/blobs).
+      description: 'Postgres metadata pattern for object storage (never base64/blobs).
+
         Used by MediaStorageProvider and recipe_import_artifact_objects.
+
+        '
       required:
-        [storage_provider, bucket, object_key, mime_type, size_bytes]
+      - storage_provider
+      - bucket
+      - object_key
+      - mime_type
+      - size_bytes
       properties:
         storage_provider:
           type: string
@@ -805,39 +2104,73 @@ components:
         bucket:
           type: string
           enum:
-            [avatars, recipe-covers, recipe-images, recipe-import-artifacts]
+          - avatars
+          - recipe-covers
+          - recipe-images
+          - recipe-import-artifacts
         object_key:
           type: string
-          description: |
-            Provider-agnostic object key. Import artifacts use `{job_id}/…`.
-            User media use `{user_id}/…`.
-        mime_type: { type: string }
-        size_bytes: { type: integer, minimum: 1 }
-        width: { type: [integer, "null"] }
-        height: { type: [integer, "null"] }
-        duration_ms: { type: [integer, "null"] }
-        checksum: { type: [string, "null"] }
-        created_at: { type: string, format: date-time }
+          description: 'Provider-agnostic object key. Import artifacts use `{job_id}/…`.
 
+            User media use `{user_id}/…`.
+
+            '
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 1
+        width:
+          type:
+          - integer
+          - 'null'
+        height:
+          type:
+          - integer
+          - 'null'
+        duration_ms:
+          type:
+          - integer
+          - 'null'
+        checksum:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
     StorageCleanupResult:
       type: object
-      required: [ok, job_type, scanned, deleted, failed, errors]
+      required:
+      - ok
+      - job_type
+      - scanned
+      - deleted
+      - failed
+      - errors
       properties:
-        ok: { type: boolean }
+        ok:
+          type: boolean
         job_type:
           type: string
-          enum: [storage_cleanup_import_artifacts]
-        scanned: { type: integer }
-        deleted: { type: integer }
-        failed: { type: integer }
+          enum:
+          - storage_cleanup_import_artifacts
+        scanned:
+          type: integer
+        deleted:
+          type: integer
+        failed:
+          type: integer
         errors:
           type: array
           items:
             type: object
             properties:
-              object_key: { type: string }
-              message: { type: string }
-
+              object_key:
+                type: string
+              message:
+                type: string
+  headers: {}
 security:
-  - BearerAuth: []
-    Apikey: []
+- BearerAuth: []
+  Apikey: []

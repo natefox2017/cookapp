@@ -102,7 +102,10 @@ function PlansPanel({ platform }: { platform: StorePlatform | 'all' }) {
 
   function openCreate() {
     setEditing(null)
-    setForm(emptyPlan)
+    setForm({
+      ...emptyPlan,
+      platform: platform === 'all' ? 'app_store' : platform,
+    })
     setOpen(true)
   }
 

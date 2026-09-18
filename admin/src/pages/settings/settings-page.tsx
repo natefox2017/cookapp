@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSettings, updateSettings } from '@/api'
+import { getSettings, isMockMode, updateSettings } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { authErrorMessage, useAuth } from '@/auth/auth-context'
 import type { AdminSettings } from '@/types/admin'
@@ -17,13 +17,15 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { validateAdminPassword } from '@/lib/password-policy'
 
 export function SettingsPage() {
   const { data, loading, error, reload } = useAsyncData(() => getSettings(), [])
   const { admin, changePassword } = useAuth()
   const [draft, setDraft] = useState<AdminSettings | null>(null)
+  const [baseline, setBaseline] = useState<AdminSettings | null>(null)
+  const [tab, setTab] = useState('general')
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,18 +34,23 @@ export function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (data) setDraft(structuredClone(data))
+    if (data) {
+      const next = structuredClone(data)
+      setDraft(next)
+      setBaseline(structuredClone(data))
+    }
   }, [data])
+
+  const dirty =
+    Boolean(draft && baseline) && JSON.stringify(draft) !== JSON.stringify(baseline)
 
   async function onSave() {
     if (!draft) return
     setSaving(true)
-    setSaved(false)
     try {
       const next = await updateSettings(draft)
-      setDraft(next)
-      setSaved(true)
-      reload()
+      setDraft(structuredClone(next))
+      setBaseline(structuredClone(next))
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Save failed')
     } finally {
@@ -58,8 +65,9 @@ export function SettingsPage() {
       setPasswordError('New password and confirmation do not match')
       return
     }
-    if (newPassword.length < 4) {
-      setPasswordError('New password must be at least 4 characters')
+    const strength = validateAdminPassword(newPassword)
+    if (!strength.ok) {
+      setPasswordError(strength.message ?? 'Weak password')
       return
     }
     setPasswordSaving(true)
@@ -76,8 +84,8 @@ export function SettingsPage() {
     }
   }
 
-  if (loading) return <LoadingBlock label="Loading settings…" />
-  if (error || !draft) {
+  if (loading && !draft) return <LoadingBlock label="Loading settings…" />
+  if ((error && !draft) || !draft) {
     return (
       <ErrorState
         title="Could not load settings"
@@ -87,19 +95,28 @@ export function SettingsPage() {
     )
   }
 
+  const showSettingsSave = tab !== 'security' && isMockMode()
+  const liveDiagnostics = !isMockMode()
+
   return (
     <div>
       <PageHeader
         title="Settings"
-        description="General, units, category policy, and system configuration."
+        description={
+          liveDiagnostics
+            ? 'Live mode: Security uses admin-auth. General/units/categories are diagnostics-only (no persist API).'
+            : 'General, units, category policy, and system configuration.'
+        }
         actions={
-          <Button loading={saving} onClick={onSave}>
-            {saved ? 'Saved' : 'Save changes'}
-          </Button>
+          showSettingsSave ? (
+            <Button loading={saving} onClick={onSave} disabled={!dirty && !saving}>
+              {dirty ? 'Save changes' : 'Saved'}
+            </Button>
+          ) : null
         }
       />
 
-      <Tabs defaultValue="general">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>
@@ -289,7 +306,9 @@ export function SettingsPage() {
               <CardTitle>Security</CardTitle>
               <CardDescription>
                 Change the admin console password for{' '}
-                <span className="font-mono">{admin?.username ?? 'admin'}</span>
+                <span className="font-mono">{admin?.username ?? 'admin'}</span>.
+                Requires 12+ characters with upper, lower, and a digit. All sessions
+                are revoked on change.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -361,7 +380,7 @@ export function SettingsPage() {
                     Mock mode
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Controlled by VITE_ADMIN_USE_MOCK at build time
+                    Dev-only. Production builds forbid mock KPI/data (Issue #51).
                   </div>
                 </div>
                 <Switch
@@ -376,13 +395,12 @@ export function SettingsPage() {
                 <Input
                   id="apiBase"
                   value={draft.system.apiBaseUrl}
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, apiBaseUrl: event.target.value },
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground">
+                  Set via VITE_ADMIN_API_BASE_URL at build time (not editable at runtime).
+                </p>
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="log-level">Log level</Label>

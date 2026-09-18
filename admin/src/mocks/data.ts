@@ -15,6 +15,8 @@ import type {
   SubscriptionRecord,
   SubscriptionRevenueData,
   TaxonomyItem,
+  UserPaymentRecord,
+  UserRegistrationStats,
 } from '@/types/admin'
 
 export const mockUsers: AdminUser[] = [
@@ -28,6 +30,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 18,
     createdAt: '2025-11-12T10:00:00Z',
     status: 'active',
+    registrationProvider: 'apple',
+    deviceType: 'ios',
   },
   {
     id: 'usr_02',
@@ -39,6 +43,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 23,
     createdAt: '2026-01-04T15:30:00Z',
     status: 'active',
+    registrationProvider: 'google',
+    deviceType: 'ios',
   },
   {
     id: 'usr_03',
@@ -50,6 +56,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 64,
     createdAt: '2025-08-21T08:15:00Z',
     status: 'active',
+    registrationProvider: 'apple',
+    deviceType: 'ios',
   },
   {
     id: 'usr_04',
@@ -61,6 +69,8 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 9,
     createdAt: '2026-02-18T12:00:00Z',
     status: 'suspended',
+    registrationProvider: 'google',
+    deviceType: 'android',
   },
   {
     id: 'usr_05',
@@ -72,8 +82,90 @@ export const mockUsers: AdminUser[] = [
     favoriteCount: 11,
     createdAt: '2026-03-02T19:45:00Z',
     status: 'active',
+    registrationProvider: 'email',
+    deviceType: 'web',
   },
 ]
+
+const mockPaymentsByUser: Record<string, UserPaymentRecord[]> = {
+  usr_01: [
+    {
+      id: 'pay_01a',
+      eventType: 'INITIAL_PURCHASE',
+      productId: 'com.natefox.cookapp.pro.yearly',
+      store: 'app_store',
+      amount: 39.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2025-12-01T16:20:00Z',
+    },
+    {
+      id: 'pay_01b',
+      eventType: 'RENEWAL',
+      productId: 'com.natefox.cookapp.pro.yearly',
+      store: 'app_store',
+      amount: 39.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2026-12-01T16:20:00Z',
+    },
+  ],
+  usr_02: [],
+  usr_03: [
+    {
+      id: 'pay_03a',
+      eventType: 'NON_RENEWING_PURCHASE',
+      productId: 'com.natefox.cookapp.lifetime',
+      store: 'app_store',
+      amount: 79.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2025-09-15T11:05:00Z',
+    },
+  ],
+  usr_04: [
+    {
+      id: 'pay_04a',
+      eventType: 'INITIAL_PURCHASE',
+      productId: 'cookapp_pro_monthly',
+      store: 'play_store',
+      amount: 4.99,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2026-01-01T09:00:00Z',
+    },
+    {
+      id: 'pay_04b',
+      eventType: 'CANCELLATION',
+      productId: 'cookapp_pro_monthly',
+      store: 'play_store',
+      amount: null,
+      currency: 'USD',
+      environment: 'production',
+      purchasedAt: '2026-03-20T14:30:00Z',
+    },
+  ],
+  usr_05: [
+    {
+      id: 'pay_05a',
+      eventType: 'INITIAL_PURCHASE',
+      productId: 'cookapp_pro_monthly',
+      store: 'play_store',
+      amount: 0,
+      currency: 'USD',
+      environment: 'sandbox',
+      purchasedAt: '2026-03-10T08:15:00Z',
+    },
+  ],
+}
+
+const mockRegistrationIps: Record<string, string | null> = {
+  usr_01: '203.0.113.24',
+  usr_02: '198.51.100.17',
+  usr_03: '192.0.2.88',
+  usr_04: '203.0.113.91',
+  usr_05: '198.51.100.44',
+}
 
 export const mockUserDetails: Record<string, AdminUserDetail> = Object.fromEntries(
   mockUsers.map((user) => [
@@ -83,9 +175,46 @@ export const mockUserDetails: Record<string, AdminUserDetail> = Object.fromEntri
       lastLoginAt: '2026-03-15T09:20:00Z',
       locale: 'en-US',
       timezone: 'America/Los_Angeles',
+      registrationIp: mockRegistrationIps[user.id] ?? null,
+      payments: mockPaymentsByUser[user.id] ?? [],
     },
   ]),
 )
+
+export function computeMockUserRegistrationStats(
+  users: AdminUser[] = mockUsers,
+): UserRegistrationStats {
+  const providerOrder = ['apple', 'google', 'email', 'unknown'] as const
+  const deviceOrder = ['ios', 'android', 'web', 'unknown'] as const
+  const providerLabels = {
+    apple: 'Apple',
+    google: 'Google',
+    email: 'Email',
+    unknown: 'Unknown',
+  } as const
+  const deviceLabels = {
+    ios: 'iOS',
+    android: 'Android',
+    web: 'Web',
+    unknown: 'Unknown',
+  } as const
+
+  const byProvider = providerOrder.map((key) => ({
+    key,
+    label: providerLabels[key],
+    count: users.filter((user) => user.registrationProvider === key).length,
+  }))
+  const byDevice = deviceOrder.map((key) => ({
+    key,
+    label: deviceLabels[key],
+    count: users.filter((user) => user.deviceType === key).length,
+  }))
+
+  return { total: users.length, byProvider, byDevice }
+}
+
+export const mockUserRegistrationStats: UserRegistrationStats =
+  computeMockUserRegistrationStats()
 
 export const mockRecipes: RecipeSummary[] = [
   {
@@ -227,9 +356,9 @@ export const mockIngredients: Ingredient[] = [
 ]
 
 export const mockGroceryUsers: GroceryUser[] = [
-  { id: 'usr_01', displayName: 'Alex Chen', email: 'alex.chen@example.com', itemCount: 8, completedCount: 3 },
-  { id: 'usr_02', displayName: 'Maya Ross', email: 'maya.ross@example.com', itemCount: 5, completedCount: 5 },
-  { id: 'usr_03', displayName: 'Jordan Lee', email: 'jordan.lee@example.com', itemCount: 12, completedCount: 4 },
+  { id: 'usr_01', displayName: 'Alex Chen', email: 'alex.chen@example.com', itemCount: 5, completedCount: 2 },
+  { id: 'usr_02', displayName: 'Maya Ross', email: 'maya.ross@example.com', itemCount: 2, completedCount: 2 },
+  { id: 'usr_03', displayName: 'Jordan Lee', email: 'jordan.lee@example.com', itemCount: 3, completedCount: 1 },
 ]
 
 export const mockGroceryItems: GroceryItem[] = [
@@ -464,6 +593,17 @@ export const mockDashboard: DashboardData = {
     totalRecipes: mockRecipes.length,
     collections: mockCollections.length,
     favorites: mockUsers.reduce((sum, user) => sum + user.favoriteCount, 0),
+    newUsersThisMonth: mockUsers.filter((user) => user.createdAt.startsWith('2026-03')).length,
+    activePaidUsers: mockUsers.filter((user) => user.subscription !== 'free').length,
+    suspendedUsers: mockUsers.filter((user) => user.status === 'suspended').length,
+    revenueTotal: mockSubscriptionRevenue.stats.appleRevenue + mockSubscriptionRevenue.stats.androidRevenue,
+    revenueMrr: mockSubscriptionRevenue.stats.mrr,
+    revenueApple: mockSubscriptionRevenue.stats.appleRevenue,
+    revenueAndroid: mockSubscriptionRevenue.stats.androidRevenue,
+    paymentTransactions: 8,
+    downloadsTotal: 18420,
+    downloadsIos: 11240,
+    downloadsAndroid: 7180,
   },
   growth: [
     { month: 'Oct', users: 12, recipes: 18 },
@@ -473,34 +613,160 @@ export const mockDashboard: DashboardData = {
     { month: 'Feb', users: 81, recipes: 128 },
     { month: 'Mar', users: 104, recipes: 156 },
   ],
+  series: [
+    {
+      month: 'Oct',
+      users: 12,
+      recipes: 18,
+      revenue: 44.98,
+      revenueApple: 39.99,
+      revenueAndroid: 4.99,
+      downloadsIos: 820,
+      downloadsAndroid: 540,
+    },
+    {
+      month: 'Nov',
+      users: 28,
+      recipes: 41,
+      revenue: 54.96,
+      revenueApple: 44.98,
+      revenueAndroid: 9.98,
+      downloadsIos: 1240,
+      downloadsAndroid: 780,
+    },
+    {
+      month: 'Dec',
+      users: 45,
+      recipes: 67,
+      revenue: 99.94,
+      revenueApple: 84.97,
+      revenueAndroid: 14.97,
+      downloadsIos: 1680,
+      downloadsAndroid: 1020,
+    },
+    {
+      month: 'Jan',
+      users: 62,
+      recipes: 94,
+      revenue: 64.94,
+      revenueApple: 44.98,
+      revenueAndroid: 19.96,
+      downloadsIos: 2100,
+      downloadsAndroid: 1280,
+    },
+    {
+      month: 'Feb',
+      users: 81,
+      recipes: 128,
+      revenue: 164.94,
+      revenueApple: 119.97,
+      revenueAndroid: 44.97,
+      downloadsIos: 2560,
+      downloadsAndroid: 1640,
+    },
+    {
+      month: 'Mar',
+      users: 104,
+      recipes: 156,
+      revenue: 49.97,
+      revenueApple: 39.99,
+      revenueAndroid: 9.98,
+      downloadsIos: 2840,
+      downloadsAndroid: 1920,
+    },
+  ],
+  userBreakdown: {
+    byRegistrationType: [
+      { key: 'apple', label: 'Apple', value: mockUsers.filter((u) => u.registrationProvider === 'apple').length },
+      { key: 'google', label: 'Google', value: mockUsers.filter((u) => u.registrationProvider === 'google').length },
+      { key: 'email', label: 'Email', value: mockUsers.filter((u) => u.registrationProvider === 'email').length },
+      { key: 'unknown', label: 'Unknown', value: mockUsers.filter((u) => u.registrationProvider === 'unknown').length },
+    ],
+    byDeviceType: [
+      { key: 'ios', label: 'iOS', value: mockUsers.filter((u) => u.deviceType === 'ios').length },
+      { key: 'android', label: 'Android', value: mockUsers.filter((u) => u.deviceType === 'android').length },
+      { key: 'web', label: 'Web', value: mockUsers.filter((u) => u.deviceType === 'web').length },
+      { key: 'unknown', label: 'Unknown', value: mockUsers.filter((u) => u.deviceType === 'unknown').length },
+    ],
+    byPlan: [
+      { key: 'free', label: 'Free', value: mockUsers.filter((u) => u.subscription === 'free').length },
+      { key: 'pro', label: 'Pro', value: mockUsers.filter((u) => u.subscription === 'pro').length },
+      { key: 'lifetime', label: 'Lifetime', value: mockUsers.filter((u) => u.subscription === 'lifetime').length },
+    ],
+  },
   recent: [
     {
       id: 'act_01',
+      type: 'payment',
+      title: 'Yearly Pro renewal',
+      subtitle: 'Alex Chen · App Store · $39.99',
+      createdAt: '2026-03-14T16:00:00Z',
+    },
+    {
+      id: 'act_02',
+      type: 'download',
+      title: 'iOS downloads spike',
+      subtitle: '+312 installs today',
+      createdAt: '2026-03-14T12:00:00Z',
+    },
+    {
+      id: 'act_03',
+      type: 'user',
+      title: 'Nina Okada joined',
+      subtitle: 'Google · Android · 198.51.100.201',
+      createdAt: '2026-03-02T19:45:00Z',
+    },
+    {
+      id: 'act_04',
+      type: 'subscription',
+      title: 'Pro trial started',
+      subtitle: 'Nina Okada · Play Store',
+      createdAt: '2026-03-10T10:00:00Z',
+    },
+    {
+      id: 'act_05',
       type: 'recipe',
       title: 'Tomato Basil Soup',
       subtitle: 'Recipe created by alex.chen@example.com',
       createdAt: '2026-03-14T16:00:00Z',
     },
+  ],
+  recentPayments: [
     {
-      id: 'act_02',
-      type: 'user',
-      title: 'Nina Okada joined',
-      subtitle: 'nina.okada@example.com',
-      createdAt: '2026-03-02T19:45:00Z',
+      id: 'pay_dash_01',
+      userLabel: 'Alex Chen',
+      eventType: 'RENEWAL',
+      store: 'app_store',
+      amount: 39.99,
+      currency: 'USD',
+      createdAt: '2026-02-01T10:00:00Z',
     },
     {
-      id: 'act_03',
-      type: 'subscription',
-      title: 'Pro trial started',
-      subtitle: 'Nina Okada',
+      id: 'pay_dash_02',
+      userLabel: 'Jordan Lee',
+      eventType: 'NON_RENEWING_PURCHASE',
+      store: 'app_store',
+      amount: 79.99,
+      currency: 'USD',
+      createdAt: '2025-09-15T12:00:00Z',
+    },
+    {
+      id: 'pay_dash_03',
+      userLabel: 'Sam Park',
+      eventType: 'INITIAL_PURCHASE',
+      store: 'play_store',
+      amount: 4.99,
+      currency: 'USD',
+      createdAt: '2026-01-01T08:00:00Z',
+    },
+    {
+      id: 'pay_dash_04',
+      userLabel: 'Nina Okada',
+      eventType: 'INITIAL_PURCHASE',
+      store: 'play_store',
+      amount: 0,
+      currency: 'USD',
       createdAt: '2026-03-10T10:00:00Z',
-    },
-    {
-      id: 'act_04',
-      type: 'collection',
-      title: 'Plant Forward',
-      subtitle: 'Collection created by Nina Okada',
-      createdAt: '2026-03-03T18:00:00Z',
     },
   ],
 }

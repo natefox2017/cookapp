@@ -46,6 +46,7 @@ export async function createAdminSession(adminId: string): Promise<{
 export async function requireAdminSession(req: Request): Promise<{
   adminId: string;
   username: string;
+  role: string;
   sessionId: string;
   token: string;
 }> {
@@ -62,7 +63,7 @@ export async function requireAdminSession(req: Request): Promise<{
   const admin = createServiceClient();
   const { data, error } = await admin
     .from("admin_sessions")
-    .select("id, admin_id, expires_at, revoked_at, admin_accounts(username)")
+    .select("id, admin_id, expires_at, revoked_at, admin_accounts(username, role)")
     .eq("token_hash", tokenHash)
     .maybeSingle();
 
@@ -75,8 +76,12 @@ export async function requireAdminSession(req: Request): Promise<{
     throw new AppError("unauthorized", "Invalid or expired admin session", 401);
   }
 
-  const account = data.admin_accounts as { username: string } | { username: string }[] | null;
-  const username = Array.isArray(account) ? account[0]?.username : account?.username;
+  const account = data.admin_accounts as
+    | { username: string; role?: string }
+    | { username: string; role?: string }[]
+    | null;
+  const row = Array.isArray(account) ? account[0] : account;
+  const username = row?.username;
   if (!username) {
     throw new AppError("unauthorized", "Invalid admin session", 401);
   }
@@ -84,7 +89,15 @@ export async function requireAdminSession(req: Request): Promise<{
   return {
     adminId: data.admin_id as string,
     username,
+    role: row?.role ?? "owner",
     sessionId: data.id as string,
     token,
   };
+}
+
+/** Owner-only gate for secrets / financial / admin-account APIs. */
+export function requireOwnerRole(role: string): void {
+  if (role !== "owner") {
+    throw new AppError("forbidden", "Owner role required", 403);
+  }
 }

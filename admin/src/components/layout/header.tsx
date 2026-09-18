@@ -28,6 +28,11 @@ export function Header({ onRefresh }: { onRefresh?: () => void }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
+    try {
+      localStorage.setItem('cookapp-admin-theme', dark ? 'dark' : 'light')
+    } catch {
+      // ignore
+    }
   }, [dark])
 
   useEffect(() => {
