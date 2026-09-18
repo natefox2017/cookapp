@@ -10,6 +10,7 @@ import {
   runImportPipeline,
   type PipelineJobRow,
 } from "./pipeline.ts";
+import { createImportPipelineRuntime } from "./runtime.ts";
 import type { PipelineStage } from "./types.ts";
 import {
   type ClaimedImportMessage,
@@ -159,8 +160,11 @@ export async function processClaimedMessage(
   try {
     const processJob = opts.processJob ??
       (async (j, fromStage) => {
+        const runtime = createImportPipelineRuntime(admin);
         const result = await runImportPipeline(j, {
           admin,
+          router: runtime.router,
+          media: runtime.media,
           confidenceThreshold: opts.confidenceThreshold,
         }, { fromStage });
         return { status: result.status };

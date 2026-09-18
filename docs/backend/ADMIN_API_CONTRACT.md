@@ -9,7 +9,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 
 1. Admin typed client live paths must match `/functions/v1/<function>/…` (never invent `/admin/…` REST unless an Edge Function exists).
 2. Production / live mode must **not** silently serve mock KPI or catalog data.
-3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”).
+3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”). Live pending pages **hide write buttons** and diagnostics-only Settings fields are **read-only** (`writeCapability`). `writeCapability` allows writes when mock mode is on **or** the typed client already calls `/functions/v1/admin-catalog` for that domain (merge-safe with live catalog #93). Settings **System** stays live diagnostics even when general/units/categories persist.
 4. Admin **nav / formal routes** only expose capabilities already approved for the current Gate (implemented or existing mock UI). Future modules stay in Notion / Issues — not as navigable placeholders. Backend APIs (e.g. #60 `admin-analytics` / `admin-operations`) may ship without Admin nav pages.
 5. Every **live** Admin endpoint is documented in `supabase/openapi/openapi.yaml`.
 6. Mock mode (`VITE_ADMIN_USE_MOCK=true`) is local/dev only — see #51 production hardening.
@@ -32,17 +32,15 @@ Shared source: `admin/src/components/layout/nav.ts` (flat list; no per-page fork
 | Dashboard | `/` | live | live |
 | Users | `/users` | live | live |
 | Recipes | `/recipes` | live | live (#92) |
-| Collections | `/collections` | live | live (#92) |
 | Ingredients | `/ingredients` | live | live (#92) |
-| Grocery | `/grocery` | live | live (#92) |
-| Meal Plans | `/meal-plans` | live | live (#92) |
-| Pantry | `/pantry` | live | live (#92) |
 | Categories | `/categories` | live | live (#92) |
 | Subscription | `/subscription` | live | live |
 | Settings | `/settings` → `/settings/general` | hybrid tabs | hybrid |
 | Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live (#63) |
 
-Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/*` → flat counterparts; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
+End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections). Typed clients may still exist for contract / live catalog merge; routes redirect to Dashboard.
+
+Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/ingredients` · `/data/categories` → flat counterparts; `/collections` · `/grocery` · `/meal-plans` · `/pantry` · `/data/collections` · `/data/grocery` · `/data/meal-plans` · `/data/pantry` → `/`; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
 
 ## Matrix
 
@@ -60,12 +58,12 @@ Compatibility redirects (no dead links after #64 rollback): `/commerce/products`
 | (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 — backend only; Admin Jobs UI not in nav (#61) |
 | `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | `…/admin-catalog/settings` | hybrid | #92 persist general/units/categories; System tab diagnostics; Security via `admin-auth` |
 | `/recipes` | `listRecipes` / CRUD | `…/admin-catalog/recipes` | live | #92 |
-| `/collections` | `listCollections` | `…/admin-catalog/collections` | live | #92 — `isPublic` always false (no public collections column) |
 | `/ingredients` | ingredients CRUD | `…/admin-catalog/ingredients` | live | #92 — Admin creates `is_system` rows |
-| `/grocery` | grocery users/items | `…/admin-catalog/grocery/*` | live | #92 — read-only |
-| `/meal-plans` | `listMealPlans` | `…/admin-catalog/meal-plans` | live | #92 — folded by date; multiple users joined with ` · ` |
-| `/pantry` | `listPantry` | `…/admin-catalog/pantry` | live | #92 — freshness derived from expiration |
 | `/categories` | taxonomy CRUD | `…/admin-catalog/taxonomy/{kind}` | live | #92 |
+| (no nav) Collections | `listCollections` | `…/admin-catalog/collections` | API only | #98 — not an Admin page; old `/collections` redirects to Dashboard |
+| (no nav) Grocery | grocery users/items | `…/admin-catalog/grocery/*` | API only | #98 — end-user grocery; not an Admin page |
+| (no nav) Meal Plans | `listMealPlans` | `…/admin-catalog/meal-plans` | API only | #98 — not an Admin page |
+| (no nav) Pantry | `listPantry` | `…/admin-catalog/pantry` | API only | #98 — not an Admin page |
 | `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
 | (future) AI Platform / AI Import / Payments UI / Analytics UI / Ops UI | — | backends may exist | planned | Stay out of Admin nav until Gate allows (#61) |
 | Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved; not an Admin nav module |
@@ -76,7 +74,7 @@ Compatibility redirects (no dead links after #64 rollback): `/commerce/products`
 | Function | `verify_jwt` | Purpose |
 |----------|--------------|---------|
 | `admin-auth` | false | Login / logout / session / change-password |
-| `admin-catalog` | false | Existing Data-page APIs: recipes/collections/ingredients/grocery/meal-plans/pantry/taxonomy/settings (#92) |
+| `admin-catalog` | false | Ops catalog APIs: recipes/ingredients/taxonomy/settings (#92). Collections/grocery/meal-plans/pantry endpoints exist but are **not** Admin nav (#98). |
 | `admin-users` | false | User list, detail, registration mix stats |
 | `admin-dashboard` | false | Ops KPI aggregation (#60 source/freshness; prefers #58/#59 tables) |
 | `admin-analytics` | false | Analytics aggregation (#60) |

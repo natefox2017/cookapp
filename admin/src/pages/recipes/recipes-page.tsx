@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Trash2 } from 'lucide-react'
-import { deleteRecipe, getRecipe, listRecipes, listTaxonomy } from '@/api'
+import { deleteRecipe, getRecipe, isMockMode, listRecipes, listTaxonomy, writeCapability } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { Badge } from '@/components/ui/badge'
@@ -135,8 +135,10 @@ export function RecipeDetailPage() {
   const navigate = useNavigate()
   const { data, loading, error, reload } = useAsyncData(() => getRecipe(id), [id])
   const [deleting, setDeleting] = useState(false)
+  const capability = writeCapability('recipes', isMockMode())
 
   async function onDelete() {
+    if (!capability.canWrite) return
     if (!id || !window.confirm('Delete this recipe from the admin catalog?')) {
       return
     }
@@ -195,10 +197,12 @@ export function RecipeDetailPage() {
                   {data.ownerEmail} · {formatDate(data.createdAt)}
                 </p>
               </div>
-              <Button variant="destructive" size="sm" loading={deleting} onClick={onDelete}>
-                <Trash2 />
-                Delete
-              </Button>
+              {capability.canWrite ? (
+                <Button variant="destructive" size="sm" loading={deleting} onClick={onDelete}>
+                  <Trash2 />
+                  Delete
+                </Button>
+              ) : null}
             </div>
             <div className="flex flex-wrap gap-1.5">
               <Badge>{data.cuisine}</Badge>

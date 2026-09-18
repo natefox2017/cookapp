@@ -2,7 +2,7 @@
  * RecipeAIParser — calls AIRouter by route_key only (no direct provider client).
  */
 
-import { getAIRouter, type AIRouter } from "../ai-router.ts";
+import type { AIRouter } from "../ai-router.ts";
 import {
   applyAntiHallucination,
   hasCriticalGaps,
@@ -61,7 +61,12 @@ export async function parseRecipeWithAI(
     };
   }
 
-  const router = opts.router ?? getAIRouter();
+    if (!opts.router) {
+      throw new Error(
+        "AIRouter is required. Inject PlatformAIRouter(serviceClient); StubAIRouter is test-only.",
+      );
+    }
+    const router = opts.router;
   const aiResult = await router.completeStructured({
     route_key,
     schema_key: SCHEMA_VERSION,

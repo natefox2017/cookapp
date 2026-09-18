@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
@@ -5,6 +6,13 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
+const adminCatalogPath = '/functions/v1/admin-catalog'
+const catalogClientLive = readFileSync(path.join(rootDir, 'src/api/catalog.ts'), 'utf8').includes(
+  adminCatalogPath,
+)
+const recipesClientLive = readFileSync(path.join(rootDir, 'src/api/recipes.ts'), 'utf8').includes(
+  adminCatalogPath,
+)
 
 /** Fail production-mode builds that enable mock KPI/data (Issue #51). */
 function forbidProductionMock(): Plugin {
@@ -34,6 +42,10 @@ function forbidProductionMock(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), forbidProductionMock()],
+  define: {
+    __COOKAPP_ADMIN_CATALOG_LIVE__: JSON.stringify(catalogClientLive),
+    __COOKAPP_ADMIN_RECIPES_LIVE__: JSON.stringify(recipesClientLive),
+  },
   resolve: {
     alias: {
       '@': path.resolve(rootDir, './src'),

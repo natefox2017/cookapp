@@ -10,9 +10,11 @@ Live vs mock path matrix: [`docs/backend/ADMIN_API_CONTRACT.md`](../docs/backend
 ## Stack
 
 - React + TypeScript + Vite
-- Tailwind CSS + shadcn/ui-style primitives
+- Tailwind CSS + shadcn/ui (default zinc / black-white theme)
 - Lucide Icons
 - Recharts
+
+Dark mode is the default and paints the **full shell** (sidebar + content). Toggle light/dark from the header; preference is stored in `localStorage` (`cookapp-admin-theme`). Sidebar collapse lives only in the header — do not add a second rail control.
 
 ## Run locally
 
@@ -45,14 +47,16 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Users | `/functions/v1/admin-users/*` | live |
 | Dashboard | `/functions/v1/admin-dashboard` | live |
 | Subscription | `/functions/v1/admin-subscriptions/*` | live |
-| Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories | `/functions/v1/admin-catalog/*` | **live** (#92) |
+| Recipes / Ingredients / Categories | `/functions/v1/admin-catalog/*` | **live** (#92) |
 | Settings → General / Units / Categories | `/functions/v1/admin-catalog/settings` | persist live; System tab diagnostics-only |
 | Settings → Security | `admin-auth` | live |
 | Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
 
 Flat navigation (Issue #61 rollback of #64 Stage-4-overreach) in `admin/src/components/layout/nav.ts`:
 
-- Dashboard · Users · Recipes · Collections · Ingredients · Grocery · Meal Plans · Pantry · Categories · Subscription · Settings
+- Dashboard · Users · Recipes · Ingredients · Categories · Subscription · Settings
+
+End-user personal surfaces (Meal Plan, Grocery, Pantry, Collections) are **not** Admin nav — they belong in the iOS app. Old `/meal-plans` · `/grocery` · `/pantry` · `/collections` URLs redirect to Dashboard.
 
 Settings tabs include Integrations (#63). Analytics / Operations / Payments / AI Platform / AI Import are **not** exposed as Admin nav or placeholder pages until Notion Gate allows; former #64 paths redirect to existing pages.
 
@@ -94,17 +98,13 @@ Admin Dashboard UI
 | `/login` | Admin sign-in | yes |
 | `/` | Dashboard | yes (`admin-dashboard`) |
 | `/users` | Users | yes |
-| `/recipes` | Recipe grid + detail | yes (#92) |
-| `/collections` | Collections grid | yes (#92) |
+| `/recipes` | Recipe catalog + detail | yes (#92) |
 | `/ingredients` | Ingredients CRUD | yes (#92) |
-| `/grocery` | Grocery | yes (#92) |
-| `/meal-plans` | Meal plan | yes (#92) |
-| `/pantry` | Pantry | yes (#92) |
 | `/categories` | Taxonomy | yes (#92) |
 | `/subscription` | Plans · Records · Revenue | yes |
 | `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |
 
-Sidebar collapses via header / rail control (persisted). In live mode, remaining hybrid Settings show a **Hybrid** badge; catalog Data pages are live (#92).
+Sidebar collapses via the header control only (persisted). Catalog pages in nav are live (#92). Settings stays **Hybrid**. End-user personal routes redirect to Dashboard (#98).
 
 ## Related
 

@@ -118,6 +118,22 @@ def main() -> None:
                 if re.search(r"\b(class|struct|protocol)\s+\w*(Repository|Service|ViewModel)\b", text):
                     fail(f"business type not allowed in Phase 1.5: {path.relative_to(IOS)}")
 
+    settings_src = (IOS / "CookApp/Features/Settings/SettingsShellViews.swift").read_text()
+    account_match = re.search(
+        r"struct AccountShellView: View \{.*?(?=\nstruct |\Z)",
+        settings_src,
+        re.S,
+    )
+    if not account_match:
+        fail("could not parse AccountShellView")
+    account_body = account_match.group(0)
+    if "Sign Out" in account_body or "authService" in account_body:
+        fail("AccountShellView must not expose Sign Out / AuthService (Phase 1.5 placeholder)")
+    if "RoutePlaceholderView" not in account_body:
+        fail("AccountShellView must use RoutePlaceholderView")
+    if "Sign Out" not in settings_src:
+        fail("Debug Foundation Diagnostics must keep Sign Out")
+
     print("Phase 1.5 navigation skeleton checks OK")
     print(f"  tabs={len(tab_cases)} routes={len(route_cases)} sheets={len(sheet_cases)}")
 
