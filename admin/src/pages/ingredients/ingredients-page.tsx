@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 const emptyForm: IngredientInput = {
   name: '',
@@ -37,6 +38,14 @@ const emptyForm: IngredientInput = {
 }
 
 export function IngredientsPage() {
+  return (
+    <LiveApiGate domain="ingredients" title="Ingredients">
+      <IngredientsPageInner />
+    </LiveApiGate>
+  )
+}
+
+function IngredientsPageInner() {
   const { data, loading, error, reload } = useAsyncData(() => listIngredients(), [])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Ingredient | null>(null)
@@ -98,7 +107,7 @@ export function IngredientsPage() {
     <div>
       <PageHeader
         title="Ingredients"
-        description="Catalog CRUD via /admin/ingredients."
+        description="Catalog CRUD (mock/dev). Live Admin Ingredients API is Not Implemented (Issue #52)."
         actions={
           <Button onClick={openCreate}>
             <Plus />

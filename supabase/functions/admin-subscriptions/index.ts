@@ -9,6 +9,7 @@ import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
 import { requireAdminSession } from "../_shared/admin-session.ts";
 import { log } from "../_shared/logger.ts";
+import { resolveRequestId, withRequestId } from "../_shared/request-id.ts";
 
 type Platform = "app_store" | "play_store";
 
@@ -111,6 +112,9 @@ Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
 
+  const requestId = resolveRequestId(req);
+  const headers = withRequestId(publicCorsHeaders, requestId);
+
   try {
     await requireAdminSession(req);
     const parts = routeParts(req);
@@ -126,7 +130,7 @@ Deno.serve(async (req) => {
         .order("plan_key")
         .order("platform");
       if (error) throw new AppError("internal_error", error.message, 500);
-      return json((data ?? []).map((row) => mapPlan(row as Record<string, unknown>)), 200, publicCorsHeaders);
+      return json((data ?? []).map((row) => mapPlan(row as Record<string, unknown>)), 200, headers);
     }
 
     if (resource === "plans" && method === "POST" && !id) {
@@ -144,7 +148,7 @@ Deno.serve(async (req) => {
         );
       }
       log("info", "admin_plan_created", { id: data.id });
-      return json(mapPlan(data as Record<string, unknown>), 201, publicCorsHeaders);
+      return json(mapPlan(data as Record<string, unknown>), 201, headers);
     }
 
     if (resource === "plans" && method === "PUT" && id) {
@@ -157,7 +161,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (error) throw new AppError("internal_error", error.message, 500);
       if (!data) throw new AppError("not_found", "Plan not found", 404);
-      return json(mapPlan(data as Record<string, unknown>), 200, publicCorsHeaders);
+      return json(mapPlan(data as Record<string, unknown>), 200, headers);
     }
 
     if (resource === "plans" && method === "DELETE" && id) {
@@ -167,7 +171,7 @@ Deno.serve(async (req) => {
         .eq("id", id);
       if (error) throw new AppError("internal_error", error.message, 500);
       if (!count) throw new AppError("not_found", "Plan not found", 404);
-      return json({ ok: true }, 200, publicCorsHeaders);
+      return json({ ok: true }, 200, headers);
     }
 
     if (resource === "records" && method === "GET") {
@@ -253,7 +257,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return json(rows, 200, publicCorsHeaders);
+      return json(rows, 200, headers);
     }
 
     if (resource === "revenue" && method === "GET") {
@@ -338,7 +342,7 @@ Deno.serve(async (req) => {
           series,
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -348,6 +352,6 @@ Deno.serve(async (req) => {
       404,
     );
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, headers);
   }
 });

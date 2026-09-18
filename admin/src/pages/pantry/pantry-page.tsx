@@ -5,8 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { formatDate } from '@/lib/utils'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 export function PantryPage() {
+  return (
+    <LiveApiGate domain="pantry" title="Pantry">
+      <PantryPageInner />
+    </LiveApiGate>
+  )
+}
+
+function PantryPageInner() {
   const { data, loading, error, reload } = useAsyncData(() => listPantry(), [])
 
   return (

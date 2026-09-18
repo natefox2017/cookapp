@@ -1,4 +1,4 @@
-import { httpRequest, isMockMode, mockRequest } from '@/api/client'
+import { isMockMode, liveNotImplemented, mockRequest, API_BASE, USE_MOCK } from '@/api/client'
 import {
   mockCategories,
   mockCollections,
@@ -23,18 +23,47 @@ import type {
   TaxonomyItem,
 } from '@/types/admin'
 
+/**
+ * Catalog domains without live Admin Edge Functions.
+ * Mock only when VITE_ADMIN_USE_MOCK=true; Production live → Not Implemented (Issue #52).
+ */
+
 function replaceList<T>(target: T[], next: T[]) {
   target.splice(0, target.length, ...next)
 }
 
+function liveDiagnosticsSettings(): AdminSettings {
+  return {
+    general: {
+      appName: 'CookApp',
+      supportEmail: '',
+      defaultLocale: 'en-US',
+      maintenanceMode: false,
+    },
+    units: {
+      measurementSystem: 'metric',
+      temperatureUnit: 'celsius',
+    },
+    categories: {
+      allowUserTags: true,
+      requireCuisine: false,
+    },
+    system: {
+      mockMode: USE_MOCK,
+      apiBaseUrl: API_BASE || '(not set)',
+      logLevel: 'info',
+    },
+  }
+}
+
 export async function listCollections(): Promise<CollectionSummary[]> {
   if (isMockMode()) return mockRequest(() => mockCollections)
-  return httpRequest('/admin/collections')
+  liveNotImplemented('collections')
 }
 
 export async function listIngredients(): Promise<Ingredient[]> {
   if (isMockMode()) return mockRequest(() => [...mockIngredients])
-  return httpRequest('/admin/ingredients')
+  liveNotImplemented('ingredients')
 }
 
 export async function createIngredient(input: IngredientInput): Promise<Ingredient> {
@@ -45,7 +74,8 @@ export async function createIngredient(input: IngredientInput): Promise<Ingredie
       return item
     })
   }
-  return httpRequest('/admin/ingredients', { method: 'POST', body: JSON.stringify(input) })
+  void input
+  liveNotImplemented('ingredients')
 }
 
 export async function updateIngredient(id: string, input: IngredientInput): Promise<Ingredient> {
@@ -58,7 +88,9 @@ export async function updateIngredient(id: string, input: IngredientInput): Prom
       return next
     })
   }
-  return httpRequest(`/admin/ingredients/${id}`, { method: 'PUT', body: JSON.stringify(input) })
+  void id
+  void input
+  liveNotImplemented('ingredients')
 }
 
 export async function deleteIngredient(id: string): Promise<void> {
@@ -70,7 +102,8 @@ export async function deleteIngredient(id: string): Promise<void> {
       )
     })
   }
-  return httpRequest(`/admin/ingredients/${id}`, { method: 'DELETE' })
+  void id
+  liveNotImplemented('ingredients')
 }
 
 export async function listGroceryUsers(): Promise<GroceryUser[]> {
@@ -86,24 +119,25 @@ export async function listGroceryUsers(): Promise<GroceryUser[]> {
       }),
     )
   }
-  return httpRequest('/admin/grocery/users')
+  liveNotImplemented('grocery')
 }
 
 export async function listGroceryItems(userId: string): Promise<GroceryItem[]> {
   if (isMockMode()) {
     return mockRequest(() => mockGroceryItems.filter((item) => item.userId === userId))
   }
-  return httpRequest(`/admin/grocery/users/${userId}/items`)
+  void userId
+  liveNotImplemented('grocery')
 }
 
 export async function listMealPlans(): Promise<MealPlanEntry[]> {
   if (isMockMode()) return mockRequest(() => mockMealPlans)
-  return httpRequest('/admin/meal-plans')
+  liveNotImplemented('meal-plans')
 }
 
 export async function listPantry(): Promise<PantryItem[]> {
   if (isMockMode()) return mockRequest(() => mockPantry)
-  return httpRequest('/admin/pantry')
+  liveNotImplemented('pantry')
 }
 
 function taxonomyList(kind: 'cuisine' | 'category' | 'tags') {
@@ -118,7 +152,8 @@ export async function listTaxonomy(
   if (isMockMode()) {
     return mockRequest(() => [...taxonomyList(kind)])
   }
-  return httpRequest(`/admin/categories/${kind}`)
+  void kind
+  liveNotImplemented('categories')
 }
 
 export async function createTaxonomyItem(
@@ -137,10 +172,9 @@ export async function createTaxonomyItem(
       return item
     })
   }
-  return httpRequest(`/admin/categories/${kind}`, {
-    method: 'POST',
-    body: JSON.stringify({ name }),
-  })
+  void kind
+  void name
+  liveNotImplemented('categories')
 }
 
 export async function updateTaxonomyItem(
@@ -162,10 +196,10 @@ export async function updateTaxonomyItem(
       return next
     })
   }
-  return httpRequest(`/admin/categories/${kind}/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ name }),
-  })
+  void kind
+  void id
+  void name
+  liveNotImplemented('categories')
 }
 
 export async function deleteTaxonomyItem(
@@ -181,12 +215,15 @@ export async function deleteTaxonomyItem(
       )
     })
   }
-  return httpRequest(`/admin/categories/${kind}/${id}`, { method: 'DELETE' })
+  void kind
+  void id
+  liveNotImplemented('categories')
 }
 
 export async function getSettings(): Promise<AdminSettings> {
   if (isMockMode()) return mockRequest(() => structuredClone(mockSettings))
-  return httpRequest('/admin/settings')
+  // Live: expose build-time diagnostics only — no fake persisted settings.
+  return liveDiagnosticsSettings()
 }
 
 export async function updateSettings(payload: AdminSettings): Promise<AdminSettings> {
@@ -199,5 +236,6 @@ export async function updateSettings(payload: AdminSettings): Promise<AdminSetti
       return structuredClone(mockSettings)
     })
   }
-  return httpRequest('/admin/settings', { method: 'PUT', body: JSON.stringify(payload) })
+  void payload
+  liveNotImplemented('settings')
 }

@@ -38,18 +38,21 @@ supabase/
   migrations/          # ordered SQL migrations
   openapi/             # OpenAPI 3.1 (yaml + json)
   functions/
-    _shared/           # cors, auth, errors, logger, admin-session
+    _shared/           # cors, auth, errors, logger, admin-session, request-id
     delete-account/
     revenuecat-webhook/
     health/
     openapi/
     admin-auth/
+    admin-users/
     admin-subscriptions/
+    admin-dashboard/
 ```
 
 ## API documentation
 
 - OpenAPI: [`supabase/openapi/openapi.yaml`](../../supabase/openapi/openapi.yaml)
+- Admin contract matrix: [`admin-api-contract-matrix.md`](./admin-api-contract-matrix.md) (Issue #52)
 - Live JSON: `GET /functions/v1/openapi` (no JWT)
 - Auth/IAP ops: [`AUTH_AND_IAP.md`](../AUTH_AND_IAP.md)
 
@@ -91,19 +94,30 @@ Authorization: Bearer <access_token>
 | `health` | yes | Module probe |
 | `openapi` | no | Serve OpenAPI JSON |
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
+| `admin-users` | no (custom admin bearer) | Admin users list / detail / registration stats |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-dashboard` | no (custom admin bearer) | Provisional DB aggregates (P1 store analytics still pending) |
 
 ### Admin auth
 
 - Tables: `admin_accounts`, `admin_sessions` (service_role only; no client RLS policies)
-- Default seed: username `admin`, password `admin` (bcrypt via pgcrypto)
+- Default seed: username `admin`, password `admin` (bcrypt via pgcrypto) — local/dev only once #51 lands
 - Endpoints under `/functions/v1/admin-auth/{login,logout,session,change-password}`
+
+### Admin users
+
+- Endpoints under `/functions/v1/admin-users`, `/functions/v1/admin-users/stats`, `/functions/v1/admin-users/:id`
 
 ### Admin subscriptions
 
 - Table: `subscription_plans` (Apple / Android SKUs, price, billing period)
 - Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
+
+### Admin dashboard
+
+- `GET /functions/v1/admin-dashboard` — CookApp DB aggregates only; App Store Connect / Google Play sync is P1 (#47)
+- Contract matrix: [`admin-api-contract-matrix.md`](./admin-api-contract-matrix.md)
 
 ## Migrations
 

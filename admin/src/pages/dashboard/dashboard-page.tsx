@@ -9,7 +9,7 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts'
-import { getDashboard } from '@/api'
+import { getDashboard, isMockMode } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -84,45 +84,53 @@ export function DashboardPage() {
     {
       label: 'Total revenue',
       value: formatMoney(data.stats.revenueTotal),
-      hint: 'All-time paid events',
+      hint: 'RevenueCat purchase_events (CookApp DB)',
     },
     {
       label: 'MRR (est.)',
       value: formatMoney(data.stats.revenueMrr),
-      hint: 'Active paid monthlyized',
+      hint: 'Provisional estimate — not Financial Reports',
     },
     {
       label: 'Apple revenue',
       value: formatMoney(data.stats.revenueApple),
-      hint: 'App Store',
+      hint: 'App Store events in DB',
     },
     {
       label: 'Android revenue',
-      value: formatMoney(data.stats.revenueAndroid),
-      hint: 'Play Store',
+      value: isMockMode() ? formatMoney(data.stats.revenueAndroid) : 'Future Reserved',
+      hint: isMockMode()
+        ? 'Play Store'
+        : 'Google Play not connected — do not treat as live KPI (P1)',
     },
   ]
 
   const downloadCards = [
     {
       label: 'Total downloads',
-      value: formatNumber(data.stats.downloadsTotal),
+      value: isMockMode()
+        ? formatNumber(data.stats.downloadsTotal)
+        : formatNumber(data.stats.downloadsIos),
       icon: Download,
+      hint: isMockMode() ? undefined : 'iOS only until ASC Analytics sync (P1 #47)',
     },
     {
       label: 'iOS downloads',
       value: formatNumber(data.stats.downloadsIos),
       icon: Smartphone,
+      hint: 'app_download_stats (manual/seed until ASC)',
     },
     {
       label: 'Android downloads',
-      value: formatNumber(data.stats.downloadsAndroid),
+      value: isMockMode() ? formatNumber(data.stats.downloadsAndroid) : 'Future Reserved',
       icon: Smartphone,
+      hint: isMockMode() ? undefined : 'Google Play not connected',
     },
     {
       label: 'Payment txns',
       value: formatNumber(data.stats.paymentTransactions),
       icon: CreditCard,
+      hint: 'CookApp purchase_events count',
     },
   ]
 
@@ -136,8 +144,25 @@ export function DashboardPage() {
     <div>
       <PageHeader
         title="Dashboard"
-        description="Detailed users, payments, and downloads overview for ops."
+        description={
+          isMockMode()
+            ? 'Mock detailed users, payments, and downloads overview.'
+            : 'Live: CookApp DB aggregates via GET /functions/v1/admin-dashboard. Full store analytics wait for P1 (#47).'
+        }
       />
+
+      {!isMockMode() ? (
+        <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
+          <p className="font-medium text-amber-900 dark:text-amber-200">
+            Provisional dashboard — not Production-certified analytics
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            User/recipe/collection counts and RevenueCat-backed payment events come from CookApp DB.
+            App Store Connect Analytics sync and Google Play remain Future Reserved. Do not treat
+            Android zeros or download seeds as store truth (Issue #52 / Notion V2 §15).
+          </p>
+        </div>
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold tracking-tight">Users</h2>
@@ -195,6 +220,9 @@ export function DashboardPage() {
                   <div className="text-2xl font-semibold tabular-nums tracking-tight">
                     {card.value}
                   </div>
+                  {card.hint ? (
+                    <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
+                  ) : null}
                 </CardContent>
               </Card>
             )

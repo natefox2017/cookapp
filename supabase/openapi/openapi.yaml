@@ -28,6 +28,10 @@ tags:
   - name: Storage
   - name: Subscription
   - name: System
+  - name: AdminAuth
+  - name: AdminUsers
+  - name: AdminSubscriptions
+  - name: AdminDashboard
 
 paths:
   /auth/v1/token:
@@ -80,6 +84,423 @@ paths:
       responses:
         "200":
           description: Healthy
+
+
+  /functions/v1/admin-auth/login:
+    post:
+      tags: [AdminAuth]
+      summary: Admin login
+      description: |
+        Issues a custom admin bearer session (not end-user JWT).
+        Optional `X-Request-Id` is echoed on the response.
+      operationId: adminAuthLogin
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: Session issued
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSessionPayload"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-auth/logout:
+    post:
+      tags: [AdminAuth]
+      summary: Admin logout
+      description: Revokes the current admin bearer session.
+      operationId: adminAuthLogout
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      responses:
+        "200":
+          description: Session revoked
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-auth/session:
+    get:
+      tags: [AdminAuth]
+      summary: Current admin session
+      operationId: adminAuthSession
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      responses:
+        "200":
+          description: Session valid
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [admin]
+                properties:
+                  admin:
+                    $ref: "#/components/schemas/AdminIdentity"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-auth/change-password:
+    post:
+      tags: [AdminAuth]
+      summary: Change admin password
+      description: Revokes all sessions for the account and returns a fresh token.
+      operationId: adminAuthChangePassword
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, format: password }
+                newPassword: { type: string, format: password, minLength: 4 }
+      responses:
+        "200":
+          description: Password updated
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/AdminSessionPayload"
+                  - type: object
+                    properties:
+                      ok: { type: boolean }
+        "400":
+          description: Validation error
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-users:
+    get:
+      tags: [AdminUsers]
+      summary: List admin users
+      description: |
+        Paginated profiles with subscription + registration filters.
+        Pagination: `page`, `pageSize` → `{ data, total, page, pageSize }`.
+      operationId: adminListUsers
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, suspended, deleted] }
+        - name: subscription
+          in: query
+          schema: { type: string, enum: [free, pro, lifetime] }
+        - name: registrationProvider
+          in: query
+          schema: { type: string, enum: [apple, google, email, unknown] }
+        - name: deviceType
+          in: query
+          schema: { type: string, enum: [ios, android, web, unknown] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Paginated users
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-users/stats:
+    get:
+      tags: [AdminUsers]
+      summary: User registration mix stats
+      operationId: adminUserRegistrationStats
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      responses:
+        "200":
+          description: Provider / device counts
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserRegistrationStats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-users/{id}:
+    get:
+      tags: [AdminUsers]
+      summary: Admin user detail
+      description: Includes registration IP and payment timeline from purchase_events.
+      operationId: adminGetUser
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: User detail
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: User not found
+
+  /functions/v1/admin-subscriptions/plans:
+    get:
+      tags: [AdminSubscriptions]
+      summary: List subscription plan products
+      operationId: adminListSubscriptionPlans
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      responses:
+        "200":
+          description: Plan catalog
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminSubscriptionPlan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [AdminSubscriptions]
+      summary: Create subscription plan product
+      operationId: adminCreateSubscriptionPlan
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSubscriptionPlanInput"
+      responses:
+        "201":
+          description: Created
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSubscriptionPlan"
+        "400":
+          description: Validation error
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Conflict
+
+  /functions/v1/admin-subscriptions/plans/{id}:
+    put:
+      tags: [AdminSubscriptions]
+      summary: Update subscription plan product
+      operationId: adminUpdateSubscriptionPlan
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSubscriptionPlanInput"
+      responses:
+        "200":
+          description: Updated
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSubscriptionPlan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Plan not found
+    delete:
+      tags: [AdminSubscriptions]
+      summary: Delete subscription plan product
+      operationId: adminDeleteSubscriptionPlan
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Deleted
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Plan not found
+
+  /functions/v1/admin-subscriptions/records:
+    get:
+      tags: [AdminSubscriptions]
+      summary: List subscription records
+      operationId: adminListSubscriptionRecords
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - name: platform
+          in: query
+          schema: { type: string, enum: [app_store, play_store] }
+      responses:
+        "200":
+          description: Subscription rows
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminSubscriptionRecord"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-subscriptions/revenue:
+    get:
+      tags: [AdminSubscriptions]
+      summary: Subscription revenue series
+      description: Aggregates paid purchase_events. Android/Play may be empty until connected.
+      operationId: adminSubscriptionRevenue
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - name: platform
+          in: query
+          schema: { type: string, enum: [app_store, play_store] }
+      responses:
+        "200":
+          description: Revenue stats + series
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSubscriptionRevenue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-dashboard:
+    get:
+      tags: [AdminDashboard]
+      summary: Admin dashboard aggregates
+      description: |
+        Provisional CookApp DB aggregates (Issue #52 / #47).
+        Not Production-certified App Store Connect / Google Play analytics.
+        Sources: profiles, recipes, collections, subscriptions, purchase_events, app_download_stats.
+      operationId: adminDashboard
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+      responses:
+        "200":
+          description: Dashboard payload
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboardData"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /rest/v1/profiles:
     get:
@@ -527,6 +948,17 @@ components:
       schema:
         type: string
         example: return=representation
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      schema: { type: string, maxLength: 128 }
+      description: Optional correlation id; echoed on Admin Edge Function responses
+
+  headers:
+    XRequestId:
+      description: Echoed correlation id
+      schema: { type: string }
 
   responses:
     Unauthorized:
@@ -546,6 +978,194 @@ components:
             code: { type: string }
             message: { type: string }
             details: {}
+
+    AdminIdentity:
+      type: object
+      required: [id, username]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+
+    AdminSessionPayload:
+      type: object
+      required: [token, expiresAt, admin]
+      properties:
+        token: { type: string }
+        expiresAt: { type: string, format: date-time }
+        admin:
+          $ref: "#/components/schemas/AdminIdentity"
+
+    AdminUserSummary:
+      type: object
+      required: [id, email, displayName, subscription, status]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        displayName: { type: string }
+        avatarUrl: { type: [string, "null"] }
+        subscription: { type: string, enum: [free, pro, lifetime] }
+        recipeCount: { type: integer }
+        favoriteCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        status: { type: string, enum: [active, suspended, deleted] }
+        registrationProvider: { type: string, enum: [apple, google, email, unknown] }
+        deviceType: { type: string, enum: [ios, android, web, unknown] }
+
+    AdminUserListResponse:
+      type: object
+      required: [data, total, page, pageSize]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUserSummary"
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+
+    AdminUserPayment:
+      type: object
+      properties:
+        id: { type: string }
+        eventType: { type: string }
+        productId: { type: [string, "null"] }
+        store: { type: [string, "null"], enum: [app_store, play_store, null] }
+        amount: { type: [number, "null"] }
+        currency: { type: [string, "null"] }
+        environment: { type: [string, "null"] }
+        purchasedAt: { type: string, format: date-time }
+
+    AdminUserDetail:
+      allOf:
+        - $ref: "#/components/schemas/AdminUserSummary"
+        - type: object
+          properties:
+            lastLoginAt: { type: [string, "null"], format: date-time }
+            locale: { type: string }
+            timezone: { type: string }
+            registrationIp: { type: [string, "null"] }
+            payments:
+              type: array
+              items:
+                $ref: "#/components/schemas/AdminUserPayment"
+
+    AdminUserRegistrationStats:
+      type: object
+      required: [total, byProvider, byDevice]
+      properties:
+        total: { type: integer }
+        byProvider:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              label: { type: string }
+              count: { type: integer }
+        byDevice:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              label: { type: string }
+              count: { type: integer }
+
+    AdminSubscriptionPlanInput:
+      type: object
+      required: [planKey, displayName, platform, productId, price, currency, billingPeriod, active]
+      properties:
+        planKey: { type: string }
+        displayName: { type: string }
+        platform: { type: string, enum: [app_store, play_store] }
+        productId: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        billingPeriod: { type: string, enum: [monthly, yearly, lifetime] }
+        active: { type: boolean }
+        description: { type: [string, "null"] }
+
+    AdminSubscriptionPlan:
+      allOf:
+        - $ref: "#/components/schemas/AdminSubscriptionPlanInput"
+        - type: object
+          required: [id, updatedAt]
+          properties:
+            id: { type: string, format: uuid }
+            updatedAt: { type: string, format: date-time }
+
+    AdminSubscriptionRecord:
+      type: object
+      properties:
+        id: { type: string }
+        user:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            displayName: { type: string }
+            email: { type: string }
+        plan: { type: string }
+        status: { type: string }
+        platform: { type: [string, "null"], enum: [app_store, play_store, null] }
+        productId: { type: [string, "null"] }
+        amount: { type: [number, "null"] }
+        currency: { type: [string, "null"] }
+        startDate: { type: string }
+        expirationDate: { type: [string, "null"] }
+
+    AdminSubscriptionRevenue:
+      type: object
+      required: [stats, series]
+      properties:
+        stats:
+          type: object
+          properties:
+            mrr: { type: number }
+            appleRevenue: { type: number }
+            androidRevenue: { type: number }
+            activePaid: { type: integer }
+        series:
+          type: array
+          items:
+            type: object
+            properties:
+              month: { type: string }
+              apple: { type: number }
+              android: { type: number }
+              total: { type: number }
+
+    AdminDashboardData:
+      type: object
+      description: Provisional dashboard payload from admin-dashboard Edge Function
+      required: [stats]
+      properties:
+        stats:
+          type: object
+          additionalProperties: true
+        growth:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        series:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        userMix:
+          type: object
+          additionalProperties: true
+        recentPayments:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        recentActivity:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
 
     UserProfile:
       type: object

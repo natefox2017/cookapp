@@ -13,8 +13,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 export function GroceryPage() {
+  return (
+    <LiveApiGate domain="grocery" title="Grocery">
+      <GroceryPageInner />
+    </LiveApiGate>
+  )
+}
+
+function GroceryPageInner() {
   const users = useAsyncData(() => listGroceryUsers(), [])
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 

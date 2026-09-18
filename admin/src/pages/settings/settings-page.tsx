@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSettings, updateSettings } from '@/api'
+import { getSettings, updateSettings, isMockMode } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { authErrorMessage, useAuth } from '@/auth/auth-context'
 import type { AdminSettings } from '@/types/admin'
@@ -31,6 +31,7 @@ export function SettingsPage() {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+  const liveMode = !isMockMode()
 
   useEffect(() => {
     if (data) {
@@ -93,13 +94,17 @@ export function SettingsPage() {
     )
   }
 
-  const showSettingsSave = tab !== 'security'
+  const showSettingsSave = tab !== 'security' && !liveMode
 
   return (
     <div>
       <PageHeader
         title="Settings"
-        description="General, units, category policy, and system configuration."
+        description={
+          liveMode
+            ? 'Security uses live admin-auth. General / Units / Categories persistence is Not Implemented (Issue #52). System shows build diagnostics.'
+            : 'General, units, category policy, and system configuration.'
+        }
         actions={
           showSettingsSave ? (
             <Button loading={saving} onClick={onSave} disabled={!dirty && !saving}>
@@ -108,6 +113,14 @@ export function SettingsPage() {
           ) : null
         }
       />
+
+      {liveMode ? (
+        <div className="mb-4 rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+          Persisted Admin settings API is not implemented. Security password change calls{' '}
+          <code className="text-xs">POST /functions/v1/admin-auth/change-password</code>. System
+          values are build-time diagnostics only.
+        </div>
+      ) : null}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>

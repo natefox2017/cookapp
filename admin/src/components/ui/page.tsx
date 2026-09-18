@@ -73,3 +73,22 @@ export function LoadingBlock({ label = 'Loading…' }: { label?: string }) {
     </div>
   )
 }
+
+/** Production live mode when Admin Edge Function does not exist yet (Issue #52). */
+export function NotImplementedState({
+  domain,
+  description,
+}: {
+  domain: string
+  description?: string
+}) {
+  return (
+    <EmptyState
+      title={`${domain} — Not Implemented`}
+      description={
+        description ??
+        'No live Admin API for this domain yet. Local/dev mock remains available when VITE_ADMIN_USE_MOCK=true. See docs/backend/admin-api-contract-matrix.md.'
+      }
+    />
+  )
+}

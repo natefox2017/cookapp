@@ -8,6 +8,7 @@ import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
 import { requireAdminSession } from "../_shared/admin-session.ts";
+import { resolveRequestId, withRequestId } from "../_shared/request-id.ts";
 
 type Provider = "apple" | "google" | "email" | "unknown";
 type Device = "ios" | "android" | "web" | "unknown";
@@ -73,6 +74,9 @@ Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
 
+  const requestId = resolveRequestId(req);
+  const headers = withRequestId(publicCorsHeaders, requestId);
+
   try {
     await requireAdminSession(req);
     if (req.method.toUpperCase() !== "GET") {
@@ -131,7 +135,7 @@ Deno.serve(async (req) => {
           })),
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -194,7 +198,7 @@ Deno.serve(async (req) => {
           ),
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -311,7 +315,7 @@ Deno.serve(async (req) => {
           pageSize,
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -321,6 +325,6 @@ Deno.serve(async (req) => {
       404,
     );
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, headers);
   }
 });

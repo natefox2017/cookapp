@@ -29,6 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 type Kind = 'cuisine' | 'category' | 'tags'
 
@@ -168,6 +169,14 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
 }
 
 export function CategoriesPage() {
+  return (
+    <LiveApiGate domain="categories" title="Categories">
+      <CategoriesPageInner />
+    </LiveApiGate>
+  )
+}
+
+function CategoriesPageInner() {
   return (
     <div>
       <PageHeader

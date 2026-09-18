@@ -7,6 +7,7 @@ import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
 import { requireAdminSession } from "../_shared/admin-session.ts";
+import { resolveRequestId, withRequestId } from "../_shared/request-id.ts";
 
 const PAID_TYPES = new Set([
   "INITIAL_PURCHASE",
@@ -46,6 +47,9 @@ function eventAmount(raw: Record<string, unknown> | null): number {
 Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
+
+  const requestId = resolveRequestId(req);
+  const headers = withRequestId(publicCorsHeaders, requestId);
 
   try {
     await requireAdminSession(req);
@@ -455,9 +459,9 @@ Deno.serve(async (req) => {
         recentPayments,
       },
       200,
-      publicCorsHeaders,
+      headers,
     );
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, headers);
   }
 });

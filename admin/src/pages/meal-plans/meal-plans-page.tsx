@@ -16,8 +16,17 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { cn } from '@/lib/utils'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 export function MealPlansPage() {
+  return (
+    <LiveApiGate domain="meal-plans" title="Meal Plans">
+      <MealPlansPageInner />
+    </LiveApiGate>
+  )
+}
+
+function MealPlansPageInner() {
   const [cursor, setCursor] = useState(() => startOfMonth(new Date('2026-03-01')))
   const { data, loading, error, reload } = useAsyncData(() => listMealPlans(), [])
 

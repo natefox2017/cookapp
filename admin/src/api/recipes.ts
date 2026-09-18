@@ -1,6 +1,8 @@
-import { httpRequest, isMockMode, mockRequest } from '@/api/client'
+import { isMockMode, liveNotImplemented, mockRequest } from '@/api/client'
 import { mockRecipeDetails, mockRecipes } from '@/mocks/data'
 import type { ListRecipesParams, RecipeDetail, RecipeSummary } from '@/types/admin'
+
+/** Recipes Admin API is not live yet — mock for local/dev only (Issue #52). */
 
 export async function listRecipes(params: ListRecipesParams = {}): Promise<RecipeSummary[]> {
   if (isMockMode()) {
@@ -15,13 +17,7 @@ export async function listRecipes(params: ListRecipesParams = {}): Promise<Recip
       })
     })
   }
-
-  const search = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) search.set(key, value)
-  })
-  const qs = search.toString()
-  return httpRequest<RecipeSummary[]>(`/admin/recipes${qs ? `?${qs}` : ''}`)
+  liveNotImplemented('recipes')
 }
 
 export async function getRecipe(id: string): Promise<RecipeDetail> {
@@ -32,7 +28,7 @@ export async function getRecipe(id: string): Promise<RecipeDetail> {
       return recipe
     })
   }
-  return httpRequest<RecipeDetail>(`/admin/recipes/${id}`)
+  liveNotImplemented('recipes')
 }
 
 export async function updateRecipe(
@@ -61,10 +57,9 @@ export async function updateRecipe(
       return next
     })
   }
-  return httpRequest<RecipeDetail>(`/admin/recipes/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
+  void id
+  void payload
+  liveNotImplemented('recipes')
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
@@ -75,5 +70,6 @@ export async function deleteRecipe(id: string): Promise<void> {
       if (index >= 0) mockRecipes.splice(index, 1)
     })
   }
-  return httpRequest<void>(`/admin/recipes/${id}`, { method: 'DELETE' })
+  void id
+  liveNotImplemented('recipes')
 }

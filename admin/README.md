@@ -62,28 +62,33 @@ Admin Dashboard UI
 
 ## Modules
 
-| Route | Module |
-|-------|--------|
-| `/login` | Admin sign-in |
-| `/` | Dashboard (users / payments / downloads KPIs + charts) |
-| `/users` | Users + provider/device filters, registration stats, payment history |
-| `/recipes` | Recipe grid + detail |
-| `/collections` | Collections grid |
-| `/ingredients` | Ingredients CRUD table |
-| `/grocery` | User list + shopping items |
-| `/meal-plans` | Calendar meal plan |
-| `/pantry` | Pantry card grid |
-| `/categories` | Cuisine / Category / Tags |
-| `/subscription` | Plans (Apple/Android) · Records · Revenue charts |
-| `/settings` | General / Units / Categories / Security / System |
+| Route | Module | Live Admin API |
+|-------|--------|----------------|
+| `/login` | Admin sign-in | `admin-auth` |
+| `/` | Dashboard (provisional DB KPIs) | `admin-dashboard` |
+| `/users` | Users + provider/device filters, registration stats, payment history | `admin-users` |
+| `/recipes` | Recipe grid + detail | **Not Implemented** (mock/dev only) |
+| `/collections` | Collections grid | **Not Implemented** (mock/dev only) |
+| `/ingredients` | Ingredients CRUD table | **Not Implemented** (mock/dev only) |
+| `/grocery` | User list + shopping items | **Not Implemented** (mock/dev only) |
+| `/meal-plans` | Calendar meal plan | **Not Implemented** (mock/dev only) |
+| `/pantry` | Pantry card grid | **Not Implemented** (mock/dev only) |
+| `/categories` | Cuisine / Category / Tags | **Not Implemented** (mock/dev only) |
+| `/subscription` | Plans (Apple/Android) · Records · Revenue charts | `admin-subscriptions` |
+| `/settings` | Security live; General/Units/Categories persistence NI | `admin-auth` (Security) |
 
-Sidebar collapses via header / rail control (persisted).
+Sidebar collapses via header / rail control (persisted). Missing-domain nav items show an **NI** badge in live mode.
+
+## Contract
+
+See [`docs/backend/admin-api-contract-matrix.md`](../docs/backend/admin-api-contract-matrix.md) (Issue #52).
 
 ## Related
 
-- GitHub Issue #12 · #32 · #35 · #44 · #47
+- GitHub Issue #12 · #32 · #35 · #44 · #47 · **#52**
 - Cloud backend Issue #11
-- Notion: Local Admin Dashboard system boundary · Analytics, Payments & User Intelligence Architecture
+- Notion: Local Admin Dashboard system boundary · Backend/Admin V2
 
-Live dashboard aggregation: `GET /functions/v1/admin-dashboard` (admin bearer).
+Live dashboard aggregation: `GET /functions/v1/admin-dashboard` (admin bearer) — provisional until P1 Analytics (#47).
 Download counts live in `app_download_stats` (seeded / manually imported until store APIs are wired).
+Google Play remains Future Reserved.

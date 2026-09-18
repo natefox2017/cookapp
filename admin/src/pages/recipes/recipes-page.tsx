@@ -18,8 +18,17 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatDate } from '@/lib/utils'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 export function RecipesPage() {
+  return (
+    <LiveApiGate domain="recipes" title="Recipes">
+      <RecipesPageInner />
+    </LiveApiGate>
+  )
+}
+
+function RecipesPageInner() {
   const [q, setQ] = useState('')
   const debouncedQ = useDebouncedValue(q, 250)
   const [cuisine, setCuisine] = useState('all')
@@ -40,7 +49,7 @@ export function RecipesPage() {
     <div>
       <PageHeader
         title="Recipes"
-        description="Browse recipe catalog via GET /admin/recipes."
+        description="Browse recipe catalog. Live Admin Recipes API is not implemented yet (Issue #52)."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -125,6 +134,14 @@ export function RecipesPage() {
 }
 
 export function RecipeDetailPage() {
+  return (
+    <LiveApiGate domain="recipes" title="Recipe Detail">
+      <RecipeDetailPageInner />
+    </LiveApiGate>
+  )
+}
+
+function RecipeDetailPageInner() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { data, loading, error, reload } = useAsyncData(() => getRecipe(id), [id])

@@ -5,8 +5,17 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
 import { formatDate } from '@/lib/utils'
+import { LiveApiGate } from '@/components/live-api-gate'
 
 export function CollectionsPage() {
+  return (
+    <LiveApiGate domain="collections" title="Collections">
+      <CollectionsPageInner />
+    </LiveApiGate>
+  )
+}
+
+function CollectionsPageInner() {
   const { data, loading, error, reload } = useAsyncData(() => listCollections(), [])
 
   return (

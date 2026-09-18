@@ -37,23 +37,34 @@ export function SidebarNav({
       <nav className={cn('flex-1 space-y-0.5 overflow-y-auto py-4', collapsed ? 'px-2' : 'px-3')}>
         {navItems.map((item) => {
           const Icon = item.icon
+          const showNi = !isMockMode() && item.liveApi === false
           return (
             <NavLink
               key={item.href}
               to={item.href}
               end={item.href === '/'}
               onClick={onNavigate}
-              title={item.title}
+              title={showNi ? `${item.title} (Not Implemented)` : item.title}
               className={({ isActive }) =>
                 cn(
                   'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground active:bg-sidebar-accent/80',
                   collapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
                   isActive && 'bg-sidebar-accent text-sidebar-primary-foreground',
+                  showNi && 'opacity-70',
                 )
               }
             >
               <Icon className="h-4 w-4 shrink-0 opacity-80" />
-              {!collapsed ? <span>{item.title}</span> : null}
+              {!collapsed ? (
+                <>
+                  <span className="flex-1 truncate">{item.title}</span>
+                  {showNi ? (
+                    <span className="rounded bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sidebar-foreground/70">
+                      NI
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
             </NavLink>
           )
         })}

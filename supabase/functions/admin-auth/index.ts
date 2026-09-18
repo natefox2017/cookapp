@@ -8,6 +8,7 @@ import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
 import { log } from "../_shared/logger.ts";
+import { resolveRequestId, withRequestId } from "../_shared/request-id.ts";
 import {
   createAdminSession,
   requireAdminSession,
@@ -35,6 +36,9 @@ async function readJson(req: Request): Promise<Record<string, unknown>> {
 Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
+
+  const requestId = resolveRequestId(req);
+  const headers = withRequestId(publicCorsHeaders, requestId);
 
   try {
     const action = routeAction(req);
@@ -73,7 +77,7 @@ Deno.serve(async (req) => {
           admin: { id: row.id, username: row.username },
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -89,7 +93,7 @@ Deno.serve(async (req) => {
         throw new AppError("internal_error", "Failed to revoke admin session", 500);
       }
       log("info", "admin_logout_ok", { admin_id: session.adminId });
-      return json({ ok: true }, 200, publicCorsHeaders);
+      return json({ ok: true }, 200, headers);
     }
 
     if (action === "session" && method === "GET") {
@@ -99,7 +103,7 @@ Deno.serve(async (req) => {
           admin: { id: session.adminId, username: session.username },
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -145,7 +149,7 @@ Deno.serve(async (req) => {
           admin: { id: session.adminId, username: session.username },
         },
         200,
-        publicCorsHeaders,
+        headers,
       );
     }
 
@@ -155,6 +159,6 @@ Deno.serve(async (req) => {
       404,
     );
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, headers);
   }
 });
