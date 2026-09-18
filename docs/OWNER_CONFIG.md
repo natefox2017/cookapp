@@ -90,7 +90,31 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 |------|------|---------------|----------|
 | Apple 内购 Shared Secret / ASC API（若 RC 需要） | todo | | |
 | 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
-| 管理后台 URL / 密钥 | todo | 见相关 Issue | |
+| 管理后台 URL / 密钥 | todo | 见 §6 Admin |
+
+---
+
+## 6. Admin Dashboard / AI Platform
+
+| 字段 | 状态 | 填写值 / 备注 | 更新日期 |
+|------|------|---------------|----------|
+| Production Admin Owner username | todo | 勿使用默认 `admin`/`admin` | |
+| Admin live API base URL | todo | `VITE_ADMIN_API_BASE_URL` | |
+| `COOKAPP_AI_MASTER_KEY`（Supabase secrets） | todo | 32-byte AES key (base64)；`supabase secrets set COOKAPP_AI_MASTER_KEY=...` | |
+| AI Gateway Base URL | todo | Admin → Settings → AI Platform → Providers | |
+| AI Protocol | todo | 首期 `openai_compatible` only | |
+| AI API Secret configured | todo | server-side `secret_ref` only；Admin 仅见 `secretConfigured` | |
+| Primary Recipe Model | todo | route `recipe_import_text` / `recipe_import_vision` | |
+| Fallback Model | todo | max 3 fallbacks per route | |
+| App Store Connect API configured | todo | P1 Analytics | |
+| Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
+
+角色约定（server-side）：
+- **Owner**：AI secrets/provider、Financial、Admin accounts
+- **Admin**：运营管理（不可写 AI secrets）
+- `operator` / `readonly`：预留
+
+AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 
 ---
 
@@ -109,3 +133,4 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | 日期 | 说明 |
 |------|------|
 | 2026-09-17 | 初版：汇总 Apple / Google / RevenueCat / Secrets |
+| 2026-09-18 | #53：AI Platform status（Gateway / secret_ref / routes） |

@@ -38,13 +38,14 @@ supabase/
   migrations/          # ordered SQL migrations
   openapi/             # OpenAPI 3.1 (yaml + json)
   functions/
-    _shared/           # cors, auth, errors, logger, admin-session
+    _shared/           # cors, auth, errors, logger, admin-session, ai-*
     delete-account/
     revenuecat-webhook/
     health/
     openapi/
     admin-auth/
     admin-subscriptions/
+    admin-ai/          # AI Platform Admin APIs (#53)
 ```
 
 ## API documentation
@@ -92,6 +93,7 @@ Authorization: Bearer <access_token>
 | `openapi` | no | Serve OpenAPI JSON |
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
 
 ### Admin auth
 
@@ -104,6 +106,15 @@ Authorization: Bearer <access_token>
 - Table: `subscription_plans` (Apple / Android SKUs, price, billing period)
 - Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
+
+### Admin AI Platform (Issue #53)
+
+- Tables: `ai_providers`, `ai_models`, `ai_routes`, `ai_usage_events`, `ai_provider_health`, `ai_secrets`
+- Secret store: AES-GCM ciphertext in `ai_secrets`; master key `COOKAPP_AI_MASTER_KEY` (Edge env). No read-full-secret API.
+- Shared modules: `AIRouter`, `AISecretStore`, OpenAI-compatible adapter, SSRF base_url checks, usage recorder
+- Seed routes: `recipe_import_text`, `recipe_import_vision`, `recipe_quality_check` (+ reserved `assistant_*`)
+- Endpoints under `/functions/v1/admin-ai/{providers,models,routes,usage,health,resolve}`
+- App/Admin browser never holds provider keys or calls gateway Base URL directly
 
 ## Migrations
 

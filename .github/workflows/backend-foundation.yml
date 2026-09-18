@@ -87,3 +87,21 @@ jobs:
           count=$(ls supabase/migrations/*.sql | wc -l)
           test "$count" -ge 2
           echo "migrations=$count"
+      - name: AI Platform Deno unit tests
+        run: |
+          set -euo pipefail
+          curl -fsSL https://deno.land/install.sh | sh
+          export DENO_INSTALL="${HOME}/.deno"
+          export PATH="${DENO_INSTALL}/bin:${PATH}"
+          deno test --allow-env \
+            supabase/functions/_shared/ai_platform_test.ts \
+            supabase/functions/_shared/ai_router_fallback_test.ts
+      - name: AI Platform required paths
+        run: |
+          set -euo pipefail
+          test -f supabase/migrations/20260918100000_ai_platform_core.sql
+          test -f supabase/functions/admin-ai/index.ts
+          test -f supabase/functions/_shared/ai-router.ts
+          test -f supabase/functions/_shared/ai-secret-store.ts
+          grep -q 'admin-ai' supabase/config.toml
+          echo "AI Platform paths OK"
