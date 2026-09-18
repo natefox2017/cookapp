@@ -16,17 +16,19 @@ import { Button } from '@/components/ui/button'
 import { isMockMode } from '@/api'
 
 function statusBadge(apiStatus: NavApiStatus): { label: string; className: string } | null {
+  // Planned leaves have no mock UI either — always label them so secondary menus
+  // cannot look “done” (Issue #64 / #52 pattern). Compact “N/I” keeps nested titles readable;
+  // full “Not implemented” stays on the page header badge + link title tooltip.
+  if (apiStatus === 'planned') {
+    return {
+      label: 'N/I',
+      className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    }
+  }
   if (isMockMode()) return null
   if (apiStatus === 'mock_only') {
     return {
       label: 'Pending',
-      className:
-        'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-    }
-  }
-  if (apiStatus === 'planned') {
-    return {
-      label: 'Not implemented',
       className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
     }
   }
@@ -48,6 +50,7 @@ function NavStatusBadge({ apiStatus }: { apiStatus: NavApiStatus }) {
         'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide',
         badge.className,
       )}
+      title={apiStatus === 'planned' ? 'Not implemented' : badge.label}
     >
       {badge.label}
     </span>
@@ -55,6 +58,7 @@ function NavStatusBadge({ apiStatus }: { apiStatus: NavApiStatus }) {
 }
 
 function leafTitle(item: NavLeaf) {
+  if (item.apiStatus === 'planned') return `${item.title} (Not implemented)`
   const badge = statusBadge(item.apiStatus)
   return badge ? `${item.title} (${badge.label})` : item.title
 }
