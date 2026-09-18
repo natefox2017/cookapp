@@ -93,6 +93,11 @@ Authorization: Bearer <access_token>
 
 Apply in filename order under `supabase/migrations/`. Cloud apply is done via Supabase MCP / CLI against project `semsjyrqjnumpvanibip`.
 
+## Spec compliance
+
+Module-by-module checklist vs the Cloud Backend Development Specification:
+[`COMPLIANCE.md`](./COMPLIANCE.md).
+
 ## Error shape (Edge Functions)
 
 ```json

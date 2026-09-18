@@ -1,1 +1,1539 @@
-{"openapi":"3.1.0","info":{"title":"CookApp Cloud Backend API","version":"1.0.0","description":"Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n","contact":{"name":"CookApp"}},"servers":[{"url":"https://semsjyrqjnumpvanibip.supabase.co","description":"Supabase Cloud"}],"tags":[{"name":"Auth"},{"name":"User"},{"name":"Recipe"},{"name":"Collection"},{"name":"Ingredient"},{"name":"Grocery"},{"name":"MealPlan"},{"name":"Pantry"},{"name":"Category"},{"name":"Storage"},{"name":"Subscription"},{"name":"System"}],"paths":{"/auth/v1/token":{"post":{"tags":["Auth"],"summary":"Session token exchange / refresh","description":"Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,\nGoogle OAuth, logout, and refresh. Documented for completeness.\n","security":[],"responses":{"200":{"description":"Session issued"}}}},"/functions/v1/delete-account":{"post":{"tags":["Auth","User"],"summary":"Delete account","description":"Purges user storage objects and deletes the auth user (cascades all owned rows).","operationId":"deleteAccount","responses":{"200":{"description":"Account deleted","content":{"application/json":{"schema":{"type":"object","properties":{"ok":{"type":"boolean"}}}}}},"401":{"$ref":"#/components/responses/Unauthorized"}}}},"/functions/v1/revenuecat-webhook":{"post":{"tags":["Subscription"],"summary":"RevenueCat webhook","description":"Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.\nJWT verification disabled; service role used internally.\n","security":[{"WebhookBearer":[]}],"responses":{"200":{"description":"Event received"}}}},"/functions/v1/health":{"get":{"tags":["System"],"summary":"Backend health / module probe","responses":{"200":{"description":"Healthy"}}}},"/rest/v1/profiles":{"get":{"tags":["User"],"summary":"GET User Profile","operationId":"getUserProfile","parameters":[{"$ref":"#/components/parameters/PreferReturn"},{"name":"id","in":"query","schema":{"type":"string","format":"uuid"},"description":"Filter `eq.<user_id>` (own id only under RLS)"}],"responses":{"200":{"description":"Profile rows","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/UserProfile"}}}}}}},"patch":{"tags":["User"],"summary":"UPDATE User Profile","operationId":"updateUserProfile","parameters":[{"$ref":"#/components/parameters/PreferReturn"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UserProfileUpdate"}}}},"responses":{"200":{"description":"Updated profile","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/UserProfile"}}}}}}}},"/rest/v1/recipes":{"get":{"tags":["Recipe"],"summary":"Recipe List / Detail","description":"List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).\nUpdate: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).\nDelete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).\n","operationId":"listRecipes","parameters":[{"name":"id","in":"query","description":"Filter e.g. `eq.<uuid>` for single recipe","schema":{"type":"string"}},{"name":"order","in":"query","schema":{"type":"string","example":"created_at.desc"}},{"name":"select","in":"query","schema":{"type":"string","example":"*"}}],"responses":{"200":{"description":"Own recipes","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Recipe"}}}}}}},"post":{"tags":["Recipe"],"summary":"Create Recipe","operationId":"createRecipe","parameters":[{"$ref":"#/components/parameters/PreferReturn"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/RecipeCreate"}}}},"responses":{"201":{"description":"Created"}}},"patch":{"tags":["Recipe"],"summary":"Update Recipe","operationId":"updateRecipe","parameters":[{"name":"id","in":"query","required":true,"schema":{"type":"string","example":"eq.<uuid>"}},{"$ref":"#/components/parameters/PreferReturn"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/RecipeCreate"}}}},"responses":{"200":{"description":"Updated"}}},"delete":{"tags":["Recipe"],"summary":"Delete Recipe","operationId":"deleteRecipe","parameters":[{"name":"id","in":"query","required":true,"schema":{"type":"string","example":"eq.<uuid>"}}],"responses":{"204":{"description":"Deleted"}}}},"/rest/v1/collections":{"get":{"tags":["Collection"],"summary":"GET Collections","operationId":"listCollections","responses":{"200":{"description":"Own collections","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Collection"}}}}}}},"post":{"tags":["Collection"],"summary":"POST Collection","operationId":"createCollection","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CollectionCreate"}}}},"responses":{"201":{"description":"Created"}}},"patch":{"tags":["Collection"],"summary":"UPDATE Collection","operationId":"updateCollection","responses":{"200":{"description":"Updated"}}},"delete":{"tags":["Collection"],"summary":"DELETE Collection","operationId":"deleteCollection","responses":{"204":{"description":"Deleted"}}}},"/rest/v1/collection_recipes":{"get":{"tags":["Collection"],"summary":"List recipes in collections","responses":{"200":{"description":"Membership rows"}}},"post":{"tags":["Collection"],"summary":"Add recipe to collection","responses":{"201":{"description":"Added"}}},"delete":{"tags":["Collection"],"summary":"Remove recipe from collection","responses":{"204":{"description":"Removed"}}}},"/rest/v1/ingredients":{"get":{"tags":["Ingredient"],"summary":"List ingredients (system + own)","responses":{"200":{"description":"Ingredient catalog","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Ingredient"}}}}}}},"post":{"tags":["Ingredient"],"summary":"Create user ingredient","responses":{"201":{"description":"Created"}}}},"/rest/v1/grocery_lists":{"get":{"tags":["Grocery"],"summary":"GET Grocery Lists","responses":{"200":{"description":"Lists"}}},"post":{"tags":["Grocery"],"summary":"Create grocery list","responses":{"201":{"description":"Created"}}}},"/rest/v1/grocery_items":{"get":{"tags":["Grocery"],"summary":"List grocery items","responses":{"200":{"description":"Items"}}},"post":{"tags":["Grocery"],"summary":"POST Item","responses":{"201":{"description":"Created"}}},"patch":{"tags":["Grocery"],"summary":"UPDATE Item","responses":{"200":{"description":"Updated"}}},"delete":{"tags":["Grocery"],"summary":"DELETE Item","responses":{"204":{"description":"Deleted"}}}},"/rest/v1/meal_plans":{"get":{"tags":["MealPlan"],"summary":"List meal plans","responses":{"200":{"description":"Meal plan entries","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/MealPlan"}}}}}}},"post":{"tags":["MealPlan"],"summary":"Create meal plan entry","responses":{"201":{"description":"Created"}}},"patch":{"tags":["MealPlan"],"summary":"Update meal plan entry","responses":{"200":{"description":"Updated"}}},"delete":{"tags":["MealPlan"],"summary":"Delete meal plan entry","responses":{"204":{"description":"Deleted"}}}},"/rest/v1/pantry_items":{"get":{"tags":["Pantry"],"summary":"List pantry items","responses":{"200":{"description":"Pantry","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/PantryItem"}}}}}}},"post":{"tags":["Pantry"],"summary":"Create pantry item","responses":{"201":{"description":"Created"}}},"patch":{"tags":["Pantry"],"summary":"Update pantry item","responses":{"200":{"description":"Updated"}}},"delete":{"tags":["Pantry"],"summary":"Delete pantry item","responses":{"204":{"description":"Deleted"}}}},"/rest/v1/cuisines":{"get":{"tags":["Category"],"summary":"List cuisines","responses":{"200":{"description":"Cuisine catalog"}}}},"/rest/v1/meal_categories":{"get":{"tags":["Category"],"summary":"List meal categories","responses":{"200":{"description":"Meal category catalog"}}}},"/rest/v1/tags":{"get":{"tags":["Category"],"summary":"List tags","responses":{"200":{"description":"Tag catalog"}}}},"/rest/v1/subscriptions":{"get":{"tags":["Subscription"],"summary":"Get own subscription row","responses":{"200":{"description":"Subscription entitlement"}}}},"/rest/v1/subscription_status":{"get":{"tags":["Subscription"],"summary":"Get subscription status (plan / status / expire_date)","responses":{"200":{"description":"Simplified subscription view"}}}},"/storage/v1/object/{bucket}/{user_id}/{object}":{"parameters":[{"name":"bucket","in":"path","required":true,"schema":{"type":"string","enum":["avatars","recipe-covers","recipe-images"]}},{"name":"user_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}},{"name":"object","in":"path","required":true,"schema":{"type":"string"}}],"post":{"tags":["Storage"],"summary":"Upload object (private bucket, path must start with auth user id)","responses":{"200":{"description":"Uploaded"}}},"get":{"tags":["Storage"],"summary":"Download / signed access to own object","responses":{"200":{"description":"Object bytes"}}},"delete":{"tags":["Storage"],"summary":"Delete own object","responses":{"200":{"description":"Deleted"}}}}},"components":{"securitySchemes":{"BearerAuth":{"type":"http","scheme":"bearer","bearerFormat":"JWT","description":"Supabase Auth access token"},"WebhookBearer":{"type":"http","scheme":"bearer","description":"REVENUECAT_WEBHOOK_SECRET"},"Apikey":{"type":"apiKey","in":"header","name":"apikey","description":"Supabase anon key (required alongside JWT for PostgREST)"}},"parameters":{"PreferReturn":{"name":"Prefer","in":"header","schema":{"type":"string","example":"return=representation"}}},"responses":{"Unauthorized":{"description":"Missing or invalid session","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ErrorBody"}}}}},"schemas":{"ErrorBody":{"type":"object","properties":{"error":{"type":"object","properties":{"code":{"type":"string"},"message":{"type":"string"},"details":{}}}}},"UserProfile":{"type":"object","required":["id","created_at","updated_at"],"properties":{"id":{"type":"string","format":"uuid"},"email":{"type":["string","null"],"format":"email"},"avatar":{"type":["string","null"]},"display_name":{"type":["string","null"]},"locale":{"type":["string","null"]},"timezone":{"type":["string","null"]},"created_at":{"type":"string","format":"date-time"},"updated_at":{"type":"string","format":"date-time"}}},"UserProfileUpdate":{"type":"object","properties":{"display_name":{"type":"string"},"avatar":{"type":"string"},"locale":{"type":"string"},"timezone":{"type":"string"}}},"RecipeIngredient":{"type":"object","properties":{"name":{"type":"string"},"amount":{"type":["number","null"]},"unit":{"type":["string","null"]},"note":{"type":["string","null"]}}},"RecipeStep":{"type":"object","properties":{"order":{"type":"integer"},"description":{"type":"string"},"image":{"type":["string","null"]},"timer":{"type":["integer","null"],"description":"Seconds"}}},"Nutrition":{"type":"object","properties":{"calories":{"type":["number","null"]},"protein":{"type":["number","null"]},"fat":{"type":["number","null"]},"carbohydrates":{"type":["number","null"]}}},"Recipe":{"type":"object","required":["id","user_id","title","created_at","updated_at"],"properties":{"id":{"type":"string","format":"uuid"},"user_id":{"type":"string","format":"uuid"},"title":{"type":"string"},"description":{"type":["string","null"]},"cover_image":{"type":["string","null"]},"cuisine":{"type":["string","null"]},"category":{"type":["string","null"]},"tags":{"type":"array","items":{"type":"string"}},"ingredients":{"type":"array","items":{"$ref":"#/components/schemas/RecipeIngredient"}},"steps":{"type":"array","items":{"$ref":"#/components/schemas/RecipeStep"}},"nutrition":{"$ref":"#/components/schemas/Nutrition"},"cooking_time":{"type":["integer","null"]},"servings":{"type":["integer","null"]},"created_at":{"type":"string","format":"date-time"},"updated_at":{"type":"string","format":"date-time"}}},"RecipeCreate":{"type":"object","required":["title"],"properties":{"title":{"type":"string"},"description":{"type":"string"},"cover_image":{"type":"string"},"cuisine":{"type":"string"},"category":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"ingredients":{"type":"array","items":{"$ref":"#/components/schemas/RecipeIngredient"}},"steps":{"type":"array","items":{"$ref":"#/components/schemas/RecipeStep"}},"nutrition":{"$ref":"#/components/schemas/Nutrition"},"cooking_time":{"type":"integer"},"servings":{"type":"integer"}}},"Collection":{"type":"object","properties":{"id":{"type":"string","format":"uuid"},"user_id":{"type":"string","format":"uuid"},"name":{"type":"string"},"cover":{"type":["string","null"]},"created_at":{"type":"string","format":"date-time"}}},"CollectionCreate":{"type":"object","required":["name"],"properties":{"name":{"type":"string"},"cover":{"type":"string"}}},"Ingredient":{"type":"object","properties":{"id":{"type":"string","format":"uuid"},"name":{"type":"string"},"category":{"type":["string","null"]},"unit":{"type":["string","null"]},"alternative_name":{"type":["string","null"]},"user_id":{"type":["string","null"],"format":"uuid"},"is_system":{"type":"boolean"}}},"GroceryList":{"type":"object","properties":{"id":{"type":"string","format":"uuid"},"user_id":{"type":"string","format":"uuid"},"name":{"type":"string"}}},"GroceryItem":{"type":"object","properties":{"id":{"type":"string","format":"uuid"},"list_id":{"type":"string","format":"uuid"},"ingredient":{"type":"string"},"quantity":{"type":["number","null"]},"category":{"type":["string","null"]},"completed":{"type":"boolean"}}},"MealPlan":{"type":"object","properties":{"id":{"type":"string","format":"uuid"},"user_id":{"type":"string","format":"uuid"},"plan_date":{"type":"string","format":"date"},"meal_type":{"type":"string","enum":["breakfast","lunch","dinner"]},"recipe_id":{"type":"string","format":"uuid"}}},"PantryItem":{"type":"object","properties":{"id":{"type":"string","format":"uuid"},"user_id":{"type":"string","format":"uuid"},"ingredient":{"type":"string"},"quantity":{"type":["number","null"]},"unit":{"type":["string","null"]},"expiration_date":{"type":["string","null"],"format":"date"}}},"Subscription":{"type":"object","properties":{"user_id":{"type":"string","format":"uuid"},"plan":{"type":["string","null"]},"status":{"type":"string","enum":["active","trialing","cancelled","expired","billing_issue","none"]},"expire_date":{"type":["string","null"],"format":"date-time"}}}}},"security":[{"BearerAuth":[],"Apikey":[]}]}
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CookApp Cloud Backend API",
+    "version": "1.0.0",
+    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
+    "contact": {
+      "name": "CookApp"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://semsjyrqjnumpvanibip.supabase.co",
+      "description": "Supabase Cloud"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "User"
+    },
+    {
+      "name": "Recipe"
+    },
+    {
+      "name": "Collection"
+    },
+    {
+      "name": "Ingredient"
+    },
+    {
+      "name": "Grocery"
+    },
+    {
+      "name": "MealPlan"
+    },
+    {
+      "name": "Pantry"
+    },
+    {
+      "name": "Category"
+    },
+    {
+      "name": "Storage"
+    },
+    {
+      "name": "Subscription"
+    },
+    {
+      "name": "System"
+    }
+  ],
+  "paths": {
+    "/auth/v1/token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Session token exchange / refresh",
+        "description": "Supabase Auth endpoint. Clients use the Supabase SDK for Apple ID token,\nGoogle OAuth, logout, and refresh. Documented for completeness.\n",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Session issued"
+          }
+        }
+      }
+    },
+    "/functions/v1/delete-account": {
+      "post": {
+        "tags": [
+          "Auth",
+          "User"
+        ],
+        "summary": "Delete account",
+        "description": "Purges user storage objects and deletes the auth user (cascades all owned rows).",
+        "operationId": "deleteAccount",
+        "responses": {
+          "200": {
+            "description": "Account deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/functions/v1/revenuecat-webhook": {
+      "post": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "RevenueCat webhook",
+        "description": "Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.\nJWT verification disabled; service role used internally.\n",
+        "security": [
+          {
+            "WebhookBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event received"
+          }
+        }
+      }
+    },
+    "/functions/v1/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Backend health / module probe",
+        "responses": {
+          "200": {
+            "description": "Healthy"
+          }
+        }
+      }
+    },
+    "/rest/v1/profiles": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "GET User Profile",
+        "operationId": "getUserProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter `eq.<user_id>` (own id only under RLS)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "UPDATE User Profile",
+        "operationId": "updateUserProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/recipes": {
+      "get": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Recipe List / Detail",
+        "description": "List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).\nUpdate: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).\nDelete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).\n",
+        "operationId": "listRecipes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Filter e.g. `eq.<uuid>` for single recipe",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "created_at.desc"
+            }
+          },
+          {
+            "name": "select",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "*"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own recipes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recipe"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Create Recipe",
+        "operationId": "createRecipe",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Update Recipe",
+        "operationId": "updateRecipe",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eq.<uuid>"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Delete Recipe",
+        "operationId": "deleteRecipe",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eq.<uuid>"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/collections": {
+      "get": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "GET Collections",
+        "operationId": "listCollections",
+        "responses": {
+          "200": {
+            "description": "Own collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Collection"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "POST Collection",
+        "operationId": "createCollection",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "UPDATE Collection",
+        "operationId": "updateCollection",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "DELETE Collection",
+        "operationId": "deleteCollection",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/collection_recipes": {
+      "get": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "List recipes in collections",
+        "responses": {
+          "200": {
+            "description": "Membership rows"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "Add recipe to collection",
+        "responses": {
+          "201": {
+            "description": "Added"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "Remove recipe from collection",
+        "responses": {
+          "204": {
+            "description": "Removed"
+          }
+        }
+      }
+    },
+    "/rest/v1/ingredients": {
+      "get": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "List ingredients (system + own)",
+        "responses": {
+          "200": {
+            "description": "Ingredient catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Ingredient"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Create user ingredient",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Update own user ingredient",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Delete own user ingredient",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/grocery_lists": {
+      "get": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "GET Grocery Lists",
+        "responses": {
+          "200": {
+            "description": "Lists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroceryList"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "Create grocery list",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "UPDATE Grocery List",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "DELETE Grocery List",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/grocery_items": {
+      "get": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "List grocery items",
+        "responses": {
+          "200": {
+            "description": "Items"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "POST Item",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "UPDATE Item",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "DELETE Item",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/meal_plans": {
+      "get": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "List meal plans",
+        "responses": {
+          "200": {
+            "description": "Meal plan entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MealPlan"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "Create meal plan entry",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "Update meal plan entry",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "Delete meal plan entry",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/pantry_items": {
+      "get": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "List pantry items",
+        "responses": {
+          "200": {
+            "description": "Pantry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PantryItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "Create pantry item",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "Update pantry item",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "Delete pantry item",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/cuisines": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "List cuisines",
+        "responses": {
+          "200": {
+            "description": "Cuisine catalog"
+          }
+        }
+      }
+    },
+    "/rest/v1/meal_categories": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "List meal categories",
+        "responses": {
+          "200": {
+            "description": "Meal category catalog"
+          }
+        }
+      }
+    },
+    "/rest/v1/tags": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "List tags",
+        "responses": {
+          "200": {
+            "description": "Tag catalog"
+          }
+        }
+      }
+    },
+    "/rest/v1/subscriptions": {
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Get own subscription row",
+        "description": "Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.",
+        "responses": {
+          "200": {
+            "description": "Subscription entitlement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionRow"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/subscription_status": {
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Get subscription status (plan / status / expire_date)",
+        "responses": {
+          "200": {
+            "description": "Simplified subscription view matching Subscription Service contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionStatus"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/v1/object/{bucket}/{user_id}/{object}": {
+      "parameters": [
+        {
+          "name": "bucket",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "avatars",
+              "recipe-covers",
+              "recipe-images"
+            ]
+          }
+        },
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "object",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Upload object (private bucket, path must start with auth user id)",
+        "responses": {
+          "200": {
+            "description": "Uploaded"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Download / signed access to own object",
+        "responses": {
+          "200": {
+            "description": "Object bytes"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Delete own object",
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Supabase Auth access token"
+      },
+      "WebhookBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "REVENUECAT_WEBHOOK_SECRET"
+      },
+      "Apikey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "apikey",
+        "description": "Supabase anon key (required alongside JWT for PostgREST)"
+      }
+    },
+    "parameters": {
+      "PreferReturn": {
+        "name": "Prefer",
+        "in": "header",
+        "schema": {
+          "type": "string",
+          "example": "return=representation"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid session",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorBody"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorBody": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {}
+            }
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "avatar": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locale": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        }
+      },
+      "RecipeIngredient": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "RecipeStep": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "image": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timer": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Seconds"
+          }
+        }
+      },
+      "Nutrition": {
+        "type": "object",
+        "properties": {
+          "calories": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "protein": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fat": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "carbohydrates": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "Recipe": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "title",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cover_image": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cuisine": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeIngredient"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeStep"
+            }
+          },
+          "nutrition": {
+            "$ref": "#/components/schemas/Nutrition"
+          },
+          "cooking_time": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "servings": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecipeCreate": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cover_image": {
+            "type": "string"
+          },
+          "cuisine": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeIngredient"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeStep"
+            }
+          },
+          "nutrition": {
+            "$ref": "#/components/schemas/Nutrition"
+          },
+          "cooking_time": {
+            "type": "integer"
+          },
+          "servings": {
+            "type": "integer"
+          }
+        }
+      },
+      "Collection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cover": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CollectionCreate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "cover": {
+            "type": "string"
+          }
+        }
+      },
+      "Ingredient": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alternative_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "is_system": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GroceryList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GroceryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "list_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ingredient": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "MealPlan": {
+        "type": "object",
+        "description": "Spec field `date` is stored as `plan_date` (Postgres reserved-word safe).",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "meal_type": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner"
+            ]
+          },
+          "recipe_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "PantryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ingredient": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiration_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "SubscriptionRow": {
+        "type": "object",
+        "description": "Raw `subscriptions` table row (PostgREST).",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entitlement_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "product_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "trialing",
+              "cancelled",
+              "expired",
+              "billing_issue",
+              "none"
+            ]
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "will_renew": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "latest_event_timestamp_ms": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "SubscriptionStatus": {
+        "type": "object",
+        "description": "View `subscription_status` — matches Subscription Service contract.",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "trialing",
+              "cancelled",
+              "expired",
+              "billing_issue",
+              "none"
+            ]
+          },
+          "expire_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": [],
+      "Apikey": []
+    }
+  ]
+}

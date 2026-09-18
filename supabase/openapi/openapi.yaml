@@ -280,6 +280,18 @@ paths:
       responses:
         "201":
           description: Created
+    patch:
+      tags: [Ingredient]
+      summary: Update own user ingredient
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Ingredient]
+      summary: Delete own user ingredient
+      responses:
+        "204":
+          description: Deleted
 
   /rest/v1/grocery_lists:
     get:
@@ -288,12 +300,30 @@ paths:
       responses:
         "200":
           description: Lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroceryList"
     post:
       tags: [Grocery]
       summary: Create grocery list
       responses:
         "201":
           description: Created
+    patch:
+      tags: [Grocery]
+      summary: UPDATE Grocery List
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Grocery]
+      summary: DELETE Grocery List
+      responses:
+        "204":
+          description: Deleted
 
   /rest/v1/grocery_items:
     get:
@@ -413,9 +443,16 @@ paths:
     get:
       tags: [Subscription]
       summary: Get own subscription row
+      description: Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.
       responses:
         "200":
           description: Subscription entitlement
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriptionRow"
 
   /rest/v1/subscription_status:
     get:
@@ -423,7 +460,13 @@ paths:
       summary: Get subscription status (plan / status / expire_date)
       responses:
         "200":
-          description: Simplified subscription view
+          description: Simplified subscription view matching Subscription Service contract
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriptionStatus"
 
   /storage/v1/object/{bucket}/{user_id}/{object}:
     parameters:
@@ -611,6 +654,7 @@ components:
         name: { type: string }
         cover: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     CollectionCreate:
       type: object
@@ -636,6 +680,8 @@ components:
         id: { type: string, format: uuid }
         user_id: { type: string, format: uuid }
         name: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     GroceryItem:
       type: object
@@ -644,11 +690,14 @@ components:
         list_id: { type: string, format: uuid }
         ingredient: { type: string }
         quantity: { type: [number, "null"] }
+        unit: { type: [string, "null"] }
         category: { type: [string, "null"] }
         completed: { type: boolean }
+        sort_order: { type: integer }
 
     MealPlan:
       type: object
+      description: Spec field `date` is stored as `plan_date` (Postgres reserved-word safe).
       properties:
         id: { type: string, format: uuid }
         user_id: { type: string, format: uuid }
@@ -668,8 +717,24 @@ components:
         unit: { type: [string, "null"] }
         expiration_date: { type: [string, "null"], format: date }
 
-    Subscription:
+    SubscriptionRow:
       type: object
+      description: Raw `subscriptions` table row (PostgREST).
+      properties:
+        user_id: { type: string, format: uuid }
+        plan: { type: [string, "null"] }
+        entitlement_id: { type: [string, "null"] }
+        product_id: { type: [string, "null"] }
+        status:
+          type: string
+          enum: [active, trialing, cancelled, expired, billing_issue, none]
+        expires_at: { type: [string, "null"], format: date-time }
+        will_renew: { type: [boolean, "null"] }
+        latest_event_timestamp_ms: { type: [integer, "null"] }
+
+    SubscriptionStatus:
+      type: object
+      description: View `subscription_status` — matches Subscription Service contract.
       properties:
         user_id: { type: string, format: uuid }
         plan: { type: [string, "null"] }
@@ -677,6 +742,7 @@ components:
           type: string
           enum: [active, trialing, cancelled, expired, billing_issue, none]
         expire_date: { type: [string, "null"], format: date-time }
+        updated_at: { type: string, format: date-time }
 
 security:
   - BearerAuth: []
