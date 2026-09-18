@@ -13,7 +13,11 @@ Every Interaction Tree primary maps to an owner asset. Do not invent MISSING_REF
 | 28 | New Item | `missing-ref/24-28/IMG_4462.PNG` (= `24-28/f11`) |
 | 32 | Add Section Menu | `missing-ref/29-32/` MP4 @ ~28.5s — expanded Breakfast/Lunch/Dinner; dense `f060` is serving overlay, not 32 |
 | 37 | Clipboard Detection | `settings-general-voice-clipboard.jpg` |
+| 10v | Smart Folder · Date Added | `10、12/IMG_4426.PNG` → PixelBase `436:3208` |
+| 16v | Search · Scoped | `16-21/IMG_4444.PNG` → `436:3209` |
+| 19v | Scope · All Included | `16-21/` MP4 ~8s → `436:3210` (History+Recently Added; no all-four in pack) |
+| 19v | Scope · History Empty | `16-21/` MP4 ~10s → `436:3211` |
 | 46 | Export | Owner skip (system share) |
 | 47–48 | Acknowledgements / Thanks | Owner skip |
 
-Cross-check: [Map frames to open pages](bc-b03b57e7-1068-5f3d-bff2-e7b54370efd2) — no PixelBase swap required.
+Cross-check: [Map frames to open pages](bc-b03b57e7-1068-5f3d-bff2-e7b54370efd2) — no primary PixelBase swap required.

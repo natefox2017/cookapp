@@ -26,31 +26,36 @@ Including previously mis-labeled “missing”:
 | Page | Ref source (owner pack / docs) | Crop SHA1 = imageHash |
 |------|--------------------------------|------------------------|
 | 13 Recipe Editor | `missing-ref/13-15/IMG_4428.PNG` | `3fd95011…` → PixelBase `423:9113` |
-| 14 Category | `missing-ref/22/` recording **t≈15.0s** (Category list; pack stills `IMG_4453`/`4455` same UI family) | `fb6a8ddf…` → `423:3834` |
+| 14 Category | `missing-ref/22/` recording **t≈15.0s** (= `22/f05`) | `fb6a8ddf…` → `423:3834` |
 | 15 Cuisine | `missing-ref/13-15/IMG_4438.PNG` | `1067db57…` → `423:9114` |
 | 21 Add Recipe Menu | `missing-ref/22/` recording **t≈1.5s** | `e75447aa…` → `423:3835` |
 | 23 Cookbook Return | `docs/ui-screenshots/cookbook-grid.jpg` | `0c80a3f3…` → `423:3836` |
-| 24 Groceries / Empty label | `missing-ref/24-28/` recording **t≈16.5s** (filled list — no zero-row empty in pack; used as SoT) | `9e8e18e5…` → `423:9109` |
+| 24 Groceries / Empty label | `missing-ref/24-28/` recording **t≈16.5s** (filled list — no zero-row empty in pack) | `9e8e18e5…` → `423:9109` |
 | 28 New Item | `missing-ref/24-28/IMG_4462.PNG` | `b7b88e5f…` → `423:3837` |
-| 32 Add Section Menu | `missing-ref/29-32/` recording **t≈28.5s** (Breakfast/Lunch/Dinner) | `8b18c0fc…` → `423:9107` |
-| 37 Clipboard Detection | `docs/ui-screenshots/settings-general-voice-clipboard.jpg` (not under missing-ref folders; **is** in main screenshot set) | `cc3fd96b…` → `423:9108` |
+| 32 Add Section Menu | `missing-ref/29-32/` recording **t≈28.5s** | `8b18c0fc…` → `423:9107` |
+| 37 Clipboard Detection | `settings-general-voice-clipboard.jpg` | `cc3fd96b…` → `423:9108` |
+
+## Variants — crops ready (Figma apply pending rate limit)
+
+Source COMPONENTS still vector-only (no PixelBase yet). Crops prepared; apply when Figma MCP quota resets:
+
+| Variant | Tree / source COMPONENT | Crop file | SHA1 | Owner source |
+|---------|-------------------------|-----------|------|--------------|
+| 10 Date Added | `383:8618` ← `383:8198` | `10-date-added-ref-crop.png` | `54d905d7…` | `10、12/IMG_4426.PNG` |
+| 16 Scoped | `383:8754` ← `383:8221` | `16-scoped-ref-crop.png` | `ab900a08…` (=18 Results) | `16-21/IMG_4444.PNG` Matches Ingredient |
+| 19 All Included | `383:8830` ← `383:8253` | `19-all-included-ref-crop.png` | `eb409151…` | `16-21/` MP4 **t≈8.0s** (History+Recently Added; pack has no all-four) |
+| 19 History Empty | `383:8921` ← `383:8311` | `19-history-empty-ref-crop.png` | `b51f9627…` | `16-21/` MP4 **t≈10.0s** empty CTA + Include |
 
 ## Not drawn (owner instruction — not 缺图)
 
 | Page | Reason |
 |------|--------|
-| 46 Export/Share | Owner: system share sheet — do not draw (`missing-ref/45-46/readme.txt`) |
-| 47 / 48 | Owner: **do not draw** — mains renamed `OWNER SKIP` |
-
-## Variants (have tree nodes; primary stills covered)
-
-| Variant | Notes |
-|---------|--------|
-| 10 Date Added | Tree instance present; use `10、12/` pack + Smart Folder stills when locking |
-| 16 Scoped / 19 All Included / History Empty | Covered by `16-21/` pack + recording; lock when primary gate complete |
+| 46 Export/Share | Owner: system share sheet — do not draw |
+| 47 / 48 | Owner: **do not draw** — `OWNER SKIP` |
 
 ## Evidence
 
-- Figma file `FHbikS2jILAeMv8mote0vD` page `37:2`
-- Crops: `/opt/cursor/artifacts/figma-qa/pixel-gate/` + copies here
-- Packs: `docs/ui-screenshots/missing-ref/` + root `docs/ui-screenshots/*.jpg`
+- Figma `FHbikS2jILAeMv8mote0vD` page `37:2`
+- Crops: `/opt/cursor/artifacts/figma-qa/pixel-gate/` + `.cursor/walkthrough-artifacts/issue10-pixel-gate/`
+- Packs: `docs/ui-screenshots/missing-ref/` + root JPGs
+- `REF-MAP.md` · `CHAT-FINDING.md`
