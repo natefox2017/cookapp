@@ -158,7 +158,6 @@ AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 | 2026-09-18 | #54：`STORAGE_CLEANUP_SECRET` for import-artifact TTL cleanup |
 | 2026-09-18 | #53：AI Platform status（Gateway / secret_ref / routes） |
 | 2026-09-18 | #56：`RECIPE_IMPORT_WORKER_SECRET` for Import Queue worker |
-| 2026-09-18 | #59：ASC secrets + `STORE_SYNC_WORKER_SECRET` |
-| 2026-09-18 | #60：Integrations status via `admin-operations`; Dashboard aggregation contracts |
 | 2026-09-18 | #59：ASC Analytics/Financial secrets + `STORE_SYNC_WORKER_SECRET` |
+| 2026-09-18 | #60：Ops jobs + Dashboard aggregation (`admin-operations` / `admin-analytics`) |
 | 2026-09-18 | #63：Admin Integrations connection status (`admin-integrations`) |
