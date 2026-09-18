@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getSettings, isMockMode, updateSettings } from '@/api'
-import { pendingWriteMessage } from '@/api/capabilities'
+import { getSettings, isMockMode, updateSettings, writeCapability } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { authErrorMessage, useAuth } from '@/auth/auth-context'
 import type { AdminSettings } from '@/types/admin'
@@ -119,19 +118,30 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
     )
   }
 
+  const persist = writeCapability('settings-persist', isMockMode())
+  const persistLocked = !persist.canWrite
+  const systemLocked = !isMockMode()
   const showSettingsSave =
-    tab !== 'security' && tab !== 'integrations' && isMockMode()
-  const liveDiagnostics = !isMockMode()
-  const diagnosticsMessage = pendingWriteMessage('settings-persist')
+    tab !== 'security' &&
+    tab !== 'integrations' &&
+    (tab === 'system' ? isMockMode() : persist.canWrite)
+  const persistNotice =
+    persistLocked && tab !== 'security' && tab !== 'integrations'
+      ? `${persist.reason} These fields are read-only diagnostics.`
+      : systemLocked && tab === 'system'
+        ? 'System is live diagnostics (build-time API mode). Log level is read-only in live mode.'
+        : null
 
   return (
     <div>
       <PageHeader
         title="Settings"
         description={
-          liveDiagnostics
+          persistLocked
             ? 'Live mode: Security uses admin-auth; Integrations uses admin-integrations. General/units/categories are diagnostics-only (no persist API).'
-            : 'General, units, category policy, integrations, and system configuration.'
+            : systemLocked
+              ? 'General, units, and category policy persist via admin-catalog. System is live diagnostics. Security and Integrations stay live.'
+              : 'General, units, category policy, integrations, and system configuration.'
         }
         actions={
           showSettingsSave ? (
@@ -141,9 +151,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
           ) : null
         }
       />
-      {liveDiagnostics && tab !== 'security' && tab !== 'integrations' ? (
-        <PendingApiNotice message={`${diagnosticsMessage} These fields are read-only diagnostics.`} />
-      ) : null}
+      {persistNotice ? <PendingApiNotice message={persistNotice} /> : null}
 
       <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList>
@@ -167,8 +175,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Input
                   id="appName"
                   value={draft.general.appName}
-                  disabled={liveDiagnostics}
-                  readOnly={liveDiagnostics}
+                  disabled={persistLocked}
+                  readOnly={persistLocked}
                   onChange={(event) =>
                     setDraft({
                       ...draft,
@@ -182,8 +190,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Input
                   id="supportEmail"
                   value={draft.general.supportEmail}
-                  disabled={liveDiagnostics}
-                  readOnly={liveDiagnostics}
+                  disabled={persistLocked}
+                  readOnly={persistLocked}
                   onChange={(event) =>
                     setDraft({
                       ...draft,
@@ -197,8 +205,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Input
                   id="locale"
                   value={draft.general.defaultLocale}
-                  disabled={liveDiagnostics}
-                  readOnly={liveDiagnostics}
+                  disabled={persistLocked}
+                  readOnly={persistLocked}
                   onChange={(event) =>
                     setDraft({
                       ...draft,
@@ -218,7 +226,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                   id="maintenance-mode"
                   aria-labelledby="maintenance-mode-label"
                   checked={draft.general.maintenanceMode}
-                  disabled={liveDiagnostics}
+                  disabled={persistLocked}
                   onCheckedChange={(checked) =>
                     setDraft({
                       ...draft,
@@ -242,7 +250,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Label htmlFor="measurement-system">Measurement system</Label>
                 <Select
                   value={draft.units.measurementSystem}
-                  disabled={liveDiagnostics}
+                  disabled={persistLocked}
                   onValueChange={(value) =>
                     setDraft({
                       ...draft,
@@ -266,7 +274,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Label htmlFor="temperature-unit">Temperature unit</Label>
                 <Select
                   value={draft.units.temperatureUnit}
-                  disabled={liveDiagnostics}
+                  disabled={persistLocked}
                   onValueChange={(value) =>
                     setDraft({
                       ...draft,
@@ -308,7 +316,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                   id="allow-user-tags"
                   aria-labelledby="allow-user-tags-label"
                   checked={draft.categories.allowUserTags}
-                  disabled={liveDiagnostics}
+                  disabled={persistLocked}
                   onCheckedChange={(checked) =>
                     setDraft({
                       ...draft,
@@ -328,7 +336,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                   id="require-cuisine"
                   aria-labelledby="require-cuisine-label"
                   checked={draft.categories.requireCuisine}
-                  disabled={liveDiagnostics}
+                  disabled={persistLocked}
                   onCheckedChange={(checked) =>
                     setDraft({
                       ...draft,
@@ -460,7 +468,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Label htmlFor="log-level">Log level</Label>
                 <Select
                   value={draft.system.logLevel}
-                  disabled={liveDiagnostics}
+                  disabled={systemLocked}
                   onValueChange={(value) =>
                     setDraft({
                       ...draft,
