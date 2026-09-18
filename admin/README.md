@@ -65,7 +65,7 @@ Admin Dashboard UI
 | Route | Module |
 |-------|--------|
 | `/login` | Admin sign-in |
-| `/` | Dashboard |
+| `/` | Dashboard (users / payments / downloads KPIs + charts) |
 | `/users` | Users + provider/device filters, registration stats, payment history |
 | `/recipes` | Recipe grid + detail |
 | `/collections` | Collections grid |
@@ -81,6 +81,9 @@ Sidebar collapses via header / rail control (persisted).
 
 ## Related
 
-- GitHub Issue #12 · #32 · #35 · #44
+- GitHub Issue #12 · #32 · #35 · #44 · #47
 - Cloud backend Issue #11
 - Notion: Local Admin Dashboard system boundary · Analytics, Payments & User Intelligence Architecture
+
+Live dashboard aggregation: `GET /functions/v1/admin-dashboard` (admin bearer).
+Download counts live in `app_download_stats` (seeded / manually imported until store APIs are wired).
