@@ -17,7 +17,16 @@ Every Interaction Tree primary maps to an owner asset. Do not invent MISSING_REF
 | 16v | Search · Scoped | `16-21/IMG_4444.PNG` → `436:3209` |
 | 19v | Scope · All Included | `16-21/` MP4 ~8s → `436:3210` (History+Recently Added; no all-four in pack) |
 | 19v | Scope · History Empty | `16-21/` MP4 ~10s → `436:3211` |
+| 08b | Recently Added · Layout | `08-09/IMG_4412` → `458:3823` |
+| 08c | Recently Added · Appearance | `08-09/IMG_4417` → `458:3824` |
+| 08d | Recently Added · List | `08-09/IMG_4413` → `458:3826` |
+| 08e | Recently Added · Photo List | `08-09/IMG_4415` → `458:3827` |
+| 08f | Recently Added · Sort | `08-09/IMG_4422` → `458:3825` |
+| 04b | Timers | `04/` MP4 ~20s → `458:3820` |
+| 04c | Cooking Ingredients | `04/` MP4 ~26s → `458:3821` |
+| 04d | Cooking Step (scroll) | `04/IMG_4405` → `458:3822` |
 | 46 | Export | Owner skip (system share) |
 | 47–48 | Acknowledgements / Thanks | Owner skip |
 
-Cross-check: [Map frames to open pages](bc-b03b57e7-1068-5f3d-bff2-e7b54370efd2) — no primary PixelBase swap required.
+Cross-check: [Map frames to open pages](bc-b03b57e7-1068-5f3d-bff2-e7b54370efd2) — no primary PixelBase swap required.  
+Audit after visibility bulk-fix: **58/59** PixelBase-only (residual **28b** Stage).
