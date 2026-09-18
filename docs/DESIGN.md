@@ -70,4 +70,5 @@ Single implementations only:
 | Radii / spacing | Cards, tab, pills, density |
 | Motion | Menu/sheet/tab morph; Reduce Motion fallback |
 
-Fill concrete values when the app scaffold lands.
+Phase 1.5 navigation scaffold is on `main` (`App/Navigation/` + feature placeholder shells; Issue #42 / PR #45).  
+Fill concrete token values and shared chrome kit components when implementing Liquid Glass D1–D3 (Issue #87) — still **chrome only**; business screens stay placeholders until a later gate.
