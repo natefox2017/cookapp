@@ -99,7 +99,7 @@ struct GlassHeaderButton: View {
     @ViewBuilder
     private func mediaScrim<S: Shape>(_ shape: S) -> some View {
         if overMedia {
-            shape.fill(Color.black.opacity(DesignTokens.Chrome.mediaScrimOpacity))
+            shape.fill(Color.cookMediaScrim.opacity(DesignTokens.Chrome.mediaScrimOpacity))
         }
     }
 

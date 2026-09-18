@@ -112,7 +112,10 @@ struct GlassMenuButton: View {
             if presenter.phase.isVisible {
                 ZStack(alignment: .topTrailing) {
                     Color.clear
-                        .frame(width: 800, height: 1200)
+                        .frame(
+                            width: DesignTokens.Chrome.menuDismissExtent,
+                            height: DesignTokens.Chrome.menuDismissExtent
+                        )
                         .contentShape(Rectangle())
                         .onTapGesture { dismiss() }
 
@@ -127,16 +130,19 @@ struct GlassMenuButton: View {
     }
 
     private var panel: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(items) { item in
-                if item.role == .separator {
-                    GlassMenuSeparator()
-                } else {
-                    menuRow(item)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(items) { item in
+                    if item.role == .separator {
+                        GlassMenuSeparator()
+                    } else {
+                        menuRow(item)
+                    }
                 }
             }
         }
         .frame(minWidth: DesignTokens.Chrome.menuMinWidth)
+        .frame(maxHeight: DesignTokens.Chrome.menuMaxHeight)
         .padding(.vertical, DesignTokens.Spacing.xs)
         .cookGlass(
             .regular,

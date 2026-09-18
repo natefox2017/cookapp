@@ -53,6 +53,11 @@ enum DesignTokens {
         static let menuItemHeight: CGFloat = 44
         static let menuHorizontalPadding: CGFloat = 16
         static let menuGlyphWidth: CGFloat = 20
+        static let menuMaxHeight: CGFloat = 280
+        static let menuDismissExtent: CGFloat = 2000
+        static var overlayClearance: CGFloat {
+            tabBarHeight + barTopPadding + barBottomPadding
+        }
         /// Keep sibling glasses from morphing into one blob at the 8pt gap.
         static let clusterBlendSpacing: CGFloat = 2
         static let hairlineWidth: CGFloat = 1
@@ -86,7 +91,8 @@ extension Color {
     static let cookDestructive = Color(.systemRed)
     static let cookSeparator = Color(.separator)
     /// Solid chrome fallback for Reduce Transparency / Increase Contrast (White-first, semantic).
-    static let cookChromeSolid = Color(.secondarySystemGroupedBackground)
+    static let cookChromeSolid = Color(.tertiarySystemBackground)
     /// Selected tab slot fill — light grey, not a brand-green slab.
     static let cookTabSelectionFill = Color(.tertiarySystemFill)
+    static let cookMediaScrim = Color.black
 }

@@ -133,8 +133,8 @@ def main() -> None:
         fail("AppShellView must compose FloatingTabChrome")
     if "openSearch()" not in shell:
         fail("AppShellView search circle must call openSearch()")
-    if ".toolbar(.hidden, for: .tabBar)" not in shell:
-        fail("AppShellView must hide the system tab bar in favor of shared glass chrome")
+    if ".tabItem" in shell:
+        fail("AppShellView must not keep a system TabView tabItem alongside custom glass chrome")
 
     placeholder = (IOS / "CookApp/App/Navigation/RoutePlaceholderView.swift").read_text()
     if "cookGlass" in placeholder or "glassEffect" in placeholder:

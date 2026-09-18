@@ -84,12 +84,13 @@ struct CookGlassModifier<S: Shape>: ViewModifier {
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var increaseContrast = UIAccessibility.isDarkerSystemColorsEnabled
 
     private var accessibility: ChromeAccessibilitySnapshot {
         ChromeAccessibilitySnapshot(
             reduceTransparency: reduceTransparency,
             reduceMotion: reduceMotion,
-            increaseContrast: UIAccessibility.isDarkerSystemColorsEnabled
+            increaseContrast: increaseContrast
         )
     }
 
@@ -102,6 +103,13 @@ struct CookGlassModifier<S: Shape>: ViewModifier {
             prefersSystemLiquidGlass: true
         )
         applied(material, to: content, snapshot: snapshot)
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: UIAccessibility.darkerSystemColorsStatusDidChangeNotification
+                )
+            ) { _ in
+                increaseContrast = UIAccessibility.isDarkerSystemColorsEnabled
+            }
     }
 
     @ViewBuilder
