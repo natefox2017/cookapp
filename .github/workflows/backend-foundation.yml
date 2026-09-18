@@ -119,10 +119,19 @@ jobs:
           test -f docs/backend/IMPORT_QUEUE.md
           test -f supabase/migrations/20260918060000_recipe_import_queue.sql
           echo "Import queue worker paths OK"
+      - name: Store analytics / financial sync unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/store-analytics/
+          test -f supabase/functions/admin-store-sync/index.ts
+          test -f supabase/functions/store-sync-worker/index.ts
+          test -f docs/backend/STORE_ANALYTICS.md
+          test -f supabase/migrations/20260918120000_store_analytics_financial.sql
+          echo "Store analytics sync paths OK"
       - name: Commerce / payment_transactions unit tests
         run: |
           set -euo pipefail
           deno test --allow-env supabase/functions/_shared/commerce/
-          test -f supabase/migrations/20260918120000_payment_transactions.sql
+          test -f supabase/migrations/20260918130000_payment_transactions.sql
           test -f docs/backend/PAYMENTS.md
           echo "Commerce payment_transactions paths OK"

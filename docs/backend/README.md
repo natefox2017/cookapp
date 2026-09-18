@@ -58,6 +58,8 @@ supabase/
     admin-subscriptions/
     storage-cleanup-import-artifacts/
     admin-ai/          # AI Platform Admin APIs (#53)
+    admin-store-sync/  # ASC analytics + financial sync (#59)
+    store-sync-worker/ # Cron tick for Apple store sync (#59)
 ```
 
 ## API documentation
@@ -67,6 +69,7 @@ supabase/
 - Admin contract matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md)
 - Auth/IAP ops: [`AUTH_AND_IAP.md`](../AUTH_AND_IAP.md)
 - Media storage: [`MEDIA_STORAGE.md`](./MEDIA_STORAGE.md)
+- Store analytics: [`STORE_ANALYTICS.md`](./STORE_ANALYTICS.md)
 
 ### Spec path ↔ PostgREST
 
@@ -112,7 +115,9 @@ Authorization: Bearer <access_token>
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) + enqueue (#56) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
+| `admin-store-sync` | no (custom admin bearer; Owner for sync/credentials) | ASC analytics + financial sync (#59) |
 | `recipe-import-worker` | no (`RECIPE_IMPORT_WORKER_SECRET`) | pgmq Import Queue worker tick (#56) |
+| `store-sync-worker` | no (`STORE_SYNC_WORKER_SECRET`) | Apple analytics + financial cron tick (#59) |
 
 ### Admin auth
 
@@ -178,6 +183,17 @@ deno test --allow-env supabase/functions/_shared/recipe-import/queue_test.ts
 - Seed routes: `recipe_import_text`, `recipe_import_vision`, `recipe_quality_check` (+ reserved `assistant_*`)
 - Endpoints under `/functions/v1/admin-ai/{providers,models,routes,usage,health,resolve}`
 - App/Admin browser never holds provider keys or calls gateway Base URL directly
+
+### Store Analytics + Financial (Issue #59)
+
+- Tables: `store_analytics_daily`, `financial_report_rows`, `store_sync_runs`, `store_integrations`, `store_secrets`
+- Providers: `StoreAnalyticsProvider` / `FinancialReportProvider` — Apple implemented; Google Play Future Reserved
+- Rules: missing Apple data stays NULL (never fill 0); analytics vs financial never merged into one revenue field
+- Endpoints: `/functions/v1/admin-store-sync/*` + cron `store-sync-worker`
+- Docs: [`STORE_ANALYTICS.md`](./STORE_ANALYTICS.md)
+```bash
+deno test --allow-env supabase/functions/_shared/store-analytics/
+```
 
 ## Migrations
 

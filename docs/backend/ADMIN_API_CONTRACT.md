@@ -43,7 +43,8 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | (future) AI Platform | — | — | planned | #53 |
 | (future) AI Import | — | — | planned | #55 |
 | (future) Audit Log | — | — | planned | #57 |
-| (future) Analytics sync / jobs | — | — | planned | #59/#60 |
+| Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved |
+| (future) Ops Jobs + Dashboard aggregation | — | — | planned | #60 / #47 |
 
 ## Live Edge Functions (inventory)
 
@@ -53,10 +54,16 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | `admin-users` | false | User list, detail, registration mix stats |
 | `admin-dashboard` | false | Ops KPI aggregation |
 | `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series, payment transactions (#58) |
+| `admin-ai` | false | AI Platform (#53) |
+| `admin-store-sync` | false | ASC analytics + financial sync (#59) |
+| `admin-recipe-import` | false | AI Recipe Import (#55/#56) |
+| `store-sync-worker` | false | ASC sync cron worker (#59) |
+| `recipe-import-worker` | false | Import queue worker (#56) |
 | `openapi` | false | Serves OpenAPI JSON |
 | `health` | true | Module probe (end-user JWT) |
 | `delete-account` | true | End-user account purge |
 | `revenuecat-webhook` | false | IAP webhook |
+| `storage-cleanup-import-artifacts` | false | Import artifact TTL cleanup (#54) |
 
 ## Deprecated / forbidden client paths
 

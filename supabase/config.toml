@@ -80,3 +80,9 @@ verify_jwt = false
 
 [functions.recipe-import-worker]
 verify_jwt = false
+
+[functions.admin-store-sync]
+verify_jwt = false
+
+[functions.store-sync-worker]
+verify_jwt = false
