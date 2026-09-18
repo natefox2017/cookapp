@@ -86,6 +86,18 @@ Deno.test("ASC supports write-only secret updates", () => {
   assertEquals(item.configCompleteness.missing.includes("privateKey"), true);
 });
 
+Deno.test("google_play reserved completeness is zero (never looks fully configured)", () => {
+  const item = buildStatusItem({
+    id: "google_play",
+    configuredKeys: [],
+    secretConfigured: false,
+    statusOverride: "future_reserved",
+  });
+  assertEquals(item.status, "future_reserved");
+  assertEquals(item.configCompleteness.percent, 0);
+  assertEquals(item.reserved, true);
+});
+
 Deno.test("all five integrations are enumerated", () => {
   assertEquals(INTEGRATION_IDS.length, 5);
 });

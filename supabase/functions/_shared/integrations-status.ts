@@ -172,6 +172,10 @@ export function buildStatusItem(input: {
       probeError: input.probeError,
     });
 
+  const reservedCompleteness: ConfigCompleteness = meta.reserved
+    ? { required: [], configured: [], missing: [], percent: 0 }
+    : completeness;
+
   return {
     id: input.id,
     name: meta.name,
@@ -180,7 +184,7 @@ export function buildStatusItem(input: {
     lastErrorAt: input.lastErrorAt ?? null,
     lastErrorMessage: input.lastErrorMessage ?? null,
     lastCheckedAt: input.lastCheckedAt ?? null,
-    configCompleteness: completeness,
+    configCompleteness: reservedCompleteness,
     secretConfigured: Boolean(input.secretConfigured),
     testSupported: meta.testSupported,
     secretWriteSupported: meta.secretWriteSupported,

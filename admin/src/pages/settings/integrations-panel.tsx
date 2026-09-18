@@ -79,7 +79,9 @@ function IntegrationCard({
             <span className="font-medium tabular-nums">{item.configCompleteness.percent}%</span>
           </div>
           <Progress value={item.configCompleteness.percent} aria-label="Config completeness" />
-          {item.configCompleteness.missing.length > 0 ? (
+          {item.reserved ? (
+            <p className="text-xs text-muted-foreground">N/A — Future reserved (not connected)</p>
+          ) : item.configCompleteness.missing.length > 0 ? (
             <p className="text-xs text-muted-foreground">
               Missing: {item.configCompleteness.missing.join(', ')}
             </p>

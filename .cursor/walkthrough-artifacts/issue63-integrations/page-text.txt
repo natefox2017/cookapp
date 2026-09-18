@@ -1,0 +1,126 @@
+CookApp Admin
+Local ops console
+Dashboard
+Users
+Recipes
+Collections
+Ingredients
+Grocery
+Meal Plans
+Pantry
+Categories
+Subscription
+Settings
+Mock API mode
+Settings
+Mock data
+admin
+Log out
+Settings
+
+General, units, category policy, integrations, and system configuration.
+
+General
+Units
+Categories
+Integrations
+Security
+System
+Integrations
+
+Connection status for Supabase, RevenueCat, App Store Connect, and AI Gateway. Google Play remains Future Reserved / Not Connected. Secrets are write-only.
+
+Mock mode (dev only): statuses are fixtures — Production forbids fake “connected” KPI.
+
+Checked Sep 18, 2026
+
+Refresh
+
+Supabase: Mock probe ok (dev only)
+
+Supabase
+
+Mock: local/dev only — not production KPI truth.
+
+Connected
+Config completeness
+100%
+
+All required keys present
+
+Secret
+•••••••• configured
+Last success
+Sep 18, 2026
+Last error
+—
+Test connection
+RevenueCat
+
+Mock: webhook secret via supabase secrets.
+
+Not configured
+Config completeness
+0%
+
+Missing: REVENUECAT_WEBHOOK_SECRET
+
+Secret
+Not configured
+Last success
+—
+Last error
+—
+Test connection
+App Store Connect
+
+Mock: ASC Analytics lands with #59.
+
+Not configured
+Config completeness
+0%
+
+Missing: issuerId, keyId, privateKey
+
+Secret
+Not configured
+Last success
+—
+Last error
+—
+Test connection
+Update secret
+AI Gateway
+
+Mock: manage secrets under AI Platform.
+
+Degraded
+Config completeness
+100%
+
+All required keys present
+
+Secret
+•••••••• configured
+Last success
+Sep 17, 2026
+Last error
+Mock: provider reported unhealthy
+Test connection
+Google Play
+
+Future Reserved / Not Connected. Never mock as connected.
+
+Future reserved
+Config completeness
+0%
+
+N/A — Future reserved (not connected)
+
+Secret
+Not configured
+Last success
+—
+Last error
+—
+Test unavailable

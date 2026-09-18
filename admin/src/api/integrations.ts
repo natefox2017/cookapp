@@ -102,7 +102,7 @@ const mockIntegrations: IntegrationStatus[] = [
       required: [],
       configured: [],
       missing: [],
-      percent: 100,
+      percent: 0,
     },
     secretConfigured: false,
     testSupported: false,
