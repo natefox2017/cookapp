@@ -46,8 +46,7 @@ supabase/
   migrations/          # ordered SQL migrations
   openapi/             # OpenAPI 3.1 (yaml + json)
   functions/
-    _shared/           # cors, auth, errors, logger, admin-session, request-context, audit, monitor
-    _shared/           # cors, auth, errors, logger, admin-session, media-storage
+    _shared/           # cors, auth, errors, logger, admin-session, request-context, audit, monitor, media-storage
     delete-account/
     revenuecat-webhook/
     health/
