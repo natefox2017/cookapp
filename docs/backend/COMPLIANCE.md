@@ -3,13 +3,14 @@
 Audit against the Cloud Backend Development Specification (Issue #11)  
 plus Notion Backend/Admin V2 review (2026-09-18).
 
-Last reviewed: 2026-09-18 against `main` + live project `semsjyrqjnumpvanibip`.
+Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `semsjyrqjnumpvanibip`.
 
 ## Verdict
 
 **Phase 1 core cloud modules: PASS.**  
-**Backend/Admin overall: Foundation Complete / V2 Operational Expansion Required**  
-(Notion: [Backend & Admin V2](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242) · Master [#49](https://github.com/natefox2017/cookapp/issues/49)).
+**Backend V2 P0/P1 child Issues (#51–#60, #63–#64): CLOSED on `main`.**  
+**Backend/Admin overall: Foundation Complete / V2 backends landed; Admin §14 UI Gate-deferred**  
+(Notion: [Backend & Admin V2](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242) · Master [#49](https://github.com/natefox2017/cookapp/issues/49) · Gate [#61](https://github.com/natefox2017/cookapp/issues/61)).
 
 | Module | Verdict | Notes |
 |--------|---------|-------|
@@ -25,13 +26,22 @@ Last reviewed: 2026-09-18 against `main` + live project `semsjyrqjnumpvanibip`.
 | Storage private + isolation | PASS | `avatars`, `recipe-covers`, `recipe-images`; + `recipe-import-artifacts` (service_role / TTL, #54) |
 | Subscription + RevenueCat webhook | PASS | `plan`/`status`; `expire_date` via `subscription_status` view; `payment_transactions` + `user_commerce_summary` (#58) |
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
-| Engineering (migrations, OpenAPI, errors, logging) | PASS | |
+| Engineering (migrations, OpenAPI, errors, logging) | PASS | OpenAPI yaml ↔ json ↔ Edge `spec.json` synced (76 paths) |
 | No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI |
-| Admin live API contract | PARTIAL | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md) (#52). Live: auth/users/dashboard/subscriptions. Missing domains return `501` in live Admin client |
-| Production mock / default credentials | IN PROGRESS | #51 / PR #62 |
-| AI Platform / AI Import / Audit / Media / Commerce normalize | PARTIAL | #53–#57 landed; #58 payments normalize; #59/#60 analytics/jobs pending |
+| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md) (#52). Live domains match Edge Functions; catalog Data pages stay `501` / mock_only |
+| Production mock / default credentials | PASS | #51 / PR #62 + bootstrap-token follow-up #65 |
+| AI Platform | PASS (backend) | #53 — `admin-ai`; Admin AI Platform **UI** Gate-deferred (#61) |
+| MediaStorageProvider + import artifacts | PASS | #54 |
+| AI Recipe Import pipeline + queue | PASS (backend) | #55/#56 — `admin-recipe-import` + worker; Admin Import **UI** Gate-deferred |
+| Admin audit + correlation IDs | PASS | #57 |
+| Payments normalize + commerce summary | PASS (backend) | #58 — APIs live; dedicated Payments **page** not in nav (#61) |
+| App Store analytics + financial sync | PASS (backend) | #59 — Google Play Future Reserved |
+| Ops jobs + Dashboard aggregation | PASS (backend) | #60/#47 — `admin-operations` / `admin-analytics` / `admin-dashboard`; Ops/Analytics **pages** Gate-deferred |
+| Integrations connection status | PASS | #63 — Settings → Integrations |
+| Admin navigation IA (§14) | DEFERRED | #64 shipped then rolled back by #81 per #61 Stage-4 Gate; flat nav is current SoT on `main` |
 
-\* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.
+\* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.  
+† Catalog Admin APIs (Recipes/Collections/…) remain missing by design until a future Issue; live mode must not fake them.
 
 ## Field aliases (documented, not bugs)
 
@@ -45,17 +55,19 @@ Last reviewed: 2026-09-18 against `main` + live project `semsjyrqjnumpvanibip`.
 
 Primary: PostgREST `/rest/v1/*` with JWT + anon key.  
 Privileged: `/functions/v1/delete-account`, `/functions/v1/revenuecat-webhook`.  
-Admin (custom bearer): `admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`.  
-Contract: `supabase/openapi/openapi.yaml` (served by `/functions/v1/openapi`).  
-Admin path matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md).
+Admin (custom bearer): see live inventory in [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md)  
+(`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`, `admin-ai`, `admin-integrations`, `admin-operations`, `admin-analytics`, `admin-store-sync`, `admin-recipe-import`, workers).  
+Contract: `supabase/openapi/openapi.yaml` (served by `/functions/v1/openapi`).
 
-## Explicit non-goals (Phase 1 audit)
+## Explicit non-goals / Gate holds
 
 - Nested jsonb schema validation for recipe ingredients/steps (app-layer concern)
 - System ingredient seed catalog content
 - Auto-create default grocery list on signup (client can `POST /grocery_lists`)
 - Moving `admin/` to a separate git repository (product/repo layout decision)
-- Full V2 AI Platform / Import / Analytics in one PR (split via #49)
+- Admin §14 hierarchical IA + AI Import / Analytics / Operations / Payments / AI Platform **nav pages** while Stage 4 Pilot Gate forbids Stage 5–7 Admin surface expansion (#61)
+- Google Play live integration (Future Reserved)
+- Android client / iOS business UI
 
 ## How to re-verify
 
