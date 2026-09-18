@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.admin-recipe-import]
 verify_jwt = false
+
+[functions.storage-cleanup-import-artifacts]
+verify_jwt = false

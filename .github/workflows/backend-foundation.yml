@@ -99,6 +99,10 @@ jobs:
         run: |
           set -euo pipefail
           deno test --allow-env supabase/functions/_shared/logger_test.ts
+      - name: Media storage unit tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/media-storage/
       - name: Recipe import pipeline unit tests
         run: |
           set -euo pipefail

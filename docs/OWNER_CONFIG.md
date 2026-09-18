@@ -120,6 +120,9 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 - `operator` / `readonly`：预留
 
 契约矩阵：`docs/backend/ADMIN_API_CONTRACT.md`
+| 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
+| 管理后台 URL / 密钥 | todo | 见相关 Issue | |
+| `STORAGE_CLEANUP_SECRET`（Supabase secrets） | todo | Cron/ops for `storage-cleanup-import-artifacts` (#54) | 2026-09-18 |
 
 ---
 
@@ -139,3 +142,4 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 |------|------|
 | 2026-09-17 | 初版：汇总 Apple / Google / RevenueCat / Secrets |
 | 2026-09-18 | #51 hardening + #52 Admin API contract；AI/ASC/Storage placeholders |
+| 2026-09-18 | #54：`STORAGE_CLEANUP_SECRET` for import-artifact TTL cleanup |
