@@ -31,7 +31,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | Settings → Security | `changePassword` | `POST /functions/v1/admin-auth/change-password` | live | |
 | `/` Dashboard | `getDashboard` | `GET /functions/v1/admin-dashboard` | live | Aggregation; Google Play must not fake zeros (#47/#49) |
 | `/users` | `listUsers` / `getUser` / `getUserRegistrationStats` | `GET /functions/v1/admin-users` · `…/:id` · `…/stats` | live | #44 |
-| `/subscription` | plans / records / revenue | `…/admin-subscriptions/{plans,records,revenue}` | live | #35 |
+| `/subscription` | plans / records / revenue / transactions | `…/admin-subscriptions/{plans,records,revenue,transactions}` | live | #35 · #58 |
 | `/settings` General/Units/Categories | `getSettings` / `updateSettings` | — | hybrid | Live: build-time diagnostics only; no persist API. Security uses `admin-auth` |
 | `/recipes` | `listRecipes` / CRUD | — | missing | Planned: Admin Recipes + AI Import (#55) |
 | `/collections` | `listCollections` | — | missing | Planned Admin Data APIs |
@@ -43,7 +43,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | (future) AI Platform | — | — | planned | #53 |
 | (future) AI Import | — | — | planned | #55 |
 | (future) Audit Log | — | — | planned | #57 |
-| (future) Payments / Analytics sync | — | — | planned | #58/#59/#60 |
+| (future) Analytics sync / jobs | — | — | planned | #59/#60 |
 
 ## Live Edge Functions (inventory)
 
@@ -52,7 +52,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | `admin-auth` | false | Login / logout / session / change-password |
 | `admin-users` | false | User list, detail, registration mix stats |
 | `admin-dashboard` | false | Ops KPI aggregation |
-| `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series |
+| `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series, payment transactions (#58) |
 | `openapi` | false | Serves OpenAPI JSON |
 | `health` | true | Module probe (end-user JWT) |
 | `delete-account` | true | End-user account purge |

@@ -1,7 +1,7 @@
 // RevenueCat → Supabase subscription sync (server-to-server).
 // Auth: Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>
 // Set secret: supabase secrets set REVENUECAT_WEBHOOK_SECRET=... --project-ref semsjyrqjnumpvanibip
-// Issues: #11, #57 (request/job correlation + webhook failure monitoring)
+// Issues: #11, #57 (request/job correlation + webhook failure monitoring), #58 (payment_transactions)
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -101,6 +101,8 @@ function sanitize(event: Record<string, unknown>, rcEventId: string | null) {
     "is_trial_conversion",
     "is_family_share",
     "cancellation_reason",
+    "transaction_id",
+    "original_transaction_id",
   ];
   const out: Record<string, unknown> = {};
   for (const k of allow) {
@@ -228,26 +230,9 @@ Deno.serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  if (rcEventId) {
-    const { data: existing } = await supabase
-      .from("purchase_events")
-      .select("id")
-      .eq("rc_event_id", rcEventId)
-      .limit(1);
-    if (existing && existing.length > 0) {
-      return json(
-        {
-          received: true,
-          already_processed: true,
-          rc_event_id: rcEventId,
-          request_id: ctx.requestId,
-        },
-        200,
-        headers,
-      );
-    }
-  }
-
+  // Always invoke the SECURITY DEFINER RPC. It is idempotent on rc_event_id
+  // (purchase_events) and (provider_source, provider_event_id) (payment_transactions).
+  // Replay must still upsert payment_transactions for self-heal / #58.
   const { data, error } = await supabase.rpc("upsert_subscription_from_revenuecat", {
     p_user_id: userId,
     p_event_type: type,

@@ -1,7 +1,7 @@
-// Admin Dashboard: subscription plans / records / revenue.
+// Admin Dashboard: subscription plans / records / revenue / payment transactions.
 // Auth: custom admin bearer (admin_sessions) via requireAdminSession.
 // Deploy: supabase functions deploy admin-subscriptions --project-ref semsjyrqjnumpvanibip
-// Issues: #35, #57
+// Issues: #35, #57, #58
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
@@ -11,6 +11,10 @@ import { requireAdminSession } from "../_shared/admin-session.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { planAuditSnapshot, writeAdminAudit } from "../_shared/audit.ts";
 import { resolveRequestContext } from "../_shared/request-context.ts";
+import {
+  maskPurchaseToken,
+  normalizeAdminStoreFilter,
+} from "../_shared/commerce/mod.ts";
 
 type Platform = "app_store" | "play_store";
 
@@ -107,6 +111,60 @@ function mapPlanLabel(plan: string | null, productId: string | null): string {
 function monthKey(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+}
+
+function mapPaymentTransaction(
+  row: Record<string, unknown>,
+  opts: { detail?: boolean } = {},
+) {
+  const store =
+    row.store === "app_store" || row.store === "google_play"
+      ? row.store
+      : row.store ?? null;
+  const base = {
+    id: row.id,
+    userId: row.user_id ?? null,
+    platform: row.platform ?? null,
+    store,
+    environment: row.environment ?? null,
+    productId: row.product_id ?? null,
+    entitlementId: row.entitlement_id ?? null,
+    transactionId: row.transaction_id ?? null,
+    originalTransactionId: row.original_transaction_id ?? null,
+    orderId: row.order_id ?? null,
+    eventType: row.event_type,
+    status: row.status,
+    purchaseAt: row.purchase_at ?? null,
+    renewalAt: row.renewal_at ?? null,
+    expiresAt: row.expires_at ?? null,
+    cancelAt: row.cancel_at ?? null,
+    refundAt: row.refund_at ?? null,
+    currency: row.currency ?? null,
+    grossAmount: row.gross_amount == null ? null : Number(row.gross_amount),
+    refundAmount: row.refund_amount == null ? null : Number(row.refund_amount),
+    estimatedProceeds:
+      row.estimated_proceeds == null ? null : Number(row.estimated_proceeds),
+    finalProceeds: row.final_proceeds == null ? null : Number(row.final_proceeds),
+    estimatedGrossUsd:
+      row.estimated_gross_usd == null ? null : Number(row.estimated_gross_usd),
+    territory: row.territory ?? null,
+    providerSource: row.provider_source,
+    providerEventId: row.provider_event_id ?? null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+  if (opts.detail) {
+    return {
+      ...base,
+      purchaseTokenMasked: maskPurchaseToken(
+        row.purchase_token as string | null | undefined,
+      ),
+      amountSource: "estimated_provider",
+      finalProceedsNote:
+        "final_proceeds is null until financial report confirmation (#59)",
+    };
+  }
+  return base;
 }
 
 Deno.serve(async (req) => {
@@ -393,6 +451,101 @@ Deno.serve(async (req) => {
             activePaid: activePaid ?? 0,
           },
           series,
+        },
+        200,
+        publicCorsHeaders,
+        ctx,
+      );
+    }
+
+    // GET /admin-subscriptions/transactions — normalized payment_transactions (#58)
+    if (resource === "transactions" && method === "GET" && !id) {
+      const url = new URL(req.url);
+      const storeFilter = normalizeAdminStoreFilter(url.searchParams.get("store"));
+      const platform = url.searchParams.get("platform");
+      const userId = url.searchParams.get("userId");
+      const eventType = url.searchParams.get("eventType");
+      const status = url.searchParams.get("status");
+      const page = Math.max(1, Number(url.searchParams.get("page") ?? 1) || 1);
+      const pageSize = Math.min(
+        100,
+        Math.max(1, Number(url.searchParams.get("pageSize") ?? 50) || 50),
+      );
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = admin
+        .from("payment_transactions")
+        .select("*", { count: "exact" })
+        .order("purchase_at", { ascending: false, nullsFirst: false })
+        .range(from, to);
+
+      if (storeFilter) query = query.eq("store", storeFilter);
+      if (platform === "ios" || platform === "android") {
+        query = query.eq("platform", platform);
+      }
+      if (userId) query = query.eq("user_id", userId);
+      if (eventType) query = query.eq("event_type", eventType.toUpperCase());
+      if (status) query = query.eq("status", status);
+
+      const { data, error, count } = await query;
+      if (error) throw new AppError("internal_error", error.message, 500);
+
+      return json(
+        {
+          data: (data ?? []).map((row) =>
+            mapPaymentTransaction(row as Record<string, unknown>)
+          ),
+          total: count ?? 0,
+          page,
+          pageSize,
+          googlePlay: {
+            status: "reserved_not_implemented",
+            note: "Google Play schema/enum only — no live sync or fake Android revenue",
+          },
+        },
+        200,
+        publicCorsHeaders,
+        ctx,
+      );
+    }
+
+    // GET /admin-subscriptions/transactions/:id
+    if (resource === "transactions" && method === "GET" && id) {
+      const { data, error } = await admin
+        .from("payment_transactions")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw new AppError("internal_error", error.message, 500);
+      if (!data) throw new AppError("not_found", "Transaction not found", 404);
+
+      let user: {
+        id: string;
+        displayName: string;
+        email: string;
+      } | null = null;
+      if (data.user_id) {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("id, display_name, email")
+          .eq("id", data.user_id)
+          .maybeSingle();
+        if (profile) {
+          user = {
+            id: profile.id as string,
+            displayName: (profile.display_name as string) || "Unknown",
+            email: (profile.email as string) || "",
+          };
+        }
+      }
+
+      return json(
+        {
+          ...mapPaymentTransaction(data as Record<string, unknown>, {
+            detail: true,
+          }),
+          user,
         },
         200,
         publicCorsHeaders,

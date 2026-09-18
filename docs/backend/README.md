@@ -15,7 +15,7 @@ Server-only. No Admin Dashboard UI lives in this repository (`admin/` is the sep
 | Data | PostgreSQL + RLS |
 | API | PostgREST `/rest/v1/*` + Edge Functions `/functions/v1/*` |
 | Files | Private Storage buckets via `MediaStorageProvider` (Supabase); `{user_id}/…` for user media; `{job_id}/…` for import artifacts |
-| Subscriptions | RevenueCat webhook → `subscriptions` / `purchase_events` |
+| Subscriptions | RevenueCat webhook → `subscriptions` / `purchase_events` / `payment_transactions` |
 | Admin ops | Custom bearer Edge Functions (`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`) |
 
 ## Modules
@@ -32,6 +32,7 @@ Server-only. No Admin Dashboard UI lives in this repository (`admin/` is the sep
 - **Storage** — buckets `avatars`, `recipe-covers`, `recipe-images` (V2: `MediaStorageProvider` + import artifacts — #54)
 - **Storage** — buckets `avatars`, `recipe-covers`, `recipe-images`, `recipe-import-artifacts` (private TTL)
 - **Subscription** — `subscriptions`, view `subscription_status` (`plan` / `status` / `expire_date`)
+- **Commerce** — `payment_transactions` + derived view `user_commerce_summary` (#58); see [`PAYMENTS.md`](./PAYMENTS.md)
 
 ### V2 confirmed (not Phase 1 foundation)
 
@@ -94,7 +95,7 @@ Authorization: Bearer <access_token>
 - Secrets: `REVENUECAT_WEBHOOK_SECRET`, OAuth provider secrets via Supabase Dashboard / `supabase secrets`
 - `profiles.email` is read-only for clients (synced from `auth.users`)
 - Authenticated Edge Functions CORS: set `CORS_ALLOWED_ORIGINS` (comma-separated); public `openapi` keeps `*`
-- Subscription upserts ignore duplicate `rc_event_id` and stale `event_timestamp_ms` (purchase_events still recorded)
+- Subscription upserts ignore duplicate `rc_event_id` and stale `event_timestamp_ms` (purchase_events still recorded; payment_transactions upserted idempotently)
 
 ## Edge Functions
 
@@ -107,9 +108,8 @@ Authorization: Bearer <access_token>
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password (+ audit) |
 | `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
 | `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
-| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue / payment transactions (#58) |
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) + enqueue (#56) |
-| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue (+ audit) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
 | `recipe-import-worker` | no (`RECIPE_IMPORT_WORKER_SECRET`) | pgmq Import Queue worker tick (#56) |
@@ -123,9 +123,19 @@ Authorization: Bearer <access_token>
 ### Admin subscriptions
 
 - Table: `subscription_plans` (Apple / Android SKUs, price, billing period)
-- Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
+- Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue,transactions}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
+- Transactions read normalized `payment_transactions` (#58)
 - Google Play: Future Reserved — do not display mock Android revenue as live ops data
+
+### Payments / commerce (Issue #58)
+
+- Tables/views: `payment_transactions`, `user_commerce_summary` (derived only)
+- Mapping + rules: [`PAYMENTS.md`](./PAYMENTS.md)
+- Shared modules: `_shared/commerce/` (provider enums + RC map; Google Play reserved stub)
+```bash
+deno test --allow-env supabase/functions/_shared/commerce/
+```
 
 ### Admin Recipe Import (Issue #55)
 
