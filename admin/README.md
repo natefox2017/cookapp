@@ -56,7 +56,7 @@ Admin Dashboard UI
 |-------|--------|
 | `/login` | Admin sign-in |
 | `/` | Dashboard |
-| `/users` | Users + detail sheet |
+| `/users` | Users + registration meta (IP / provider / device) + payment history |
 | `/recipes` | Recipe grid + detail |
 | `/collections` | Collections grid |
 | `/ingredients` | Ingredients CRUD table |

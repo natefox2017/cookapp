@@ -45,6 +45,7 @@ supabase/
     openapi/
     admin-auth/
     admin-subscriptions/
+    admin-users/
 ```
 
 ## API documentation
@@ -92,6 +93,7 @@ Authorization: Bearer <access_token>
 | `openapi` | no | Serve OpenAPI JSON |
 | `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-users` | no (custom admin bearer) | Admin user list/detail + registration meta + payments |
 
 ### Admin auth
 
@@ -104,6 +106,11 @@ Authorization: Bearer <access_token>
 - Table: `subscription_plans` (Apple / Android SKUs, price, billing period)
 - Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
+
+### Admin users
+
+- `profiles` columns: `registration_type`, `device_type`, `registration_ip`, `account_status`
+- Endpoints: `GET /functions/v1/admin-users`, `GET /functions/v1/admin-users/:id` (includes `paymentRecords` from `purchase_events`)
 
 ## Migrations
 

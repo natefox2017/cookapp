@@ -4,6 +4,10 @@ export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'trialing'
 /** Store platforms used for plan catalog + record filters. */
 export type StorePlatform = 'app_store' | 'play_store'
 export type BillingPeriod = 'monthly' | 'yearly' | 'lifetime'
+/** How the account was created (Sign in with Apple / Google / email). */
+export type RegistrationType = 'apple' | 'google' | 'email' | 'unknown'
+/** Client device class at registration / last known. */
+export type DeviceType = 'iphone' | 'ipad' | 'android' | 'web' | 'unknown'
 
 export interface AdminUser {
   id: string
@@ -15,12 +19,34 @@ export interface AdminUser {
   favoriteCount: number
   createdAt: string
   status: UserStatus
+  registrationType: RegistrationType
+  deviceType: DeviceType
+  registrationIp: string | null
+}
+
+export interface UserPaymentRecord {
+  id: string
+  eventType: string
+  productId: string | null
+  store: StorePlatform | 'stripe' | 'promotional' | 'unknown' | null
+  amount: number | null
+  currency: string | null
+  environment: 'sandbox' | 'production' | null
+  createdAt: string
 }
 
 export interface AdminUserDetail extends AdminUser {
   lastLoginAt: string | null
   locale: string
   timezone: string
+  paymentRecords: UserPaymentRecord[]
+}
+
+export interface UserRegistrationStats {
+  total: number
+  byRegistrationType: Record<RegistrationType, number>
+  byDeviceType: Record<DeviceType, number>
+  withPayments: number
 }
 
 export interface RecipeSummary {
@@ -239,12 +265,15 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   pageSize: number
+  stats?: UserRegistrationStats
 }
 
 export interface ListUsersParams {
   q?: string
   status?: UserStatus | 'all'
   subscription?: SubscriptionPlan | 'all'
+  registrationType?: RegistrationType | 'all'
+  deviceType?: DeviceType | 'all'
   page?: number
   pageSize?: number
 }
