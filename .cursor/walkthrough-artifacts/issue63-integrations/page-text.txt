@@ -3,20 +3,16 @@ Local ops console
 Dashboard
 Users
 Recipes
-Commerce
-Analytics
-N/I
-Operations
-Data
+Collections
+Ingredients
+Grocery
+Meal Plans
+Pantry
+Categories
+Subscription
 Settings
-General
-AI Platform
-N/I
-Integrations
-Security
-System
 Mock API mode
-Integrations
+Settings
 Mock data
 admin
 Log out
@@ -39,9 +35,6 @@ Mock mode (dev only): statuses are fixtures — Production forbids fake “conne
 Checked Sep 18, 2026
 
 Refresh
-
-Supabase: Mock probe ok (dev only)
-
 Supabase
 
 Mock: local/dev only — not production KPI truth.
