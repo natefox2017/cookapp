@@ -51,8 +51,9 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Analytics | `/functions/v1/admin-analytics` | **live** (#60 / #101) |
 | Operations | `/functions/v1/admin-operations/jobs` | **live** (#60 / #101) |
 | AI Import | `/functions/v1/admin-recipe-import/*` | **live** (#55 / #101) |
-| Recipes / Ingredients / Categories | — | **missing** → live client `501`; sidebar **Pending** |
-| Settings → General / Security / System | hybrid | Security via `admin-auth`; general diagnostics-only |
+| Recipes / Ingredients / Categories | `/functions/v1/admin-catalog/*` | **live** (#92 / #93) |
+| Settings → General / Units / Categories | `/functions/v1/admin-catalog/settings` | persist live; System tab diagnostics-only |
+| Settings → Security | `admin-auth` | live |
 | Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
 | Settings → AI Platform | `/functions/v1/admin-ai/*` | **live** (#53 / #101) — secrets write-only |
 
@@ -102,22 +103,22 @@ Admin Dashboard UI
 | `/login` | Admin sign-in | yes |
 | `/` | Dashboard | yes (`admin-dashboard`) |
 | `/users` | Users | yes |
-| `/recipes` | Recipe catalog + detail | pending |
+| `/recipes` | Recipe catalog + detail | yes (#92 / #93) |
 | `/recipes/import` | AI Import enqueue | yes (`admin-recipe-import`) |
 | `/recipes/import-review` | Import review queue | yes (`admin-recipe-import`) |
-| `/ingredients` | Ingredients CRUD | pending |
-| `/categories` | Taxonomy | pending |
+| `/ingredients` | Ingredients CRUD | yes (#92 / #93) |
+| `/categories` | Taxonomy | yes (#92 / #93) |
 | `/subscription` | Plans · Records · Revenue | yes |
 | `/commerce/payments` | Payment transactions | yes (`admin-subscriptions/transactions`) |
 | `/analytics` | Downloads / growth / import quality | yes (`admin-analytics`) |
 | `/operations/jobs` | Jobs & Syncs | yes (`admin-operations`) |
 | `/settings` | General / Integrations / AI Platform / Units / Categories / Security / System | hybrid + Integrations/AI live |
 
-Sidebar collapses via the header control only (persisted). In live mode, pending modules show a **Pending** badge.
+Sidebar collapses via the header control only (persisted). Catalog pages in nav are live (#92). Settings stays **Hybrid**. End-user personal routes redirect to Dashboard (#98).
 
 ## Related
 
-- GitHub Issue #12 · #32 · #35 · #44 · #47 · #49 · #51 · #52
+- GitHub Issue #12 · #32 · #35 · #44 · #47 · #49 · #51 · #52 · **#92**
 - Cloud backend Issue #11
 - Notion: Local Admin Dashboard · Analytics/Payments · Backend & Admin V2
 

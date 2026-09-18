@@ -29,6 +29,7 @@ export interface NavItem {
  * Admin nav — ops + catalog + Gate-released operational pages (#101).
  * End-user personal surfaces (Meal Plan, Grocery, Pantry, Collections) stay in the
  * iOS app, not the ops console. Integrations (#63) and AI Platform live under Settings tabs.
+ * Catalog routes are live via admin-catalog (#92 / #93).
  */
 export const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/', icon: LayoutDashboard, apiStatus: 'live' },
@@ -37,15 +38,15 @@ export const navItems: NavItem[] = [
     title: 'Recipes',
     href: '/recipes',
     icon: CookingPot,
-    apiStatus: 'hybrid',
+    apiStatus: 'live',
     children: [
-      { title: 'Recipes', href: '/recipes', icon: CookingPot, apiStatus: 'mock_only' },
+      { title: 'Recipes', href: '/recipes', icon: CookingPot, apiStatus: 'live' },
       { title: 'AI Import', href: '/recipes/import', icon: Sparkles, apiStatus: 'live' },
       { title: 'Import Review', href: '/recipes/import-review', icon: ClipboardCheck, apiStatus: 'live' },
     ],
   },
-  { title: 'Ingredients', href: '/ingredients', icon: Carrot, apiStatus: 'mock_only' },
-  { title: 'Categories', href: '/categories', icon: Tags, apiStatus: 'mock_only' },
+  { title: 'Ingredients', href: '/ingredients', icon: Carrot, apiStatus: 'live' },
+  { title: 'Categories', href: '/categories', icon: Tags, apiStatus: 'live' },
   {
     title: 'Commerce',
     href: '/subscription',

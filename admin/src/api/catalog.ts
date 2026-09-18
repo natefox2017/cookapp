@@ -1,5 +1,4 @@
-import { API_BASE, isMockMode, mockRequest } from '@/api/client'
-import { notImplemented } from '@/api/not-implemented'
+import { API_BASE, httpRequest, isMockMode, mockRequest } from '@/api/client'
 import {
   mockCategories,
   mockCollections,
@@ -30,12 +29,12 @@ function replaceList<T>(target: T[], next: T[]) {
 
 export async function listCollections(): Promise<CollectionSummary[]> {
   if (isMockMode()) return mockRequest(() => mockCollections)
-  return notImplemented('collections')
+  return httpRequest('/functions/v1/admin-catalog/collections')
 }
 
 export async function listIngredients(): Promise<Ingredient[]> {
   if (isMockMode()) return mockRequest(() => [...mockIngredients])
-  return notImplemented('ingredients')
+  return httpRequest('/functions/v1/admin-catalog/ingredients')
 }
 
 export async function createIngredient(input: IngredientInput): Promise<Ingredient> {
@@ -46,7 +45,10 @@ export async function createIngredient(input: IngredientInput): Promise<Ingredie
       return item
     })
   }
-  return notImplemented('ingredients')
+  return httpRequest('/functions/v1/admin-catalog/ingredients', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export async function updateIngredient(id: string, input: IngredientInput): Promise<Ingredient> {
@@ -59,7 +61,10 @@ export async function updateIngredient(id: string, input: IngredientInput): Prom
       return next
     })
   }
-  return notImplemented('ingredients')
+  return httpRequest(`/functions/v1/admin-catalog/ingredients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export async function deleteIngredient(id: string): Promise<void> {
@@ -71,7 +76,7 @@ export async function deleteIngredient(id: string): Promise<void> {
       )
     })
   }
-  return notImplemented('ingredients')
+  await httpRequest(`/functions/v1/admin-catalog/ingredients/${id}`, { method: 'DELETE' })
 }
 
 export async function listGroceryUsers(): Promise<GroceryUser[]> {
@@ -87,24 +92,24 @@ export async function listGroceryUsers(): Promise<GroceryUser[]> {
       }),
     )
   }
-  return notImplemented('grocery')
+  return httpRequest('/functions/v1/admin-catalog/grocery/users')
 }
 
 export async function listGroceryItems(userId: string): Promise<GroceryItem[]> {
   if (isMockMode()) {
     return mockRequest(() => mockGroceryItems.filter((item) => item.userId === userId))
   }
-  return notImplemented('grocery')
+  return httpRequest(`/functions/v1/admin-catalog/grocery/users/${userId}/items`)
 }
 
 export async function listMealPlans(): Promise<MealPlanEntry[]> {
   if (isMockMode()) return mockRequest(() => mockMealPlans)
-  return notImplemented('meal-plans')
+  return httpRequest('/functions/v1/admin-catalog/meal-plans')
 }
 
 export async function listPantry(): Promise<PantryItem[]> {
   if (isMockMode()) return mockRequest(() => mockPantry)
-  return notImplemented('pantry')
+  return httpRequest('/functions/v1/admin-catalog/pantry')
 }
 
 function taxonomyList(kind: 'cuisine' | 'category' | 'tags') {
@@ -119,7 +124,7 @@ export async function listTaxonomy(
   if (isMockMode()) {
     return mockRequest(() => [...taxonomyList(kind)])
   }
-  return notImplemented('categories')
+  return httpRequest(`/functions/v1/admin-catalog/taxonomy/${kind}`)
 }
 
 export async function createTaxonomyItem(
@@ -138,7 +143,10 @@ export async function createTaxonomyItem(
       return item
     })
   }
-  return notImplemented('categories')
+  return httpRequest(`/functions/v1/admin-catalog/taxonomy/${kind}`, {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  })
 }
 
 export async function updateTaxonomyItem(
@@ -160,7 +168,10 @@ export async function updateTaxonomyItem(
       return next
     })
   }
-  return notImplemented('categories')
+  return httpRequest(`/functions/v1/admin-catalog/taxonomy/${kind}/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  })
 }
 
 export async function deleteTaxonomyItem(
@@ -176,10 +187,10 @@ export async function deleteTaxonomyItem(
       )
     })
   }
-  return notImplemented('categories')
+  await httpRequest(`/functions/v1/admin-catalog/taxonomy/${kind}/${id}`, { method: 'DELETE' })
 }
 
-/** Live: build-time diagnostics only (no `/admin/settings` Edge Function). */
+/** Live: System tab stays diagnostics; General/Units/Categories persist via admin-catalog. */
 export function liveSettingsDiagnostics(): AdminSettings {
   return {
     general: {
@@ -204,9 +215,22 @@ export function liveSettingsDiagnostics(): AdminSettings {
   }
 }
 
+function overlaySystemDiagnostics(settings: AdminSettings): AdminSettings {
+  const fallback = liveSettingsDiagnostics().system
+  return {
+    ...settings,
+    system: {
+      mockMode: false,
+      apiBaseUrl: API_BASE || settings.system?.apiBaseUrl || fallback.apiBaseUrl,
+      logLevel: settings.system?.logLevel ?? 'info',
+    },
+  }
+}
+
 export async function getSettings(): Promise<AdminSettings> {
   if (isMockMode()) return mockRequest(() => structuredClone(mockSettings))
-  return liveSettingsDiagnostics()
+  const remote = await httpRequest<AdminSettings>('/functions/v1/admin-catalog/settings')
+  return overlaySystemDiagnostics(remote)
 }
 
 export async function updateSettings(payload: AdminSettings): Promise<AdminSettings> {
@@ -219,5 +243,9 @@ export async function updateSettings(payload: AdminSettings): Promise<AdminSetti
       return structuredClone(mockSettings)
     })
   }
-  return notImplemented('settings-persist')
+  const remote = await httpRequest<AdminSettings>('/functions/v1/admin-catalog/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+  return overlaySystemDiagnostics(remote)
 }

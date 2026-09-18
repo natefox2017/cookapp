@@ -60,6 +60,20 @@ describe('admin nav (Issue #101 — Gate-released ops pages)', () => {
     }
   })
 
+  it('marks catalog + commerce leaves as live (Issue #92 / #93)', () => {
+    const byHref = Object.fromEntries(navLeaves().map((item) => [item.href, item.apiStatus]))
+    for (const href of [
+      '/',
+      '/users',
+      '/recipes',
+      '/ingredients',
+      '/categories',
+      '/subscription',
+    ]) {
+      assert.equal(byHref[href], 'live', `expected live nav ${href}`)
+    }
+  })
+
   it('does not expose end-user personal surfaces (meal plan, grocery, pantry, collections)', () => {
     const titles = [...navItems.map((item) => item.title), ...navLeaves().map((item) => item.title)]
     for (const title of ['Grocery', 'Meal Plans', 'Pantry', 'Collections']) {

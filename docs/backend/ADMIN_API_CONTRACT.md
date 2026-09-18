@@ -31,11 +31,11 @@ Shared source: `admin/src/components/layout/nav.ts` (grouped Recipes / Commerce;
 |-----|-------|----|------------|
 | Dashboard | `/` | live | live |
 | Users | `/users` | live | live |
-| Recipes | `/recipes` | mock UI | missing |
+| Recipes | `/recipes` | live | live (#92 / #93) |
 | Recipes → AI Import | `/recipes/import` | live | live (#101 / `admin-recipe-import`) |
 | Recipes → Import Review | `/recipes/import-review` | live | live (#101 / `admin-recipe-import`) |
-| Ingredients | `/ingredients` | mock UI | missing |
-| Categories | `/categories` | mock UI | missing |
+| Ingredients | `/ingredients` | live | live (#92 / #93) |
+| Categories | `/categories` | live | live (#92 / #93) |
 | Commerce → Subscription | `/subscription` | live | live |
 | Commerce → Payments | `/commerce/payments` | live | live (#58 / #101) |
 | Analytics | `/analytics` | live | live (#60 / #101) |
@@ -62,14 +62,14 @@ Compatibility redirects (no dead links after #64 rollback): `/commerce/products`
 | `/commerce/payments` | `listPaymentTransactions` | `…/admin-subscriptions/transactions` · `…/transactions/:id` | live | #58 / #101 — RC amounts ≠ final financial truth; Google Play Future Reserved |
 | `/analytics` | `getAnalytics` | `GET /functions/v1/admin-analytics` | live | #60 / #101 |
 | `/operations/jobs` | `listOpsJobs` / `runOpsJob` / `retryOpsJob` | `…/admin-operations/{jobs,integrations}` | live | #60 / #101 |
-| `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: General/Units/Categories persist when the client calls `admin-catalog`; otherwise diagnostics **read-only**. System stays diagnostics. Security / Integrations / AI Platform stay writable |
-| `/recipes` | `listRecipes` / CRUD | — | missing | Live writes hidden until the typed client calls `admin-catalog` (#61 `writeCapability`; #93/#100 flips this automatically) |
-| (no nav) Collections | `listCollections` | — | missing | End-user collections — not an Admin page; old `/collections` redirects to Dashboard |
-| `/ingredients` | ingredients CRUD | — | missing | Live writes hidden until `admin-catalog` client lands (#61 `writeCapability`) |
-| (no nav) Grocery | grocery users/items | — | missing | End-user grocery lists — not an Admin page |
-| (no nav) Meal Plans | `listMealPlans` | — | missing | End-user meal plans — not an Admin page |
-| (no nav) Pantry | `listPantry` | — | missing | End-user pantry — not an Admin page |
-| `/categories` | taxonomy CRUD | — | missing | Live writes hidden until `admin-catalog` client lands (#61 `writeCapability`). End-user category tables exist via PostgREST |
+| `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | `…/admin-catalog/settings` | hybrid | #92/#93 persist general/units/categories; System tab diagnostics; Security via `admin-auth`; Integrations / AI Platform stay writable |
+| `/recipes` | `listRecipes` / CRUD | `…/admin-catalog/recipes` | live | #92 / #93 |
+| `/ingredients` | ingredients CRUD | `…/admin-catalog/ingredients` | live | #92 / #93 — Admin creates `is_system` rows |
+| `/categories` | taxonomy CRUD | `…/admin-catalog/taxonomy/{kind}` | live | #92 / #93 |
+| (no nav) Collections | `listCollections` | `…/admin-catalog/collections` | API only | #98 — not an Admin page; old `/collections` redirects to Dashboard |
+| (no nav) Grocery | grocery users/items | `…/admin-catalog/grocery/*` | API only | #98 — end-user grocery; not an Admin page |
+| (no nav) Meal Plans | `listMealPlans` | `…/admin-catalog/meal-plans` | API only | #98 — not an Admin page |
+| (no nav) Pantry | `listPantry` | `…/admin-catalog/pantry` | API only | #98 — not an Admin page |
 | `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
 | `/settings/ai-platform` | providers / models / routes / usage / health | `…/admin-ai/*` | live | #53 / #101 — secrets write-only; never returned to the browser |
 | `/recipes/import` · `/recipes/import-review` | import jobs / enqueue / review actions | `…/admin-recipe-import/jobs*` | live | #55/#56 / #101 |
@@ -81,6 +81,7 @@ Compatibility redirects (no dead links after #64 rollback): `/commerce/products`
 | Function | `verify_jwt` | Purpose |
 |----------|--------------|---------|
 | `admin-auth` | false | Login / logout / session / change-password |
+| `admin-catalog` | false | Ops catalog APIs: recipes/ingredients/taxonomy/settings (#92). Collections/grocery/meal-plans/pantry endpoints exist but are **not** Admin nav (#98). |
 | `admin-users` | false | User list, detail, registration mix stats |
 | `admin-dashboard` | false | Ops KPI aggregation (#60 source/freshness; prefers #58/#59 tables) |
 | `admin-analytics` | false | Analytics aggregation (#60) |
