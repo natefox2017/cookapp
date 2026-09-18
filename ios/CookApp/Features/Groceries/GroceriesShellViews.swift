@@ -10,20 +10,7 @@ struct GroceriesHomeView: View {
             .toolbar {
 #if DEBUG
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu("Routes") {
-                        ForEach(AppRoute.groceriesPushRoutes, id: \.self) { route in
-                            Button(route.placeholderTitle) {
-                                navigation.push(route, on: .groceries)
-                            }
-                        }
-                        Divider()
-                        ForEach(AppSheet.groceriesSheets, id: \.self) { sheet in
-                            Button(sheet.placeholderTitle) {
-                                navigation.present(sheet)
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("debug.routes.groceries")
+                    DebugRouteChromeMenu(tab: .groceries, navigation: navigation)
                 }
 #endif
             }

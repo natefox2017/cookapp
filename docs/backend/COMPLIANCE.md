@@ -3,7 +3,7 @@
 Audit against the Cloud Backend Development Specification (Issue #11)  
 plus Notion Backend/Admin V2 review (2026-09-18).
 
-Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `semsjyrqjnumpvanibip`.
+Last reviewed: 2026-09-18T14:50Z against `main` (`8137bbd`) + live project `semsjyrqjnumpvanibip`.
 
 ## Verdict
 
@@ -28,7 +28,7 @@ Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `sems
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
 | Engineering (migrations, OpenAPI, errors, logging) | PASS | OpenAPI yaml ↔ json ↔ Edge `spec.json` synced |
 | No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI |
-| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md). Catalog Data pages live via `admin-catalog` (#92). Gate-deferred: AI Import / Analytics / Ops / Payments / AI Platform **nav pages**. |
+| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md). Ops catalog live via `admin-catalog` (#92 / PR #93). Gate-deferred: AI Import / Analytics / Ops / Payments / AI Platform **nav pages**. |
 | Production mock / default credentials | PASS | #51 / PR #62 + bootstrap-token follow-up #65 |
 | AI Platform | PASS | #53 — `admin-ai`; Admin Settings → AI Platform UI (#101) |
 | MediaStorageProvider + import artifacts | PASS | #54 |
@@ -41,7 +41,7 @@ Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `sems
 | Admin navigation IA (§14) | PARTIAL | #101 ships released ops pages (grouped Recipes/Commerce). Full #64 placeholder IA stays rolled back; personal surfaces remain out of Admin nav (#98) |
 
 \* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.  
-† Catalog Data pages (Recipes/Collections/Ingredients/Grocery/Meal Plans/Pantry/Categories + Settings persist) are live via `admin-catalog` (#92). AI Import / Analytics / Ops / Payments / AI Platform **nav pages** remain Gate-deferred (#61).
+† Admin **nav** catalog live via `admin-catalog` (#92 / PR #93): Recipes, Ingredients, Categories, plus Settings persist (General / Units / Categories). Collections / Grocery / Meal Plans / Pantry are **not** Admin pages (#98 / #99) — they belong on iOS; Edge routes may exist as API-only. AI Import / Analytics / Ops / Payments / AI Platform **nav pages** remain Gate-deferred (#61).
 
 ## Field aliases (documented, not bugs)
 
@@ -56,7 +56,7 @@ Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `sems
 Primary: PostgREST `/rest/v1/*` with JWT + anon key.  
 Privileged: `/functions/v1/delete-account`, `/functions/v1/revenuecat-webhook`.  
 Admin (custom bearer): see live inventory in [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md)  
-(`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`, `admin-ai`, `admin-integrations`, `admin-operations`, `admin-analytics`, `admin-store-sync`, `admin-recipe-import`, workers).  
+(`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`, `admin-catalog`, `admin-ai`, `admin-integrations`, `admin-operations`, `admin-analytics`, `admin-store-sync`, `admin-recipe-import`, workers).  
 Contract: `supabase/openapi/openapi.yaml` (served by `/functions/v1/openapi`).
 
 ## Explicit non-goals / Gate holds

@@ -10,20 +10,7 @@ struct CookbookHomeView: View {
             .toolbar {
 #if DEBUG
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu("Routes") {
-                        ForEach(AppRoute.cookbookPushRoutes, id: \.self) { route in
-                            Button(route.placeholderTitle) {
-                                navigation.push(route, on: .cookbook)
-                            }
-                        }
-                        Divider()
-                        ForEach(AppSheet.cookbookSheets, id: \.self) { sheet in
-                            Button(sheet.placeholderTitle) {
-                                navigation.present(sheet)
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("debug.routes.cookbook")
+                    DebugRouteChromeMenu(tab: .cookbook, navigation: navigation)
                 }
 #endif
             }

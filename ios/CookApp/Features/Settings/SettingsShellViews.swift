@@ -13,18 +13,22 @@ struct SettingsHomeView: View {
             .toolbar {
 #if DEBUG
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu("Routes") {
-                        ForEach(AppRoute.settingsPushRoutes, id: \.self) { route in
-                            Button(route.placeholderTitle) {
-                                navigation.push(route, on: .settings)
+                    DebugRouteChromeMenu(
+                        tab: .settings,
+                        navigation: navigation,
+                        extraItems: [
+                            GlassMenuItem(
+                                id: "foundation.diagnostics",
+                                title: "Foundation Diagnostics",
+                                systemImage: "stethoscope"
+                            )
+                        ],
+                        onExtra: { item in
+                            if item.id == "foundation.diagnostics" {
+                                showFoundationDiagnostics = true
                             }
                         }
-                        Divider()
-                        Button("Foundation Diagnostics") {
-                            showFoundationDiagnostics = true
-                        }
-                    }
-                    .accessibilityIdentifier("debug.routes.settings")
+                    )
                 }
 #endif
             }

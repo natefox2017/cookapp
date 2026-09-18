@@ -2,8 +2,8 @@
 
 Issue: [#52](https://github.com/natefox2017/cookapp/issues/52) · Parent [#49](https://github.com/natefox2017/cookapp/issues/49)  
 Notion: [Backend & Admin V2 §3 P0-B / §17](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242)  
-Nav scope: Issue [#101](https://github.com/natefox2017/cookapp/issues/101) Gate-released operational pages (AI Import, AI Platform, Analytics, Operations, Payments). Personal surfaces stay out of Admin nav ([#98](https://github.com/natefox2017/cookapp/issues/98)).  
-Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-18).
+Nav scope: Issue [#101](https://github.com/natefox2017/cookapp/issues/101) Gate-released operational pages (AI Import, AI Platform, Analytics, Operations, Payments). Personal surfaces stay out of Admin nav ([#98](https://github.com/natefox2017/cookapp/issues/98) / [#99](https://github.com/natefox2017/cookapp/issues/99)).  
+Audited against `main` (`1e0db94`, #93/#98/#99/#103) + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-18).
 
 ## Rules
 
@@ -20,7 +20,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 |--------|---------|
 | **live** | Edge Function deployed; Admin client uses `/functions/v1/…` |
 | **missing** | No Admin Edge Function; live client returns `501`; mock-only UI |
-| **hybrid** | Partial live (e.g. Settings Security via `admin-auth`; general settings not persisted live) |
+| **hybrid** | Partial live (Settings: persist general/units/categories via `admin-catalog`; System diagnostics; Security via `admin-auth`) |
 | **planned** | Confirmed in Notion V2; tracked under #49 children — **not** exposed as Admin nav until Gate allows |
 
 ## Navigation (Gate-released ops)
@@ -44,7 +44,7 @@ Shared source: `admin/src/components/layout/nav.ts` (grouped Recipes / Commerce;
 | Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live (#63) |
 | Settings → AI Platform | `/settings/ai-platform` | live (`AiPlatformPanel`) | live (#53 / #101) |
 
-End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections). Typed clients may still exist for contract / live catalog merge; routes redirect to Dashboard.
+End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections) — confirmed product: those belong in the iOS app (#98/#99). Typed clients / Edge routes may still exist as API-only; old URLs redirect to Dashboard.
 
 Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/ingredients` · `/data/categories` → flat counterparts; `/collections` · `/grocery` · `/meal-plans` · `/pantry` · `/data/collections` · `/data/grocery` · `/data/meal-plans` · `/data/pantry` → `/`; `/operations/audit-log` → `/operations/jobs`; unknown `/settings/:section` → `/settings/general`.
 

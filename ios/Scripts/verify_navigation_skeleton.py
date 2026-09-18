@@ -23,6 +23,11 @@ REQUIRED_FILES = [
     "CookApp/Features/MealPlan/MealPlanShellViews.swift",
     "CookApp/Features/Settings/SettingsShellViews.swift",
     "CookAppTests/Navigation/NavigationSkeletonTests.swift",
+    "CookApp/Core/Chrome/CookGlassStyle.swift",
+    "CookApp/Core/Chrome/FloatingTabBar.swift",
+    "CookApp/Core/Chrome/GlassHeaderButton.swift",
+    "CookApp/Core/Chrome/GlassMenu.swift",
+    "CookAppTests/Core/ChromeKitTests.swift",
 ]
 
 REQUIRED_TYPES = [
@@ -38,6 +43,11 @@ REQUIRED_TYPES = [
     "struct SettingsHomeView",
     "struct SearchShellView",
     "struct RecipeListShellView",
+    "struct FloatingTabChrome",
+    "struct FloatingTabBar",
+    "struct GlassHeaderButton",
+    "struct GlassMenuButton",
+    "enum CookGlassVariant",
 ]
 
 FORBIDDEN_TYPE_PATTERNS = [
@@ -134,8 +144,32 @@ def main() -> None:
     if "Sign Out" not in settings_src:
         fail("Debug Foundation Diagnostics must keep Sign Out")
 
+    shell = (IOS / "CookApp/App/Navigation/AppShellView.swift").read_text()
+    if "FloatingTabChrome" not in shell:
+        fail("AppShellView must compose FloatingTabChrome")
+    if "openSearch()" not in shell:
+        fail("AppShellView search circle must call openSearch()")
+    if ".tabItem" in shell:
+        fail("AppShellView must not keep a system TabView tabItem alongside custom glass chrome")
+
+    placeholder = (IOS / "CookApp/App/Navigation/RoutePlaceholderView.swift").read_text()
+    if "cookGlass" in placeholder or "glassEffect" in placeholder:
+        fail("RoutePlaceholderView must not use Liquid Glass (content layer)")
+
+    glass = (IOS / "CookApp/Core/Chrome/CookGlassStyle.swift").read_text()
+    for needle in (
+        "accessibilityReduceTransparency",
+        "accessibilityReduceMotion",
+        "isDarkerSystemColorsEnabled",
+        "glassEffect",
+        "GlassEffectContainer",
+    ):
+        if needle not in glass:
+            fail(f"CookGlassStyle missing accessibility/system glass hook: {needle}")
+
     print("Phase 1.5 navigation skeleton checks OK")
     print(f"  tabs={len(tab_cases)} routes={len(route_cases)} sheets={len(sheet_cases)}")
+    print("  chrome kit D1–D3 wired")
 
 
 if __name__ == "__main__":
