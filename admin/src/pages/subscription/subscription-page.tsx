@@ -568,7 +568,7 @@ export function SubscriptionPage() {
   return (
     <div>
       <PageHeader
-        title="Subscription"
+        title="Products · Subscriptions"
         description="Manage Apple / Android plan catalog, review entitlements, and track revenue."
         actions={
           <div className="flex items-center gap-2">

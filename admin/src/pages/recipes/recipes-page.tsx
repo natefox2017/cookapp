@@ -39,7 +39,7 @@ export function RecipesPage() {
   return (
     <div>
       <PageHeader
-        title="Recipes"
+        title="Library"
         description="Mock-only until Admin Recipes / AI Import APIs ship (see ADMIN_API_CONTRACT.md)."
       />
 

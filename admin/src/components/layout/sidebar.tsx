@@ -98,7 +98,10 @@ function LeafLink({
       title={leafTitle(item)}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground active:bg-sidebar-accent/80',
+        'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors',
+        'hover:bg-sidebar-accent hover:text-sidebar-primary-foreground',
+        'active:bg-sidebar-accent/80 active:text-sidebar-primary-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         collapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
         nested && !collapsed && 'py-1.5 pl-9 text-[13px]',
         active && 'bg-sidebar-accent text-sidebar-primary-foreground',
@@ -154,8 +157,12 @@ function NavGroupBlock({
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground',
-          under && 'text-sidebar-primary-foreground',
+          'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors',
+          'hover:bg-sidebar-accent hover:text-sidebar-primary-foreground',
+          'active:bg-sidebar-accent/80 active:text-sidebar-primary-foreground',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          under && 'bg-sidebar-accent/50 text-sidebar-primary-foreground',
+          open && 'text-sidebar-primary-foreground',
         )}
         aria-expanded={open}
       >
