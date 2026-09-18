@@ -28,7 +28,7 @@ Last reviewed: 2026-09-18T14:50Z against `main` (`8137bbd`) + live project `sems
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
 | Engineering (migrations, OpenAPI, errors, logging) | PASS | OpenAPI yaml ↔ json ↔ Edge `spec.json` synced |
 | No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI |
-| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md). Ops catalog live via `admin-catalog` (#92 / PR #93). Gate-deferred: AI Import / Analytics / Ops / Payments / AI Platform **nav pages**. |
+| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md). Ops catalog live via `admin-catalog` (#92 / PR #93). Gate-released (#101): AI Import / Analytics / Ops / Payments / AI Platform **nav pages**. |
 | Production mock / default credentials | PASS | #51 / PR #62 + bootstrap-token follow-up #65 |
 | AI Platform | PASS | #53 — `admin-ai`; Admin Settings → AI Platform UI (#101) |
 | MediaStorageProvider + import artifacts | PASS | #54 |
@@ -41,7 +41,7 @@ Last reviewed: 2026-09-18T14:50Z against `main` (`8137bbd`) + live project `sems
 | Admin navigation IA (§14) | PARTIAL | #101 ships released ops pages (grouped Recipes/Commerce). Full #64 placeholder IA stays rolled back; personal surfaces remain out of Admin nav (#98) |
 
 \* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.  
-† Admin **nav** catalog live via `admin-catalog` (#92 / PR #93): Recipes, Ingredients, Categories, plus Settings persist (General / Units / Categories). Collections / Grocery / Meal Plans / Pantry are **not** Admin pages (#98 / #99) — they belong on iOS; Edge routes may exist as API-only. AI Import / Analytics / Ops / Payments / AI Platform **nav pages** remain Gate-deferred (#61).
+† Admin **nav** catalog live via `admin-catalog` (#92 / PR #93): Recipes, Ingredients, Categories, plus Settings persist (General / Units / Categories). Collections / Grocery / Meal Plans / Pantry are **not** Admin pages (#98 / #99) — they belong on iOS; Edge routes may exist as API-only. AI Import / Analytics / Ops / Payments / AI Platform **nav pages** are Gate-released via [#101](https://github.com/natefox2017/cookapp/issues/101).
 
 ## Field aliases (documented, not bugs)
 
