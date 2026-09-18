@@ -59,6 +59,13 @@ final class AppNavigationState {
         }
     }
 
+    /// Floating search circle — Cookbook-owned Search route, never stacked.
+    func openSearch() {
+        selectedTab = AppRoute.search.owningTab
+        cookbookPath = NavigationPath()
+        cookbookPath.append(AppRoute.search)
+    }
+
     func present(_ sheet: AppSheet) {
         presentedSheet = sheet
     }

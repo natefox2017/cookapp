@@ -57,4 +57,13 @@ extension AppSheet {
     static var mealPlanSheets: [AppSheet] {
         allCases.filter { $0.owningTab == .mealPlan }
     }
+
+    static func sheets(for tab: AppTab) -> [AppSheet] {
+        switch tab {
+        case .cookbook: cookbookSheets
+        case .groceries: groceriesSheets
+        case .mealPlan: mealPlanSheets
+        case .settings: []
+        }
+    }
 }

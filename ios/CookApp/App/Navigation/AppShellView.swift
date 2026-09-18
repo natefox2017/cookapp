@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Signed-in root: four tabs, each with an independent `NavigationStack`.
+/// Signed-in root: four tabs, each with an independent `NavigationStack`,
+/// plus shared Liquid Glass floating tab chrome (D1) and search circle (D2).
 struct AppShellView: View {
     @State private var navigation = AppNavigationState()
 
@@ -22,6 +23,13 @@ struct AppShellView: View {
             tabStack(for: .settings) {
                 SettingsHomeView(navigation: navigation)
             }
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            FloatingTabChrome(
+                selectedTab: $navigation.selectedTab,
+                onSearch: { navigation.openSearch() }
+            )
         }
         .sheet(item: $navigation.presentedSheet) { sheet in
             NavigationStack {
@@ -47,11 +55,13 @@ struct AppShellView: View {
                 .navigationDestination(for: AppRoute.self) { route in
                     NavigationDestinationBuilder.view(for: route)
                 }
+                .toolbar(.hidden, for: .tabBar)
         }
         .tabItem {
             Label(tab.title, systemImage: tab.systemImage)
         }
         .tag(tab)
+        .toolbar(.hidden, for: .tabBar)
     }
 
     private func pathBinding(for tab: AppTab) -> Binding<NavigationPath> {
