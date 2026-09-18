@@ -2,11 +2,7 @@ import {
   LayoutDashboard,
   Users,
   CookingPot,
-  Library,
   Carrot,
-  ShoppingCart,
-  CalendarDays,
-  Refrigerator,
   Tags,
   CreditCard,
   Settings,
@@ -24,19 +20,16 @@ export interface NavItem {
 }
 
 /**
- * Flat Admin nav — only capabilities already approved & implemented (or mock UI).
- * Hierarchical / planned IA from #64 was rolled back per Issue #61 (Stage 4 Gate).
- * Integrations (#63) lives under Settings tabs, not as a separate top-level IA module.
+ * Flat Admin nav — ops + catalog only.
+ * End-user personal surfaces (Meal Plan, Grocery, Pantry, Collections) stay in the
+ * iOS app, not the ops console. Hierarchical / planned IA from #64 was rolled back
+ * per Issue #61 (Stage 4 Gate). Integrations (#63) lives under Settings tabs.
  */
 export const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/', icon: LayoutDashboard, apiStatus: 'live' },
   { title: 'Users', href: '/users', icon: Users, apiStatus: 'live' },
   { title: 'Recipes', href: '/recipes', icon: CookingPot, apiStatus: 'mock_only' },
-  { title: 'Collections', href: '/collections', icon: Library, apiStatus: 'mock_only' },
   { title: 'Ingredients', href: '/ingredients', icon: Carrot, apiStatus: 'mock_only' },
-  { title: 'Grocery', href: '/grocery', icon: ShoppingCart, apiStatus: 'mock_only' },
-  { title: 'Meal Plans', href: '/meal-plans', icon: CalendarDays, apiStatus: 'mock_only' },
-  { title: 'Pantry', href: '/pantry', icon: Refrigerator, apiStatus: 'mock_only' },
   { title: 'Categories', href: '/categories', icon: Tags, apiStatus: 'mock_only' },
   { title: 'Subscription', href: '/subscription', icon: CreditCard, apiStatus: 'live' },
   { title: 'Settings', href: '/settings', icon: Settings, apiStatus: 'hybrid' },
