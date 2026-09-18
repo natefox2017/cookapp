@@ -47,17 +47,22 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Users | `/functions/v1/admin-users/*` | live |
 | Dashboard | `/functions/v1/admin-dashboard` | live |
 | Subscription | `/functions/v1/admin-subscriptions/*` | live |
+| Payments | `/functions/v1/admin-subscriptions/transactions` | **live** (#58 / #101) |
+| Analytics | `/functions/v1/admin-analytics` | **live** (#60 / #101) |
+| Operations | `/functions/v1/admin-operations/jobs` | **live** (#60 / #101) |
+| AI Import | `/functions/v1/admin-recipe-import/*` | **live** (#55 / #101) |
 | Recipes / Ingredients / Categories | — | **missing** → live client `501`; sidebar **Pending** |
 | Settings → General / Security / System | hybrid | Security via `admin-auth`; general diagnostics-only |
 | Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
+| Settings → AI Platform | `/functions/v1/admin-ai/*` | **live** (#53 / #101) — secrets write-only |
 
-Flat navigation (Issue #61 rollback of #64 Stage-4-overreach) in `admin/src/components/layout/nav.ts`:
+Grouped navigation in `admin/src/components/layout/nav.ts` (Issue #101):
 
-- Dashboard · Users · Recipes · Ingredients · Categories · Subscription · Settings
+- Dashboard · Users · Recipes (catalog + AI Import + Import Review) · Ingredients · Categories · Commerce (Subscription + Payments) · Analytics · Operations · Settings
 
 End-user personal surfaces (Meal Plan, Grocery, Pantry, Collections) are **not** Admin nav — they belong in the iOS app. Old `/meal-plans` · `/grocery` · `/pantry` · `/collections` URLs redirect to Dashboard.
 
-Settings tabs include Integrations (#63). Analytics / Operations / Payments / AI Platform / AI Import are **not** exposed as Admin nav or placeholder pages until Notion Gate allows; former #64 paths redirect to existing pages.
+Settings tabs include Integrations (#63) and AI Platform (#101). `/operations/audit-log` redirects to Jobs.
 
 ## Auth
 
@@ -98,10 +103,15 @@ Admin Dashboard UI
 | `/` | Dashboard | yes (`admin-dashboard`) |
 | `/users` | Users | yes |
 | `/recipes` | Recipe catalog + detail | pending |
+| `/recipes/import` | AI Import enqueue | yes (`admin-recipe-import`) |
+| `/recipes/import-review` | Import review queue | yes (`admin-recipe-import`) |
 | `/ingredients` | Ingredients CRUD | pending |
 | `/categories` | Taxonomy | pending |
 | `/subscription` | Plans · Records · Revenue | yes |
-| `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |
+| `/commerce/payments` | Payment transactions | yes (`admin-subscriptions/transactions`) |
+| `/analytics` | Downloads / growth / import quality | yes (`admin-analytics`) |
+| `/operations/jobs` | Jobs & Syncs | yes (`admin-operations`) |
+| `/settings` | General / Integrations / AI Platform / Units / Categories / Security / System | hybrid + Integrations/AI live |
 
 Sidebar collapses via the header control only (persisted). In live mode, pending modules show a **Pending** badge.
 

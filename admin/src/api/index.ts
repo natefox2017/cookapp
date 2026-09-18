@@ -4,6 +4,7 @@ export * from '@/api/catalog'
 export * from '@/api/auth'
 export * from '@/api/subscriptions'
 export * from '@/api/integrations'
+export * from '@/api/ops'
 export { isMockMode, ApiError } from '@/api/client'
 export { isNotImplementedError, notImplemented } from '@/api/not-implemented'
 export {

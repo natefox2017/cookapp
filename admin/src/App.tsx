@@ -6,10 +6,15 @@ import { LoginPage } from '@/pages/login/login-page'
 import { DashboardPage } from '@/pages/dashboard/dashboard-page'
 import { UsersPage } from '@/pages/users/users-page'
 import { RecipeDetailPage, RecipesPage } from '@/pages/recipes/recipes-page'
+import { ImportPage } from '@/pages/recipes/import-page'
+import { ImportReviewPage } from '@/pages/recipes/import-review-page'
 import { IngredientsPage } from '@/pages/ingredients/ingredients-page'
 import { CategoriesPage } from '@/pages/categories/categories-page'
 import { SubscriptionPage } from '@/pages/subscription/subscription-page'
-import { SettingsPage } from '@/pages/settings/settings-page'
+import { PaymentsPage } from '@/pages/payments/payments-page'
+import { AnalyticsPage } from '@/pages/analytics/analytics-page'
+import { OperationsPage } from '@/pages/operations/operations-page'
+import { SettingsPage, type SettingsSection } from '@/pages/settings/settings-page'
 
 function ProductionMockBlocked() {
   return (
@@ -28,15 +33,21 @@ function ProductionMockBlocked() {
   )
 }
 
-/** Settings deep-links from #63 (Integrations) + Security/System tabs. */
-const SETTINGS_SECTIONS = new Set(['general', 'security', 'system', 'integrations'])
+/** Settings deep-links: General / Security / System / Integrations / AI Platform. */
+const SETTINGS_SECTIONS = new Set<SettingsSection>([
+  'general',
+  'security',
+  'system',
+  'integrations',
+  'ai-platform',
+])
 
 function SettingsSectionRoute() {
   const { section } = useParams()
-  if (!section || !SETTINGS_SECTIONS.has(section)) {
+  if (!section || !SETTINGS_SECTIONS.has(section as SettingsSection)) {
     return <Navigate to="/settings/general" replace />
   }
-  return <SettingsPage section={section as 'general' | 'security' | 'system' | 'integrations'} />
+  return <SettingsPage section={section as SettingsSection} />
 }
 
 export default function App() {
@@ -54,15 +65,10 @@ export default function App() {
             <Route path="users" element={<UsersPage />} />
 
             {/* Compatibility redirects from rolled-back #64 paths (before :id catch-alls) */}
-            <Route path="recipes/import" element={<Navigate to="/recipes" replace />} />
-            <Route path="recipes/import-review" element={<Navigate to="/recipes" replace />} />
             <Route path="commerce/products" element={<Navigate to="/subscription" replace />} />
-            <Route path="commerce/payments" element={<Navigate to="/subscription" replace />} />
             <Route path="data/ingredients" element={<Navigate to="/ingredients" replace />} />
             <Route path="data/categories" element={<Navigate to="/categories" replace />} />
-            <Route path="analytics" element={<Navigate to="/" replace />} />
-            <Route path="operations/jobs" element={<Navigate to="/" replace />} />
-            <Route path="operations/audit-log" element={<Navigate to="/" replace />} />
+            <Route path="operations/audit-log" element={<Navigate to="/operations/jobs" replace />} />
 
             {/* End-user personal surfaces — not an Admin ops view */}
             <Route path="collections" element={<Navigate to="/" replace />} />
@@ -74,13 +80,18 @@ export default function App() {
             <Route path="data/meal-plans" element={<Navigate to="/" replace />} />
             <Route path="data/pantry" element={<Navigate to="/" replace />} />
 
+            <Route path="recipes/import" element={<ImportPage />} />
+            <Route path="recipes/import-review" element={<ImportReviewPage />} />
             <Route path="recipes" element={<RecipesPage />} />
             <Route path="recipes/:id" element={<RecipeDetailPage />} />
             <Route path="ingredients" element={<IngredientsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="subscription" element={<SubscriptionPage />} />
+            <Route path="commerce/payments" element={<PaymentsPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="operations/jobs" element={<OperationsPage />} />
 
-            {/* Settings — implemented tabs only (#63 Integrations kept; unknown sections → general) */}
+            {/* Settings — implemented tabs only (unknown sections → general) */}
             <Route path="settings" element={<Navigate to="/settings/general" replace />} />
             <Route path="settings/:section" element={<SettingsSectionRoute />} />
 

@@ -20,8 +20,9 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { validateAdminPassword } from '@/lib/password-policy'
 import { IntegrationsPanel } from '@/pages/settings/integrations-panel'
+import { AiPlatformPanel } from '@/pages/settings/ai-platform-panel'
 
-export type SettingsSection = 'general' | 'security' | 'system' | 'integrations'
+export type SettingsSection = 'general' | 'security' | 'system' | 'integrations' | 'ai-platform'
 type SettingsTab = SettingsSection | 'units' | 'categories'
 
 export function SettingsPage({ section = 'general' }: { section?: SettingsSection }) {
@@ -54,7 +55,12 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
   function onTabChange(next: string) {
     const nextTab = next as SettingsTab
     setTab(nextTab)
-    if (nextTab === 'security' || nextTab === 'system' || nextTab === 'integrations') {
+    if (
+      nextTab === 'security' ||
+      nextTab === 'system' ||
+      nextTab === 'integrations' ||
+      nextTab === 'ai-platform'
+    ) {
       navigate(`/settings/${nextTab}`, { replace: true })
       return
     }
@@ -121,12 +127,11 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
   const persist = writeCapability('settings-persist', isMockMode())
   const persistLocked = !persist.canWrite
   const systemLocked = !isMockMode()
+  const liveSettingsTab = tab === 'security' || tab === 'integrations' || tab === 'ai-platform'
   const showSettingsSave =
-    tab !== 'security' &&
-    tab !== 'integrations' &&
-    (tab === 'system' ? isMockMode() : persist.canWrite)
+    !liveSettingsTab && (tab === 'system' ? isMockMode() : persist.canWrite)
   const persistNotice =
-    persistLocked && tab !== 'security' && tab !== 'integrations'
+    persistLocked && !liveSettingsTab
       ? `${persist.reason} These fields are read-only diagnostics.`
       : systemLocked && tab === 'system'
         ? 'System is live diagnostics (build-time API mode). Log level is read-only in live mode.'
@@ -138,10 +143,10 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
         title="Settings"
         description={
           persistLocked
-            ? 'Live mode: Security uses admin-auth; Integrations uses admin-integrations. General/units/categories are diagnostics-only (no persist API).'
+            ? 'Live mode: Security uses admin-auth; Integrations uses admin-integrations; AI Platform uses admin-ai. General/units/categories are diagnostics-only (no persist API).'
             : systemLocked
-              ? 'General, units, and category policy persist via admin-catalog. System is live diagnostics. Security and Integrations stay live.'
-              : 'General, units, category policy, integrations, and system configuration.'
+              ? 'General, units, and category policy persist via admin-catalog. System is live diagnostics. Security, Integrations, and AI Platform stay live.'
+              : 'General, units, category policy, integrations, AI platform, and system configuration.'
         }
         actions={
           showSettingsSave ? (
@@ -154,11 +159,12 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
       {persistNotice ? <PendingApiNotice message={persistNotice} /> : null}
 
       <Tabs value={tab} onValueChange={onTabChange}>
-        <TabsList>
+        <TabsList className="h-auto min-h-9 flex-wrap justify-start">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="ai-platform">AI Platform</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
@@ -360,6 +366,19 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
             </CardHeader>
           </Card>
           <IntegrationsPanel />
+        </TabsContent>
+
+        <TabsContent value="ai-platform">
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>AI Platform</CardTitle>
+              <CardDescription>
+                Providers, models, routes, usage, and health via admin-ai. Secrets are write-only
+                and never returned to the browser.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <AiPlatformPanel />
         </TabsContent>
 
         <TabsContent value="security">
