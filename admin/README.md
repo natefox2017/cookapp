@@ -46,7 +46,7 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Dashboard | `/functions/v1/admin-dashboard` | live |
 | Subscription | `/functions/v1/admin-subscriptions/*` | live |
 | Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories | — | **missing** → live client returns `501`; sidebar marks **Pending** |
-| Settings | hybrid | Security via `admin-auth`; general settings diagnostics-only in live mode |
+| Settings | hybrid + Integrations live | Security via `admin-auth`; Integrations via `admin-integrations` (#63); general settings diagnostics-only in live mode |
 
 ## Auth
 
@@ -94,7 +94,7 @@ Admin Dashboard UI
 | `/pantry` | Pantry | pending |
 | `/categories` | Taxonomy | pending |
 | `/subscription` | Plans · Records · Revenue | yes |
-| `/settings` | General / Units / Categories / Security / System | hybrid |
+| `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |
 
 Sidebar collapses via header / rail control (persisted). In live mode, pending modules show a **Pending** badge.
 

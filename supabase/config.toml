@@ -78,5 +78,8 @@ verify_jwt = false
 [functions.admin-ai]
 verify_jwt = false
 
+[functions.admin-integrations]
+verify_jwt = false
+
 [functions.recipe-import-worker]
 verify_jwt = false

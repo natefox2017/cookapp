@@ -33,6 +33,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | `/users` | `listUsers` / `getUser` / `getUserRegistrationStats` | `GET /functions/v1/admin-users` · `…/:id` · `…/stats` | live | #44 |
 | `/subscription` | plans / records / revenue | `…/admin-subscriptions/{plans,records,revenue}` | live | #35 |
 | `/settings` General/Units/Categories | `getSettings` / `updateSettings` | — | hybrid | Live: build-time diagnostics only; no persist API. Security uses `admin-auth` |
+| Settings → Integrations | `listIntegrations` / `testIntegration` / secret write | `GET/POST/PUT /functions/v1/admin-integrations…` | live | #63 — Google Play always Future Reserved |
 | `/recipes` | `listRecipes` / CRUD | — | missing | Planned: Admin Recipes + AI Import (#55) |
 | `/collections` | `listCollections` | — | missing | Planned Admin Data APIs |
 | `/ingredients` | ingredients CRUD | — | missing | |
@@ -53,6 +54,8 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 | `admin-users` | false | User list, detail, registration mix stats |
 | `admin-dashboard` | false | Ops KPI aggregation |
 | `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series |
+| `admin-ai` | false | AI Platform providers / models / routes / usage / health |
+| `admin-integrations` | false | Integration connection status / test / write-only secrets (#63) |
 | `openapi` | false | Serves OpenAPI JSON |
 | `health` | true | Module probe (end-user JWT) |
 | `delete-account` | true | End-user account purge |

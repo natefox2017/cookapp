@@ -112,7 +112,8 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | AI API Secret configured | todo | server-side `secret_ref` only；Admin 仅见 `secretConfigured` | |
 | Primary Recipe Model | todo | route `recipe_import_text` / `recipe_import_vision` | |
 | Fallback Model | todo | max 3 fallbacks per route | |
-| App Store Connect API configured | todo | P1 Analytics #59；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
+| App Store Connect API configured | todo | P1 Analytics #59 + Integrations #63; Admin Settings → Integrations | 2026-09-18 |
+| Integrations status page | done | Settings → Integrations (`admin-integrations`); Google Play Future Reserved | 2026-09-18 |
 | Analytics access configured | todo | | |
 | Financial Reports access configured | todo | | |
 | Storage Provider | done | Supabase（R2 / Stream = n/a / future） | |
@@ -150,3 +151,4 @@ AI Platform Edge Function：`/functions/v1/admin-ai/*`（Issue #53）
 | 2026-09-18 | #54：`STORAGE_CLEANUP_SECRET` for import-artifact TTL cleanup |
 | 2026-09-18 | #53：AI Platform status（Gateway / secret_ref / routes） |
 | 2026-09-18 | #56：`RECIPE_IMPORT_WORKER_SECRET` for Import Queue worker |
+| 2026-09-18 | #63：Admin Integrations connection status (`admin-integrations`) |

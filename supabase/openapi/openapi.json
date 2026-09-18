@@ -71,6 +71,9 @@
     },
     {
       "name": "AdminAI"
+    },
+    {
+      "name": "AdminIntegrations"
     }
   ],
   "paths": {
@@ -2928,6 +2931,264 @@
           }
         }
       }
+    },
+    "/functions/v1/admin-integrations": {
+      "get": {
+        "tags": [
+          "AdminIntegrations"
+        ],
+        "summary": "List integration connection statuses",
+        "description": "Returns connected / not_configured / degraded / future_reserved for\nSupabase, RevenueCat, App Store Connect, AI Gateway, and Google Play.\nSecrets are never returned as plaintext — only `secretConfigured`.\nGoogle Play is always Future Reserved / Not Connected (Issue #63).\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminIntegrationsList",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration status list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-integrations/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/IntegrationId"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "AdminIntegrations"
+        ],
+        "summary": "Get one integration status",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminIntegrationsGet",
+        "responses": {
+          "200": {
+            "description": "Integration status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-integrations/{id}/test": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/IntegrationId"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "AdminIntegrations"
+        ],
+        "summary": "Test integration connection",
+        "description": "Backend-initiated probe. Admin browser never calls third-party providers\ndirectly. Google Play test is rejected (Future Reserved).\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminIntegrationsTest",
+        "responses": {
+          "200": {
+            "description": "Probe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationTestResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-integrations/{id}/secret": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/IntegrationId"
+          }
+        }
+      ],
+      "put": {
+        "tags": [
+          "AdminIntegrations"
+        ],
+        "summary": "Write-only integration secret (Owner)",
+        "description": "Stores ciphertext in `integration_secrets`. There is no read-full-secret API.\nResponse only confirms `secretConfigured: true`. Currently supported for\n`app_store_connect`. RevenueCat webhook secret remains Edge env-only;\nAI Gateway secrets use `admin-ai`.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminIntegrationsPutSecret",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "privateKey": {
+                    "type": "string",
+                    "description": "ASC .p8 private key (write-only)"
+                  },
+                  "apiKey": {
+                    "type": "string"
+                  },
+                  "secret": {
+                    "type": "string"
+                  },
+                  "issuerId": {
+                    "type": "string"
+                  },
+                  "keyId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secret stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "secretConfigured",
+                    "integration"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "secretConfigured": {
+                      "type": "boolean"
+                    },
+                    "integration": {
+                      "$ref": "#/components/schemas/IntegrationStatus"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-integrations/{id}/config": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/IntegrationId"
+          }
+        }
+      ],
+      "put": {
+        "tags": [
+          "AdminIntegrations"
+        ],
+        "summary": "Update non-secret integration config (Owner)",
+        "description": "Non-secret fields only (e.g. ASC issuerId / keyId). Never accepts secret values.",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminIntegrationsPutConfig",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "issuerId": {
+                    "type": "string"
+                  },
+                  "keyId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Config saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "integration": {
+                      "$ref": "#/components/schemas/IntegrationStatus"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3022,6 +3283,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorBody"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
             }
           }
         }
@@ -5145,6 +5416,170 @@
               "null"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "IntegrationId": {
+        "type": "string",
+        "enum": [
+          "supabase",
+          "revenuecat",
+          "app_store_connect",
+          "ai_gateway",
+          "google_play"
+        ]
+      },
+      "IntegrationConnectionStatus": {
+        "type": "string",
+        "enum": [
+          "connected",
+          "not_configured",
+          "degraded",
+          "future_reserved"
+        ]
+      },
+      "IntegrationConfigCompleteness": {
+        "type": "object",
+        "required": [
+          "required",
+          "configured",
+          "missing",
+          "percent"
+        ],
+        "properties": {
+          "required": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "configured": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "percent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      },
+      "IntegrationStatus": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "configCompleteness",
+          "secretConfigured",
+          "testSupported",
+          "secretWriteSupported",
+          "reserved"
+        ],
+        "description": "Integration connection status for Admin Settings → Integrations (Issue #63).\n`secretConfigured` is boolean only — plaintext secrets are never returned.\n",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/IntegrationId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IntegrationConnectionStatus"
+          },
+          "lastSuccessAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastErrorAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastErrorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastCheckedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "configCompleteness": {
+            "$ref": "#/components/schemas/IntegrationConfigCompleteness"
+          },
+          "secretConfigured": {
+            "type": "boolean"
+          },
+          "testSupported": {
+            "type": "boolean"
+          },
+          "secretWriteSupported": {
+            "type": "boolean"
+          },
+          "reserved": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "IntegrationsListResponse": {
+        "type": "object",
+        "required": [
+          "integrations",
+          "checkedAt"
+        ],
+        "properties": {
+          "integrations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationStatus"
+            }
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IntegrationTestResult": {
+        "type": "object",
+        "required": [
+          "ok",
+          "message",
+          "integration"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "integration": {
+            "$ref": "#/components/schemas/IntegrationStatus"
           }
         }
       }

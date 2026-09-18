@@ -57,6 +57,8 @@ supabase/
     admin-subscriptions/
     storage-cleanup-import-artifacts/
     admin-ai/          # AI Platform Admin APIs (#53)
+    admin-integrations/ # Integrations status (#63)
+    recipe-import-worker/
 ```
 
 ## API documentation
@@ -112,6 +114,7 @@ Authorization: Bearer <access_token>
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue (+ audit) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
+| `admin-integrations` | no (custom admin bearer; Owner for secret/config writes) | Integrations connection status / test / write-only secrets (#63) |
 | `recipe-import-worker` | no (`RECIPE_IMPORT_WORKER_SECRET`) | pgmq Import Queue worker tick (#56) |
 
 ### Admin auth
