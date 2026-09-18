@@ -1,0 +1,86 @@
+{
+  "02": {
+    "full_mae": 32.01,
+    "top_mae": 66.88,
+    "tabs_mae": 21.71,
+    "mid_mae": 26.55,
+    "hero_mae": null,
+    "live_shape": [
+      954,
+      440,
+      3
+    ],
+    "ref_shape": [
+      956,
+      440,
+      3
+    ],
+    "verdict": "PASS*",
+    "hard_fail": false,
+    "notes": [],
+    "claimed": 33.1
+  },
+  "11": {
+    "full_mae": 15.18,
+    "top_mae": 6.94,
+    "tabs_mae": 40.2,
+    "mid_mae": 13.63,
+    "hero_mae": null,
+    "live_shape": [
+      954,
+      440,
+      3
+    ],
+    "ref_shape": [
+      956,
+      440,
+      3
+    ],
+    "verdict": "PASS*",
+    "hard_fail": false,
+    "notes": [],
+    "claimed": 38.6
+  },
+  "41": {
+    "full_mae": 48.85,
+    "top_mae": 52.04,
+    "tabs_mae": 34.95,
+    "mid_mae": 49.58,
+    "hero_mae": 77.71,
+    "live_shape": [
+      954,
+      440,
+      3
+    ],
+    "ref_shape": [
+      956,
+      440,
+      3
+    ],
+    "verdict": "PASS*",
+    "hard_fail": false,
+    "notes": [],
+    "claimed": 41.05
+  },
+  "05": {
+    "full_mae": 10.67,
+    "top_mae": 20.5,
+    "tabs_mae": 2.88,
+    "mid_mae": 9.75,
+    "hero_mae": null,
+    "live_shape": [
+      954,
+      440,
+      3
+    ],
+    "ref_shape": [
+      956,
+      440,
+      3
+    ],
+    "verdict": "PASS*",
+    "hard_fail": false,
+    "notes": [],
+    "claimed": 11.2
+  }
+}

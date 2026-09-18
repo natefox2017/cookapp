@@ -1,0 +1,76 @@
+{
+  "generated": "2026-09-18T00:08Z",
+  "purpose": "Independent honesty spot-check of Issue #10 FAIL=0 / Acceptance [x]",
+  "figma": "FHbikS2jILAeMv8mote0vD",
+  "frames": {
+    "02": "116:18195",
+    "11": "130:14331",
+    "41": "117:10305",
+    "05": "116:18318"
+  },
+  "mae": {
+    "02": {
+      "full_mae": 32.01,
+      "top_mae": 66.88,
+      "tabs_mae": 21.71,
+      "mid_mae": 26.55,
+      "hero_mae": null,
+      "verdict": "PASS*",
+      "hard_fail": false,
+      "notes": []
+    },
+    "11": {
+      "full_mae": 15.18,
+      "top_mae": 6.94,
+      "tabs_mae": 40.2,
+      "mid_mae": 13.63,
+      "hero_mae": null,
+      "verdict": "PASS*",
+      "hard_fail": false,
+      "notes": []
+    },
+    "41": {
+      "full_mae": 48.85,
+      "top_mae": 52.04,
+      "tabs_mae": 34.95,
+      "mid_mae": 49.58,
+      "hero_mae": 77.71,
+      "verdict": "PASS*",
+      "hard_fail": false,
+      "notes": []
+    },
+    "05": {
+      "full_mae": 11.15,
+      "top_mae": 20.5,
+      "tabs_mae": 2.88,
+      "mid_mae": 9.33,
+      "hero_mae": null,
+      "verdict": "PASS*",
+      "hard_fail": false,
+      "notes": []
+    }
+  },
+  "glass": {
+    "TopButton_master": 0.5,
+    "Capsule_Label": 0.7,
+    "Capsule_AddMore": 0.5,
+    "Capsule_CartCalendarMore": 0.5,
+    "02_instances": 0.5,
+    "05_Back": 0.7,
+    "11_Leading": 0.5,
+    "11_FourTabCapsule": 0.72,
+    "41_Close": 0.55,
+    "range": "0.50\u20130.78 white frost (not dark)",
+    "ok": true
+  },
+  "findings": {
+    "05_regression": "LIVE had 24 Hour Timer + toggle ON + picker 1:1:1 + separate preset chips \u2014 hard FAIL vs create-timer.jpg; fixed on master 116:8985 \u2192 Untitled Timer / toggle OFF / 0:0:0 / segmented gray presets",
+    "02": "PASS* MAE~32; light frosted glass fill op=0.5 white confirmed; top MAE inflated by hero photo through glass",
+    "11": "PASS* MAE~15 (better than claimed 38.6); no Filter; light glass",
+    "41": "PASS* full MAE~49 photo/margins residual; IA matches Join Pestle Pro; close glass op=0.55 white",
+    "hard_FAIL_after_fix": 0,
+    "acceptance": "keep [x] after 05 fix; photo/icon AA residuals noted",
+    "issue_state": "OPEN",
+    "notion_updated": true
+  }
+}
