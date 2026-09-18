@@ -87,9 +87,8 @@ function platformLabel(platform: StorePlatform | null) {
   return '—'
 }
 
-function PlansPanel() {
+function PlansPanel({ platform }: { platform: StorePlatform | 'all' }) {
   const { data, loading, error, reload } = useAsyncData(() => listSubscriptionPlans(), [])
-  const [platformFilter, setPlatformFilter] = useState<StorePlatform | 'all'>('all')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<SubscriptionPlanProduct | null>(null)
   const [form, setForm] = useState<SubscriptionPlanInput>(emptyPlan)
@@ -97,9 +96,9 @@ function PlansPanel() {
 
   const rows = useMemo(() => {
     if (!data) return []
-    if (platformFilter === 'all') return data
-    return data.filter((item) => item.platform === platformFilter)
-  }, [data, platformFilter])
+    if (platform === 'all') return data
+    return data.filter((item) => item.platform === platform)
+  }, [data, platform])
 
   function openCreate() {
     setEditing(null)
@@ -168,23 +167,7 @@ function PlansPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Label className="text-muted-foreground">Platform</Label>
-          <Select
-            value={platformFilter}
-            onValueChange={(value) => setPlatformFilter(value as StorePlatform | 'all')}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="app_store">Apple</SelectItem>
-              <SelectItem value="play_store">Android</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4" />
           Add plan
@@ -522,17 +505,17 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
           </CardHeader>
           <CardContent>
             <ChartContainer config={revenueChartConfig} className="h-64 w-full aspect-auto">
-              <BarChart data={data.series}>
+              <BarChart data={data.series} margin={{ left: 8, right: 8, top: 8, bottom: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} width={40} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend />
                 {(platform === 'all' || platform === 'app_store') && (
-                  <Bar dataKey="apple" fill="var(--color-apple)" radius={4} />
+                  <Bar dataKey="apple" name="Apple" fill="var(--color-apple)" radius={4} />
                 )}
                 {(platform === 'all' || platform === 'play_store') && (
-                  <Bar dataKey="android" fill="var(--color-android)" radius={4} />
+                  <Bar dataKey="android" name="Android" fill="var(--color-android)" radius={4} />
                 )}
               </BarChart>
             </ChartContainer>
@@ -546,18 +529,26 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
           </CardHeader>
           <CardContent>
             <ChartContainer config={revenueChartConfig} className="h-64 w-full aspect-auto">
-              <AreaChart data={data.series}>
+              <AreaChart data={data.series} margin={{ left: 8, right: 12, top: 8, bottom: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} width={40} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  width={40}
+                  domain={[0, (dataMax: number) => Math.ceil((dataMax || 0) * 1.1)]}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area
                   type="monotone"
                   dataKey="total"
+                  name="Total"
                   stroke="var(--color-total)"
                   fill="var(--color-total)"
                   fillOpacity={0.18}
                   strokeWidth={2}
+                  connectNulls
+                  isAnimationActive={false}
                 />
               </AreaChart>
             </ChartContainer>
@@ -604,7 +595,7 @@ export function SubscriptionPage() {
         </TabsList>
 
         <TabsContent value="plans">
-          <PlansPanel />
+          <PlansPanel platform={platform} />
         </TabsContent>
         <TabsContent value="records">
           <RecordsPanel platform={platform} />
