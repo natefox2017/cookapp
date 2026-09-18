@@ -44,14 +44,22 @@ export function isDefaultAdminCredentials(
 }
 
 /**
- * Production blocks default seed login unless explicitly allowed.
- * Fail-secure: unset env is treated as production.
+ * Production blocks default seed login unless ENV is explicitly local/dev.
+ * Fail-secure: unset COOKAPP_ADMIN_ENV is treated as production.
  */
 export function isAdminProductionRuntime(): boolean {
-  const allowDefault =
-    (Deno.env.get("COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS") ?? "")
-      .toLowerCase() === "true";
-  if (allowDefault) return false;
   const mode = (Deno.env.get("COOKAPP_ADMIN_ENV") ?? "production").toLowerCase();
   return mode !== "development" && mode !== "dev" && mode !== "local";
+}
+
+/**
+ * Dev-only escape hatch for default admin/admin login.
+ * Ignored when runtime is production (even if env var is mistakenly set).
+ */
+export function allowDefaultAdminCredentials(): boolean {
+  if (isAdminProductionRuntime()) return false;
+  return (
+    (Deno.env.get("COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS") ?? "")
+      .toLowerCase() === "true"
+  );
 }

@@ -191,8 +191,19 @@
           "AdminAuth"
         ],
         "summary": "Bootstrap Owner credentials",
-        "description": "Replaces the default seed account with a strong Owner password.\nRequires current default password when a seed row exists.\nNo prior session required. Does not return secret values.\n",
+        "description": "Replaces the default seed account with a strong Owner password.\nRequires current default password when a seed row exists.\nProduction requires header `X-CookApp-Bootstrap-Token` matching\nsecret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).\nLocal/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.\n",
         "security": [],
+        "parameters": [
+          {
+            "name": "X-CookApp-Bootstrap-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {

@@ -101,7 +101,8 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | Production Admin Owner username | todo | 勿使用默认 `admin`/`admin` | |
 | Production Owner password（强密码） | todo | 仅存 Secrets / 密码管理器；用 `POST /functions/v1/admin-auth/bootstrap` | |
 | `COOKAPP_ADMIN_ENV`（Supabase secrets） | todo | Production 设为 `production`（默认即 production） | |
-| `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS` | n/a | 仅 local/dev；Production 禁止 `true` | |
+| `COOKAPP_ADMIN_BOOTSTRAP_TOKEN`（Supabase secrets） | todo | 一次性强随机 token；Bootstrap 请求头 `X-CookApp-Bootstrap-Token`；用完可轮换/删除 | |
+| `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS` | n/a | 仅当 `COOKAPP_ADMIN_ENV=development`；Production 即使误设也为 false | |
 | Admin live API base URL | todo | `VITE_ADMIN_API_BASE_URL`；Production build 禁止 `VITE_ADMIN_USE_MOCK=true` | |
 | AI Gateway Base URL | todo | Backend V2 AI Platform（#53） | |
 | AI Protocol | todo | 首期 OpenAI-compatible | |

@@ -65,6 +65,30 @@ function mapAdmin(row: {
   };
 }
 
+/** Production bootstrap requires COOKAPP_ADMIN_BOOTSTRAP_TOKEN (header or Bearer). */
+function requireBootstrapAuthorization(req: Request): void {
+  const expected = Deno.env.get("COOKAPP_ADMIN_BOOTSTRAP_TOKEN") ?? "";
+  if (isAdminProductionRuntime()) {
+    if (!expected) {
+      throw new AppError(
+        "server_misconfigured",
+        "COOKAPP_ADMIN_BOOTSTRAP_TOKEN is required before production bootstrap",
+        500,
+      );
+    }
+  } else if (!expected) {
+    return;
+  }
+
+  const header = req.headers.get("X-CookApp-Bootstrap-Token")?.trim() ?? "";
+  const auth = req.headers.get("Authorization") ?? "";
+  const bearer = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  const presented = header || bearer;
+  if (!presented || presented !== expected) {
+    throw new AppError("forbidden", "Invalid or missing bootstrap token", 403);
+  }
+}
+
 Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
@@ -139,6 +163,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "bootstrap" && method === "POST") {
+      requireBootstrapAuthorization(req);
       const body = await readJson(req);
       const username = String(body.username ?? "admin").trim().toLowerCase();
       const newPassword = String(body.newPassword ?? "");
