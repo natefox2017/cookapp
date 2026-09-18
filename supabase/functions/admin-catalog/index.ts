@@ -1,4 +1,5 @@
-// Admin catalog APIs for existing Data pages (Recipes, Collections, …).
+// Admin catalog APIs: ops nav (recipes / ingredients / taxonomy / settings).
+// Personal-list routes (collections / grocery / meal-plans / pantry) are API-only — not Admin pages (#98).
 // Auth: custom admin bearer via requireAdminSession.
 // Deploy: supabase functions deploy admin-catalog --project-ref semsjyrqjnumpvanibip
 // Issue: #92 (parent #49)

@@ -195,10 +195,10 @@ deno test --allow-env supabase/functions/_shared/operations/
 - Monitoring: structured `monitor.webhook_failure` (etc.) events — **no** fake Operational status
 - Redaction tests: `deno test supabase/functions/_shared/logger_test.ts`
 
-### Admin catalog / Data pages (Issue #92)
+### Admin catalog / Data pages (Issue #92 / PR #93)
 
-Admin **nav** catalog: Recipes, Ingredients, Categories, plus Settings persist (#92).  
-Collections / Grocery / Meal Plans / Pantry stay **out of Admin nav** (#98); Edge Function may still expose those paths as API-only.
+Admin **nav** catalog: Recipes, Ingredients, Categories, plus Settings persist (#92 / PR #93 on `main`).  
+Collections / Grocery / Meal Plans / Pantry stay **out of Admin nav** (#98/#99); they belong on iOS. Edge Function may still expose those paths as API-only.
 - Function: `admin-catalog` (custom admin bearer)
 - Settings: `runtime_config.admin_settings` — general/units/categories only; System tab remains diagnostics
 ```bash
