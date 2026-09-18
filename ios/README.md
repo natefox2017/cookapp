@@ -48,11 +48,17 @@ open CookApp.xcodeproj
 python3 ios/Scripts/verify_navigation_skeleton.py
 ```
 
-On macOS, also run unit tests after `xcodegen generate`:
+**Owner note (2026-09-18):** iOS Build / `xcodebuild` / device runs are **deferred** until a usable test environment is confirmed. Do not treat missing Xcode results as a Phase 1.5 or chrome-kit failure. When Owner re-enables testing:
 
 ```bash
+xcodegen generate
 xcodebuild -scheme CookApp -destination 'platform=iOS Simulator,name=iPhone 16' test
 ```
+
+## Status
+
+- Phase 1.5 skeleton: **done** — Issue [#42](https://github.com/natefox2017/cookapp/issues/42) / PR [#45](https://github.com/natefox2017/cookapp/pull/45) on `main`
+- Liquid Glass chrome kit D1–D3: this PR — Issue [#87](https://github.com/natefox2017/cookapp/issues/87)
 
 ## Out of scope
 

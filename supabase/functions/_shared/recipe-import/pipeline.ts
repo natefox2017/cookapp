@@ -7,10 +7,9 @@
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import type { AIRouter } from "../ai-router.ts";
 import {
-  getMediaStorageProvider,
-  RECIPE_IMPORT_ARTIFACTS_BUCKET,
+  MEDIA_BUCKETS,
   type MediaStorageProvider,
-} from "../media-storage.ts";
+} from "../media-storage/mod.ts";
 import { canonicalizeUrl } from "../ssrf.ts";
 import { resolveSource } from "./source-resolver.ts";
 import { extractContent } from "./content-extractor.ts";
@@ -120,11 +119,12 @@ async function saveArtifact(
 ) {
   if (opts.useStorage && content.length > 8_000) {
     const object_key = `${jobId}/${artifact_type}.txt`;
+    const body = new TextEncoder().encode(content);
     const ref = await media.upload({
-      bucket: RECIPE_IMPORT_ARTIFACTS_BUCKET,
-      object_key,
-      body: content,
-      mime_type: opts.mime ?? "text/plain",
+      bucket: MEDIA_BUCKETS.recipeImportArtifacts,
+      objectKey: object_key,
+      body,
+      mimeType: opts.mime ?? "text/plain",
     });
     await admin.from("recipe_import_artifacts").insert({
       job_id: jobId,
@@ -169,7 +169,15 @@ export async function runImportPipeline(
   opts: { fromStage?: PipelineStage } = {},
 ): Promise<{ status: JobStatus; recipe_id?: string | null }> {
   const admin = deps.admin;
-  const media = deps.media ?? getMediaStorageProvider();
+  if (!deps.media) {
+    throw new Error(
+      "MediaStorageProvider is required. Inject createSupabaseMediaStorageProvider(serviceClient); stub is test-only.",
+    );
+  }
+  if (deps.media.providerId === "stub") {
+    throw new Error("Stub MediaStorageProvider is test-only");
+  }
+  const media = deps.media;
   const fromStage = opts.fromStage ?? "resolve";
   const startIdx = stageIndex(fromStage);
 
@@ -279,6 +287,16 @@ export async function runImportPipeline(
         useStorage: true,
       });
     }
+    if (extracted.caption) {
+      await saveArtifact(admin, media, job.id, "caption", extracted.caption, {
+        useStorage: extracted.caption.length > 8_000,
+      });
+    }
+    if (extracted.transcript) {
+      await saveArtifact(admin, media, job.id, "transcript", extracted.transcript, {
+        useStorage: extracted.transcript.length > 8_000,
+      });
+    }
     if (extracted.json_ld_recipes.length) {
       await saveArtifact(
         admin,
@@ -335,6 +353,11 @@ export async function runImportPipeline(
         });
       }
       normalized = normalizeContent(extracted);
+    }
+    if (!deps.router) {
+      throw new Error(
+        "AIRouter is required. Inject PlatformAIRouter(serviceClient); StubAIRouter is test-only.",
+      );
     }
     const parsed = await parseRecipeWithAI(normalized, {
       jobId: job.id,

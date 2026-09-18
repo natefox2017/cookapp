@@ -1,9 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { ChevronsLeft, ChevronsRight, CookingPot } from 'lucide-react'
+import { CookingPot } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { navItems } from '@/components/layout/nav'
 import { useSidebar } from '@/components/layout/sidebar-context'
-import { Button } from '@/components/ui/button'
 import { isMockMode } from '@/api'
 
 export function SidebarNav({
@@ -21,15 +20,15 @@ export function SidebarNav({
           collapsed ? 'justify-center px-2' : 'gap-2.5 px-5',
         )}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <CookingPot className="h-5 w-5" />
         </div>
         {!collapsed ? (
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold tracking-tight text-sidebar-primary-foreground">
+            <div className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
               CookApp Admin
             </div>
-            <div className="text-xs text-sidebar-foreground/70">Local ops console</div>
+            <div className="text-xs text-muted-foreground">Local ops console</div>
           </div>
         ) : null}
       </div>
@@ -54,9 +53,9 @@ export function SidebarNav({
               }
               className={({ isActive }) =>
                 cn(
-                  'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground active:bg-sidebar-accent/80',
+                  'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent/80',
                   collapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
-                  isActive && 'bg-sidebar-accent text-sidebar-primary-foreground',
+                  isActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
                 )
               }
             >
@@ -82,7 +81,7 @@ export function SidebarNav({
       </nav>
 
       {!collapsed ? (
-        <div className="border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-foreground/60">
+        <div className="border-t border-sidebar-border px-4 py-3 text-xs text-muted-foreground">
           {isMockMode() ? 'Mock API mode' : 'Live API mode'}
         </div>
       ) : (
@@ -93,26 +92,16 @@ export function SidebarNav({
 }
 
 export function Sidebar() {
-  const { collapsed, toggle } = useSidebar()
+  const { collapsed } = useSidebar()
 
   return (
     <aside
       className={cn(
-        'relative hidden h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex',
+        'hidden h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex',
         collapsed ? 'w-[72px]' : 'w-64',
       )}
     >
       <SidebarNav collapsed={collapsed} />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="absolute -right-3 top-20 z-10 hidden h-6 w-6 rounded-full border bg-card shadow-sm md:inline-flex"
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        onClick={toggle}
-      >
-        {collapsed ? <ChevronsRight className="h-3.5 w-3.5" /> : <ChevronsLeft className="h-3.5 w-3.5" />}
-      </Button>
     </aside>
   )
 }

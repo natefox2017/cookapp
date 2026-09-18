@@ -62,6 +62,9 @@ Single implementations only:
 
 Concrete values live in `ios/CookApp/Core/Theme/DesignTokens.swift` (one file).
 
+Phase 1.5 navigation scaffold is on `main` (`App/Navigation/` + feature placeholder shells; Issue #42 / PR #45).
+Liquid Glass D1–D3 chrome kit values below are filled for Issue #87 — still **chrome only**; business screens stay placeholders until a later gate.
+
 | Token | Usage | Value |
 |-------|--------|--------|
 | Brand green | Titles, quantities, active tab, primary CTAs | `Color.cookBrand` (`AccentColor`) |

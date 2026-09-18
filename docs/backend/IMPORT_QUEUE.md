@@ -20,12 +20,12 @@ Async processing for `recipe_import_jobs` created by the shared AI Recipe Import
 2. Matches in-repo pattern: Edge Function + bearer secret + Cron (same shape as `storage-cleanup-import-artifacts`).
 3. No Node sidecar (Graphile / pg-boss) and no third-party SaaS (Inngest / Trigger.dev).
 4. Job **state** stays on `recipe_import_jobs`; pgmq only carries work messages (`job_id`, `from_stage`, `correlation_id`).
-5. Pipeline work is **not** reimplemented — worker calls `runImportPipeline` from `#55`.
+5. Pipeline work is **not** reimplemented — worker calls `runImportPipeline` from `#55` with `PlatformAIRouter` + Supabase `MediaStorageProvider` (`createImportPipelineRuntime`). Stubs are test-only.
 
 ### Non-goals
 
 - Client-side `pgmq_public` exposure (service_role / security definer wrappers only).
-- Replacing MediaStorage / AIRouter — worker uses existing shared deps / stubs.
+- Replacing MediaStorage / AIRouter — worker **injects** the real Supabase provider and `PlatformAIRouter`.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ Admin API (batch / retry / reparse / approve)
 Cron / manual POST recipe-import-worker
   → read runtime_config concurrency / VT / max_attempts
   → public.recipe_import_queue_read → process up to N messages
-  → runImportPipeline(job, { admin }, { fromStage })
+  → runImportPipeline(job, { admin, router, media }, { fromStage })
   → archive on success or poison; VT expiry retries transient failures
 ```
 

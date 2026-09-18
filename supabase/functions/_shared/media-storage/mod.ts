@@ -5,6 +5,8 @@ export {
   createSupabaseMediaStorageProvider,
   SupabaseMediaStorageProvider,
 } from "./supabase-provider.ts";
+export { MemoryMediaStorageProvider } from "./memory-provider.ts";
+export { RECIPE_IMPORT_ARTIFACTS_BUCKET } from "./compat.ts";
 export * from "./types.ts";
 export * from "./validation.ts";
 export {

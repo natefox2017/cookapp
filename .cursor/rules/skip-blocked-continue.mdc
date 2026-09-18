@@ -1,0 +1,43 @@
+---
+description: Skip blocked work; continue with whatever can proceed; summarize blockers for Owner
+alwaysApply: true
+---
+
+# Skip Blocked → Continue (cookapp) — HARD RULE
+
+Owner rule (2026-09-18): **do not stall the whole run on one blocker.**
+
+## When something is stuck
+
+Treat as **blocked** and **skip for now** if any of:
+
+- External quota / rate limit (e.g. Figma MCP daily cap)
+- Stage / Gate not authorized yet (e.g. Admin §14 IA, iOS business UI)
+- Waiting on Owner secrets (see `owner-config-nonblocking.mdc`)
+- Waiting on Owner decision / environment (e.g. iOS Build deferred)
+- Dependency Issue/PR not mergeable for reasons outside this agent's control
+
+**Do not** sit idle, poll forever, or refuse to continue other work because of the above.
+
+## Required behavior
+
+1. **Skip** the blocked item (leave a short note on the Issue/PR if useful).
+2. **Continue** with the next actionable item that is not blocked.
+3. When the current actionable queue is drained (or at a natural checkpoint), **summarize remaining blockers** for Owner — what is stuck, why, and what decision/input is needed.
+4. Owner will then say how to handle the blocked list; only then resume those items.
+
+## Examples
+
+| Blocked | Continue with |
+|--------|----------------|
+| Figma Education quota for #10 pixel rebuild | Other Issues, docs sync, Admin Gate-allowed work, triage |
+| Stage-4 blocks Admin hierarchical IA | Keep flat nav; Backend APIs already on main; Integrations |
+| Owner iOS Build/Test deferred | Ship code + Ready PR; do not claim Build PASS |
+| Owner Config `todo` secrets | Placeholders; other modules |
+
+## Anti-patterns
+
+- Stopping the whole agent because one tool/quota failed
+- Asking Owner mid-flight to unblock before finishing other work
+- Inventing Gate-blocked UI to “keep busy”
+- Marking blocked work as done without evidence
