@@ -74,7 +74,18 @@ export async function deleteIngredient(id: string): Promise<void> {
 }
 
 export async function listGroceryUsers(): Promise<GroceryUser[]> {
-  if (isMockMode()) return mockRequest(() => mockGroceryUsers)
+  if (isMockMode()) {
+    return mockRequest(() =>
+      mockGroceryUsers.map((user) => {
+        const items = mockGroceryItems.filter((item) => item.userId === user.id)
+        return {
+          ...user,
+          itemCount: items.length,
+          completedCount: items.filter((item) => item.completed).length,
+        }
+      }),
+    )
+  }
   return httpRequest('/admin/grocery/users')
 }
 

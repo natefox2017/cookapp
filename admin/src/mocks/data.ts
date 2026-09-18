@@ -356,9 +356,9 @@ export const mockIngredients: Ingredient[] = [
 ]
 
 export const mockGroceryUsers: GroceryUser[] = [
-  { id: 'usr_01', displayName: 'Alex Chen', email: 'alex.chen@example.com', itemCount: 8, completedCount: 3 },
-  { id: 'usr_02', displayName: 'Maya Ross', email: 'maya.ross@example.com', itemCount: 5, completedCount: 5 },
-  { id: 'usr_03', displayName: 'Jordan Lee', email: 'jordan.lee@example.com', itemCount: 12, completedCount: 4 },
+  { id: 'usr_01', displayName: 'Alex Chen', email: 'alex.chen@example.com', itemCount: 5, completedCount: 2 },
+  { id: 'usr_02', displayName: 'Maya Ross', email: 'maya.ross@example.com', itemCount: 2, completedCount: 2 },
+  { id: 'usr_03', displayName: 'Jordan Lee', email: 'jordan.lee@example.com', itemCount: 3, completedCount: 1 },
 ]
 
 export const mockGroceryItems: GroceryItem[] = [

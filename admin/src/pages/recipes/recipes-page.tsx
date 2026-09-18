@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { deleteRecipe, getRecipe, listRecipes } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,16 +21,17 @@ import { formatDate } from '@/lib/utils'
 
 export function RecipesPage() {
   const [q, setQ] = useState('')
+  const debouncedQ = useDebouncedValue(q, 250)
   const [cuisine, setCuisine] = useState('all')
   const [category, setCategory] = useState('all')
 
   const params = useMemo(
     () => ({
-      q,
+      q: debouncedQ,
       cuisine: cuisine === 'all' ? undefined : cuisine,
       category: category === 'all' ? undefined : category,
     }),
-    [q, cuisine, category],
+    [debouncedQ, cuisine, category],
   )
 
   const { data, loading, error, reload } = useAsyncData(() => listRecipes(params), [params])
@@ -129,7 +131,7 @@ export function RecipeDetailPage() {
   const [deleting, setDeleting] = useState(false)
 
   async function onDelete() {
-    if (!id || !window.confirm('Delete this recipe? This cannot be undone in mock mode until reload.')) {
+    if (!id || !window.confirm('Delete this recipe from the admin catalog?')) {
       return
     }
     setDeleting(true)

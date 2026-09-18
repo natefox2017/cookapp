@@ -80,7 +80,7 @@ begin
 
   update public.admin_accounts
   set
-    password_hash = crypt(p_new_password, gen_salt('bf')),
+    password_hash = crypt(p_new_password, gen_salt('bf', 12)),
     updated_at = now()
   where id = p_admin_id;
 
@@ -105,7 +105,7 @@ grant all on table public.admin_accounts to service_role;
 grant all on table public.admin_sessions to service_role;
 
 insert into public.admin_accounts (username, password_hash)
-values ('admin', crypt('admin', gen_salt('bf')))
+values ('admin', crypt('admin', gen_salt('bf', 12)))
 on conflict (username) do nothing;
 
 comment on table public.admin_accounts is
