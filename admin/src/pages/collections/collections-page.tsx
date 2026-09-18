@@ -31,12 +31,14 @@ export function CollectionsPage() {
         {data?.map((collection) => (
           <Card key={collection.id} className="overflow-hidden">
             <div className="aspect-[16/10] bg-muted">
-              <img
-                src={collection.coverUrl}
-                alt={collection.name}
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
+              {collection.coverUrl ? (
+                <img
+                  src={collection.coverUrl}
+                  alt={collection.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : null}
             </div>
             <CardContent className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">

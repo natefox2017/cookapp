@@ -16,7 +16,7 @@ Server-only. No Admin Dashboard UI lives in this repository (`admin/` is the sep
 | API | PostgREST `/rest/v1/*` + Edge Functions `/functions/v1/*` |
 | Files | Private Storage buckets via `MediaStorageProvider` (Supabase); `{user_id}/…` for user media; `{job_id}/…` for import artifacts |
 | Subscriptions | RevenueCat webhook → `subscriptions` / `purchase_events` / `payment_transactions` |
-| Admin ops | Custom bearer Edge Functions (`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`) |
+| Admin ops | Custom bearer Edge Functions (`admin-auth`, `admin-users`, `admin-dashboard`, `admin-subscriptions`, `admin-catalog`, …) |
 
 ## Modules
 
@@ -59,6 +59,7 @@ supabase/
     admin-operations/
     admin-subscriptions/
     storage-cleanup-import-artifacts/
+    admin-catalog/     # Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Taxonomy / Settings (#92)
     admin-ai/          # AI Platform Admin APIs (#53)
     admin-integrations/ # Integrations status (#63)
     admin-store-sync/  # ASC analytics + financial sync (#59)
@@ -118,7 +119,7 @@ Authorization: Bearer <access_token>
 | `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation (#60 source/freshness; prefers #58/#59; no fake Android) |
 | `admin-analytics` | no (custom admin bearer) | Analytics aggregation (#60) |
 | `admin-operations` | no (custom admin bearer) | Jobs & Syncs + Integrations status (#60) |
-| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue / payment transactions (#58) |
+| `admin-catalog` | no (custom admin bearer) | Existing Admin Data pages + settings persist (#92) |
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) + enqueue (#56) |
 | `storage-cleanup-import-artifacts` | no (`STORAGE_CLEANUP_SECRET`) | TTL cleanup for `recipe-import-artifacts` |
 | `admin-ai` | no (custom admin bearer; Owner for writes/secrets) | AI Platform providers / models / routes / usage / health |
@@ -193,6 +194,15 @@ deno test --allow-env supabase/functions/_shared/operations/
 - Error envelope: `{ error: { code, message, details }, request_id }`
 - Monitoring: structured `monitor.webhook_failure` (etc.) events — **no** fake Operational status
 - Redaction tests: `deno test supabase/functions/_shared/logger_test.ts`
+
+### Admin catalog / Data pages (Issue #92)
+
+Existing Admin nav pages (not Gate-deferred IA): Recipes, Collections, Ingredients, Grocery, Meal Plans, Pantry, Categories, plus Settings persist.
+- Function: `admin-catalog` (custom admin bearer)
+- Settings: `runtime_config.admin_settings` — general/units/categories only; System tab remains diagnostics
+```bash
+deno test --allow-env supabase/functions/_shared/admin-catalog/
+```
 
 ### Admin AI Platform (Issue #53)
 

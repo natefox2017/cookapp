@@ -38,6 +38,24 @@ describe('admin nav (Issue #61 — #64 IA rollback)', () => {
     }
   })
 
+  it('marks existing Data pages as live (Issue #92 catalog APIs)', () => {
+    const live = navItems.filter((item) => item.apiStatus === 'live').map((item) => item.href)
+    for (const href of [
+      '/',
+      '/users',
+      '/recipes',
+      '/collections',
+      '/ingredients',
+      '/grocery',
+      '/meal-plans',
+      '/pantry',
+      '/categories',
+      '/subscription',
+    ]) {
+      assert.equal(live.includes(href), true, `expected live nav ${href}`)
+    }
+  })
+
   it('keeps Settings as hybrid entry (Integrations lives in Settings tabs via #63)', () => {
     const settings = navItems.find((item) => item.href === '/settings')
     assert.ok(settings)

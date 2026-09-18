@@ -45,8 +45,9 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Users | `/functions/v1/admin-users/*` | live |
 | Dashboard | `/functions/v1/admin-dashboard` | live |
 | Subscription | `/functions/v1/admin-subscriptions/*` | live |
-| Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories | — | **missing** → live client `501`; sidebar **Pending** |
-| Settings → General / Security / System | hybrid | Security via `admin-auth`; general diagnostics-only |
+| Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories | `/functions/v1/admin-catalog/*` | **live** (#92) |
+| Settings → General / Units / Categories | `/functions/v1/admin-catalog/settings` | persist live; System tab diagnostics-only |
+| Settings → Security | `admin-auth` | live |
 | Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
 
 Flat navigation (Issue #61 rollback of #64 Stage-4-overreach) in `admin/src/components/layout/nav.ts`:
@@ -93,21 +94,21 @@ Admin Dashboard UI
 | `/login` | Admin sign-in | yes |
 | `/` | Dashboard | yes (`admin-dashboard`) |
 | `/users` | Users | yes |
-| `/recipes` | Recipe grid + detail | pending |
-| `/collections` | Collections grid | pending |
-| `/ingredients` | Ingredients CRUD | pending |
-| `/grocery` | Grocery | pending |
-| `/meal-plans` | Meal plan | pending |
-| `/pantry` | Pantry | pending |
-| `/categories` | Taxonomy | pending |
+| `/recipes` | Recipe grid + detail | yes (#92) |
+| `/collections` | Collections grid | yes (#92) |
+| `/ingredients` | Ingredients CRUD | yes (#92) |
+| `/grocery` | Grocery | yes (#92) |
+| `/meal-plans` | Meal plan | yes (#92) |
+| `/pantry` | Pantry | yes (#92) |
+| `/categories` | Taxonomy | yes (#92) |
 | `/subscription` | Plans · Records · Revenue | yes |
 | `/settings` | General / Integrations / Units / Categories / Security / System | hybrid + Integrations live (#63) |
 
-Sidebar collapses via header / rail control (persisted). In live mode, pending modules show a **Pending** badge.
+Sidebar collapses via header / rail control (persisted). In live mode, remaining hybrid Settings show a **Hybrid** badge; catalog Data pages are live (#92).
 
 ## Related
 
-- GitHub Issue #12 · #32 · #35 · #44 · #47 · #49 · #51 · #52
+- GitHub Issue #12 · #32 · #35 · #44 · #47 · #49 · #51 · #52 · **#92**
 - Cloud backend Issue #11
 - Notion: Local Admin Dashboard · Analytics/Payments · Backend & Admin V2
 
