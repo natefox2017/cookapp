@@ -39,6 +39,13 @@ describe('admin nav (Issue #61 — #64 IA rollback)', () => {
     }
   })
 
+  it('marks remaining catalog pages as live (Issue #92)', () => {
+    const live = navItems.filter((item) => item.apiStatus === 'live').map((item) => item.href)
+    for (const href of ['/', '/users', '/recipes', '/ingredients', '/categories', '/subscription']) {
+      assert.equal(live.includes(href), true, `expected live nav ${href}`)
+    }
+  })
+
   it('does not expose end-user personal surfaces (meal plan, grocery, pantry, collections)', () => {
     const hrefs = navItems.map((item) => item.href)
     const titles = navItems.map((item) => item.title)

@@ -26,9 +26,9 @@ Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `sems
 | Storage private + isolation | PASS | `avatars`, `recipe-covers`, `recipe-images`; + `recipe-import-artifacts` (service_role / TTL, #54) |
 | Subscription + RevenueCat webhook | PASS | `plan`/`status`; `expire_date` via `subscription_status` view; `payment_transactions` + `user_commerce_summary` (#58) |
 | Security (RLS, JWT, secrets, service_role) | PASS | Advisors clean after hardening |
-| Engineering (migrations, OpenAPI, errors, logging) | PASS | OpenAPI yaml ↔ json ↔ Edge `spec.json` synced (76 paths) |
+| Engineering (migrations, OpenAPI, errors, logging) | PASS | OpenAPI yaml ↔ json ↔ Edge `spec.json` synced |
 | No Admin Dashboard in cloud service code | PASS* | `admin/` is Local Admin Dashboard (Notion §21); separate UI |
-| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md) (#52). Live domains match Edge Functions; catalog Data pages stay `501` / mock_only |
+| Admin live API contract | PASS† | Matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md). Catalog Data pages live via `admin-catalog` (#92). Gate-deferred: AI Import / Analytics / Ops / Payments / AI Platform **nav pages**. |
 | Production mock / default credentials | PASS | #51 / PR #62 + bootstrap-token follow-up #65 |
 | AI Platform | PASS (backend) | #53 — `admin-ai`; Admin AI Platform **UI** Gate-deferred (#61) |
 | MediaStorageProvider + import artifacts | PASS | #54 |
@@ -41,7 +41,7 @@ Last reviewed: 2026-09-18T10:45Z against `main` (`fc8a354`) + live project `sems
 | Admin navigation IA (§14) | DEFERRED | #64 shipped then rolled back by #81 per #61 Stage-4 Gate; flat nav is current SoT on `main` |
 
 \* Spec forbids mixing Admin UI into Supabase server code. Local Admin lives under `admin/` and talks via typed API layer — not embedded in Edge Functions.  
-† Catalog Admin APIs (Recipes/Collections/…) remain missing by design until a future Issue; live mode must not fake them.
+† Catalog Data pages (Recipes/Collections/Ingredients/Grocery/Meal Plans/Pantry/Categories + Settings persist) are live via `admin-catalog` (#92). AI Import / Analytics / Ops / Payments / AI Platform **nav pages** remain Gate-deferred (#61).
 
 ## Field aliases (documented, not bugs)
 

@@ -39,6 +39,7 @@ tags:
 - name: AdminIntegrations
 - name: AdminOperations
 - name: AdminAnalytics
+- name: AdminCatalog
 paths:
   /auth/v1/token:
     post:
@@ -1766,6 +1767,256 @@ paths:
                 $ref: '#/components/schemas/PaymentTransactionDetail'
         '404':
           description: Not found
+  /functions/v1/admin-catalog/recipes:
+    get:
+      tags: [AdminCatalog]
+      summary: List recipes (ops view)
+      operationId: adminListRecipes
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: q
+        in: query
+        schema: { type: string }
+      - name: cuisine
+        in: query
+        schema: { type: string }
+      - name: category
+        in: query
+        schema: { type: string }
+      - name: tag
+        in: query
+        schema: { type: string }
+      responses:
+        '200':
+          description: Recipe summaries
+  /functions/v1/admin-catalog/recipes/{id}:
+    get:
+      tags: [AdminCatalog]
+      summary: Recipe detail
+      operationId: adminGetRecipe
+      security:
+      - AdminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Recipe detail
+        '404':
+          description: Not found
+    patch:
+      tags: [AdminCatalog]
+      summary: Update recipe (audit)
+      operationId: adminUpdateRecipe
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [AdminCatalog]
+      summary: Delete recipe (audit)
+      operationId: adminDeleteRecipe
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-catalog/collections:
+    get:
+      tags: [AdminCatalog]
+      summary: List collections
+      operationId: adminListCollections
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Collections
+  /functions/v1/admin-catalog/ingredients:
+    get:
+      tags: [AdminCatalog]
+      summary: List ingredients
+      operationId: adminListIngredients
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Ingredients
+    post:
+      tags: [AdminCatalog]
+      summary: Create system ingredient
+      operationId: adminCreateIngredient
+      security:
+      - AdminBearer: []
+      responses:
+        '201':
+          description: Created
+  /functions/v1/admin-catalog/ingredients/{id}:
+    patch:
+      tags: [AdminCatalog]
+      summary: Update ingredient
+      operationId: adminUpdateIngredient
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [AdminCatalog]
+      summary: Delete ingredient
+      operationId: adminDeleteIngredient
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-catalog/grocery/users:
+    get:
+      tags: [AdminCatalog]
+      summary: Users with grocery lists
+      operationId: adminListGroceryUsers
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Grocery users
+  /functions/v1/admin-catalog/grocery/users/{userId}/items:
+    get:
+      tags: [AdminCatalog]
+      summary: Grocery items for a user
+      operationId: adminListGroceryItems
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Items
+  /functions/v1/admin-catalog/meal-plans:
+    get:
+      tags: [AdminCatalog]
+      summary: Meal plan slots folded by date
+      operationId: adminListMealPlans
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Meal plan entries
+  /functions/v1/admin-catalog/pantry:
+    get:
+      tags: [AdminCatalog]
+      summary: Pantry items
+      operationId: adminListPantry
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Pantry
+  /functions/v1/admin-catalog/taxonomy/{kind}:
+    get:
+      tags: [AdminCatalog]
+      summary: List cuisine / meal category / tags
+      operationId: adminListTaxonomy
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        schema: { type: string, enum: [cuisine, category, tags] }
+      responses:
+        '200':
+          description: Taxonomy
+    post:
+      tags: [AdminCatalog]
+      summary: Create taxonomy item
+      operationId: adminCreateTaxonomy
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        schema: { type: string, enum: [cuisine, category, tags] }
+      responses:
+        '201':
+          description: Created
+  /functions/v1/admin-catalog/taxonomy/{kind}/{id}:
+    patch:
+      tags: [AdminCatalog]
+      summary: Rename taxonomy item
+      operationId: adminUpdateTaxonomy
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [AdminCatalog]
+      summary: Delete taxonomy item
+      operationId: adminDeleteTaxonomy
+      security:
+      - AdminBearer: []
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+      responses:
+        '200':
+          description: Deleted
+  /functions/v1/admin-catalog/settings:
+    get:
+      tags: [AdminCatalog]
+      summary: Admin settings (persisted general/units/categories)
+      operationId: adminGetSettings
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Settings
+    patch:
+      tags: [AdminCatalog]
+      summary: Persist Admin settings (no secrets / system mock flag)
+      operationId: adminUpdateSettings
+      security:
+      - AdminBearer: []
+      responses:
+        '200':
+          description: Settings
   /functions/v1/admin-users:
     get:
       tags:
