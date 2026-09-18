@@ -64,7 +64,7 @@ Admin Dashboard UI
 | `/meal-plans` | Calendar meal plan |
 | `/pantry` | Pantry card grid |
 | `/categories` | Cuisine / Category / Tags |
-| `/subscription` | Subscriptions table |
+| `/subscription` | Plans (Apple/Android) · Records · Revenue charts |
 | `/settings` | General / Units / Categories / Security / System |
 
 Sidebar collapses via header / rail control (persisted).
