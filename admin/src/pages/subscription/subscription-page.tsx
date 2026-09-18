@@ -562,14 +562,22 @@ function RevenuePanel({ platform }: { platform: StorePlatform | 'all' }) {
   )
 }
 
-export function SubscriptionPage() {
+export function SubscriptionPage({
+  initialTab = 'records',
+  title = 'Subscriptions',
+  description = 'Review entitlements and track subscription revenue. Plan catalog also appears under Products & Plans.',
+}: {
+  initialTab?: 'plans' | 'records' | 'revenue'
+  title?: string
+  description?: string
+}) {
   const [platform, setPlatform] = useState<StorePlatform | 'all'>('all')
 
   return (
     <div>
       <PageHeader
-        title="Subscription"
-        description="Manage Apple / Android plan catalog, review entitlements, and track revenue."
+        title={title}
+        description={description}
         actions={
           <div className="flex items-center gap-2">
             <Label className="text-muted-foreground hidden sm:inline">Platform</Label>
@@ -590,7 +598,7 @@ export function SubscriptionPage() {
         }
       />
 
-      <Tabs defaultValue="plans">
+      <Tabs defaultValue={initialTab} key={initialTab}>
         <TabsList>
           <TabsTrigger value="plans">Plans</TabsTrigger>
           <TabsTrigger value="records">Records</TabsTrigger>

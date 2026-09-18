@@ -21,8 +21,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { validateAdminPassword } from '@/lib/password-policy'
 import { IntegrationsPanel } from '@/pages/settings/integrations-panel'
 import { AiPlatformPanel } from '@/pages/settings/ai-platform-panel'
+import { RuntimeConfigPanel } from '@/pages/settings/runtime-config-panel'
 
-export type SettingsSection = 'general' | 'security' | 'system' | 'integrations' | 'ai-platform'
+export type SettingsSection =
+  | 'general'
+  | 'runtime-config'
+  | 'security'
+  | 'system'
+  | 'integrations'
+  | 'ai-platform'
 type SettingsTab = SettingsSection | 'units' | 'categories'
 
 export function SettingsPage({ section = 'general' }: { section?: SettingsSection }) {
@@ -59,7 +66,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
       nextTab === 'security' ||
       nextTab === 'system' ||
       nextTab === 'integrations' ||
-      nextTab === 'ai-platform'
+      nextTab === 'ai-platform' ||
+      nextTab === 'runtime-config'
     ) {
       navigate(`/settings/${nextTab}`, { replace: true })
       return
@@ -127,7 +135,11 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
   const persist = writeCapability('settings-persist', isMockMode())
   const persistLocked = !persist.canWrite
   const systemLocked = !isMockMode()
-  const liveSettingsTab = tab === 'security' || tab === 'integrations' || tab === 'ai-platform'
+  const liveSettingsTab =
+    tab === 'security' ||
+    tab === 'integrations' ||
+    tab === 'ai-platform' ||
+    tab === 'runtime-config'
   const showSettingsSave =
     !liveSettingsTab && (tab === 'system' ? isMockMode() : persist.canWrite)
   const persistNotice =
@@ -163,9 +175,10 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="runtime-config">Runtime Config</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="ai-platform">AI Platform</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="security">Security & Admin</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
@@ -353,6 +366,10 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="runtime-config">
+          <RuntimeConfigPanel />
         </TabsContent>
 
         <TabsContent value="integrations">

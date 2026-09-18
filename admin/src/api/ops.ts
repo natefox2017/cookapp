@@ -1,4 +1,4 @@
-import { httpRequest, isMockMode, mockRequest } from '@/api/client'
+import { ApiError, httpRequest, isMockMode, mockRequest } from '@/api/client'
 import {
   mockAiHealth,
   mockAiModels,
@@ -216,5 +216,210 @@ export async function testAiProvider(id: string): Promise<{ ok: boolean; latency
   return httpRequest(`/functions/v1/admin-ai/providers/${id}/test`, {
     method: 'POST',
     body: '{}',
+  })
+}
+
+export interface SystemHealthPayload {
+  generatedAt: string
+  components: {
+    key: string
+    label: string
+    status: string
+    lastSuccessAt: string | null
+    lastErrorAt: string | null
+    lastError: string | null
+    note: string | null
+  }[]
+}
+
+export async function getSystemHealth(): Promise<SystemHealthPayload> {
+  if (isMockMode()) {
+    return mockRequest(() => ({
+      generatedAt: new Date().toISOString(),
+      components: [
+        {
+          key: 'supabase',
+          label: 'Backend / Database',
+          status: 'healthy',
+          lastSuccessAt: new Date().toISOString(),
+          lastErrorAt: null,
+          lastError: null,
+          note: null,
+        },
+        {
+          key: 'revenuecat',
+          label: 'RevenueCat',
+          status: 'not_configured',
+          lastSuccessAt: null,
+          lastErrorAt: null,
+          lastError: null,
+          note: 'Local mock — Not Connected',
+        },
+        {
+          key: 'app_store_connect',
+          label: 'App Store Connect',
+          status: 'not_configured',
+          lastSuccessAt: null,
+          lastErrorAt: null,
+          lastError: null,
+          note: 'Local mock — Not Connected',
+        },
+        {
+          key: 'ai_gateway',
+          label: 'AI Gateway',
+          status: 'not_configured',
+          lastSuccessAt: null,
+          lastErrorAt: null,
+          lastError: null,
+          note: 'Local mock — Not Connected',
+        },
+        {
+          key: 'google_play',
+          label: 'Google Play',
+          status: 'not_configured',
+          lastSuccessAt: null,
+          lastErrorAt: null,
+          lastError: null,
+          note: 'Future Reserved — Not Connected',
+        },
+      ],
+    }))
+  }
+  try {
+    return await httpRequest('/functions/v1/admin-operations/health')
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 501 || err.status === 404)) {
+      // Fall back to integrations list probe when dedicated health is missing.
+      const { listIntegrations } = await import('@/api/integrations')
+      const integrations = await listIntegrations()
+      return {
+        generatedAt: integrations.checkedAt,
+        components: integrations.integrations.map((item) => ({
+          key: item.id,
+          label: item.name,
+          status: item.status,
+          lastSuccessAt: item.lastSuccessAt,
+          lastErrorAt: item.lastErrorAt,
+          lastError: item.lastErrorMessage,
+          note: item.notes,
+        })),
+      }
+    }
+    throw err
+  }
+}
+
+export interface AuditLogRow {
+  id: string
+  actorAdminId: string | null
+  actorUsername: string | null
+  action: string
+  objectType: string
+  objectId: string | null
+  ip: string | null
+  result: string
+  createdAt: string
+}
+
+export interface AuditLogListResult {
+  data: AuditLogRow[]
+  total: number
+  pageSize?: number
+  offset?: number
+  status?: 'ok' | 'not_implemented' | 'pending'
+  note?: string | null
+}
+
+/** GET /admin-operations/audit-logs — honest empty when none; 501 → No Data note. */
+export async function listAuditLogs(params?: {
+  limit?: number
+  offset?: number
+}): Promise<AuditLogListResult> {
+  const limit = params?.limit ?? 50
+  const offset = params?.offset ?? 0
+  if (isMockMode()) {
+    return mockRequest(() => ({
+      data: [],
+      total: 0,
+      pageSize: limit,
+      offset,
+      status: 'pending' as const,
+      note: 'Mock mode: no audit events seeded. Live mode uses GET /admin-operations/audit-logs.',
+    }))
+  }
+  try {
+    return await httpRequest<AuditLogListResult>(
+      `/functions/v1/admin-operations/audit-logs?limit=${limit}&offset=${offset}`,
+    )
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 501 || err.status === 404)) {
+      return {
+        data: [],
+        total: 0,
+        pageSize: limit,
+        offset,
+        status: 'not_implemented',
+        note:
+          'Audit log API is not available yet (GET /functions/v1/admin-operations/audit-logs). Showing No Data.',
+      }
+    }
+    throw err
+  }
+}
+
+export interface RuntimeConfigRow {
+  key: string
+  value: unknown
+  description: string | null
+  updatedAt: string
+}
+
+export async function listRuntimeConfig(): Promise<RuntimeConfigRow[]> {
+  if (isMockMode()) {
+    return mockRequest(() => [
+      {
+        key: 'maintenance_mode',
+        value: false,
+        description: 'When true, clients should show maintenance',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        key: 'ai_import_confidence_threshold',
+        value: 0.75,
+        description: 'Minimum confidence for auto-import',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        key: 'supported_import_sources',
+        value: ['web', 'tiktok', 'instagram', 'youtube'],
+        description: 'Admin-supported import sources',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        key: 'admin_import_destination',
+        value: 'system_recommended',
+        description: 'Admin AI Import writes system_recommended rows',
+        updatedAt: new Date().toISOString(),
+      },
+    ])
+  }
+  return httpRequest('/functions/v1/admin-catalog/runtime-config')
+}
+
+export async function updateRuntimeConfig(
+  key: string,
+  value: unknown,
+): Promise<RuntimeConfigRow> {
+  if (isMockMode()) {
+    return mockRequest(() => ({
+      key,
+      value,
+      description: null,
+      updatedAt: new Date().toISOString(),
+    }))
+  }
+  return httpRequest(`/functions/v1/admin-catalog/runtime-config/${encodeURIComponent(key)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ value }),
   })
 }

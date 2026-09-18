@@ -38,7 +38,7 @@ const emptyForm: IngredientInput = {
   alternativeName: null,
 }
 
-export function IngredientsPage() {
+export function IngredientsPage({ embedded = false }: { embedded?: boolean }) {
   const { data, loading, error, reload } = useAsyncData(() => listIngredients(), [])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Ingredient | null>(null)
@@ -102,22 +102,31 @@ export function IngredientsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Ingredients"
-        description={
-          capability.canWrite
-            ? 'Catalog CRUD via /admin/ingredients.'
-            : 'Live Ingredients API is pending. Catalog is read-only until the contract is live.'
-        }
-        actions={
-          capability.canWrite ? (
-            <Button onClick={openCreate}>
-              <Plus />
-              Add ingredient
-            </Button>
-          ) : null
-        }
-      />
+      {!embedded ? (
+        <PageHeader
+          title="Ingredients"
+          description={
+            capability.canWrite
+              ? 'Catalog CRUD via /admin/ingredients.'
+              : 'Live Ingredients API is pending. Catalog is read-only until the contract is live.'
+          }
+          actions={
+            capability.canWrite ? (
+              <Button onClick={openCreate}>
+                <Plus />
+                Add ingredient
+              </Button>
+            ) : null
+          }
+        />
+      ) : capability.canWrite ? (
+        <div className="mb-3 flex justify-end">
+          <Button onClick={openCreate}>
+            <Plus />
+            Add ingredient
+          </Button>
+        </div>
+      ) : null}
       {capability.reason ? <PendingApiNotice message={capability.reason} /> : null}
 
       {loading ? <LoadingBlock label="Loading ingredients…" /> : null}

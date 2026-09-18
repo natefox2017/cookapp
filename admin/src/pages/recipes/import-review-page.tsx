@@ -51,11 +51,14 @@ export function ImportReviewPage() {
     <div>
       <PageHeader
         title="Import Review"
-        description="Only low-confidence, missing-field, duplicate, or failed jobs need a human. Successful imports skip this queue."
+        description="Only low-confidence, missing-field, duplicate, or failed jobs need a human. Approvals publish into the System Recipe Library."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" asChild>
-              <Link to="/recipes/import">AI Import</Link>
+              <Link to="/content/import">AI Import</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/content/recipes">System Recipe Library</Link>
             </Button>
             <Button variant="outline" loading={refreshing} onClick={reload}>
               Refresh

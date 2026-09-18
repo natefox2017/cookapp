@@ -8,48 +8,56 @@ import { isNavHrefActive, navItems, navLeaves, pageTitleForPath } from './nav.ts
 
 const here = dirname(fileURLToPath(import.meta.url))
 
-describe('admin nav (Issue #101 — Gate-released ops pages)', () => {
-  it('exposes ops/catalog plus released operational modules', () => {
+describe('admin nav (Issue #104 — §14 IA rebuild)', () => {
+  it('exposes primary §14 IA groups', () => {
     const titles = navItems.map((item) => item.title)
     assert.deepEqual(titles, [
       'Dashboard',
       'Users',
-      'Recipes',
-      'Ingredients',
-      'Categories',
       'Commerce',
       'Analytics',
+      'Content & AI',
       'Operations',
       'Settings',
     ])
   })
 
-  it('exposes live AI Import, Import Review, Payments, Analytics, and Operations leaves', () => {
+  it('exposes Commerce / Content / Operations leaves with live status', () => {
     const leaves = navLeaves()
     const hrefs = leaves.map((item) => item.href)
     for (const href of [
-      '/recipes/import',
-      '/recipes/import-review',
+      '/commerce',
+      '/commerce/subscriptions',
       '/commerce/payments',
+      '/commerce/products',
       '/analytics',
+      '/content/recipes',
+      '/content/import',
+      '/content/import-review',
+      '/content/taxonomy',
+      '/operations/health',
       '/operations/jobs',
+      '/operations/errors',
+      '/operations/audit-log',
+      '/settings/runtime-config',
+      '/settings/ai-platform',
     ]) {
-      assert.equal(hrefs.includes(href), true, `missing released nav leaf ${href}`)
+      assert.equal(hrefs.includes(href), true, `missing nav leaf ${href}`)
     }
     const byHref = Object.fromEntries(leaves.map((item) => [item.href, item.apiStatus]))
-    assert.equal(byHref['/recipes/import'], 'live')
-    assert.equal(byHref['/recipes/import-review'], 'live')
+    assert.equal(byHref['/content/import'], 'live')
     assert.equal(byHref['/commerce/payments'], 'live')
-    assert.equal(byHref['/analytics'], 'live')
     assert.equal(byHref['/operations/jobs'], 'live')
+    assert.equal(byHref['/operations/audit-log'], 'live')
   })
 
-  it('does not expose remaining placeholder or personal-surface modules as nav leaves', () => {
+  it('does not expose personal-content or pre-§14 flat catalog as primary leaves', () => {
     const hrefs = navLeaves().map((item) => item.href)
     for (const blocked of [
-      '/operations/audit-log',
-      '/commerce/products',
-      '/settings/ai-platform',
+      '/recipes',
+      '/ingredients',
+      '/categories',
+      '/subscription',
       '/data/collections',
       '/grocery',
       '/meal-plans',
@@ -60,59 +68,58 @@ describe('admin nav (Issue #101 — Gate-released ops pages)', () => {
     }
   })
 
-  it('marks catalog + commerce leaves as live (Issue #92 / #93)', () => {
-    const byHref = Object.fromEntries(navLeaves().map((item) => [item.href, item.apiStatus]))
-    for (const href of [
-      '/',
-      '/users',
-      '/recipes',
-      '/ingredients',
-      '/categories',
-      '/subscription',
-    ]) {
-      assert.equal(byHref[href], 'live', `expected live nav ${href}`)
-    }
+  it('labels System Recipe Library (not user recipes)', () => {
+    const leaf = navLeaves().find((item) => item.href === '/content/recipes')
+    assert.equal(leaf?.title, 'System Recipe Library')
   })
 
-  it('does not expose end-user personal surfaces (meal plan, grocery, pantry, collections)', () => {
+  it('does not expose end-user personal surfaces', () => {
     const titles = [...navItems.map((item) => item.title), ...navLeaves().map((item) => item.title)]
     for (const title of ['Grocery', 'Meal Plans', 'Pantry', 'Collections']) {
       assert.equal(titles.includes(title), false, `user-personal nav title ${title}`)
     }
   })
 
-  it('keeps Settings as hybrid entry (Integrations + AI Platform live in Settings tabs)', () => {
+  it('keeps Settings as hybrid entry', () => {
     const settings = navItems.find((item) => item.href === '/settings')
     assert.ok(settings)
     assert.equal(settings?.apiStatus, 'hybrid')
   })
 
-  it('resolves page titles with longest-prefix (import is not Recipe Detail)', () => {
+  it('resolves page titles for §14 paths', () => {
     assert.equal(pageTitleForPath('/'), 'Dashboard')
-    assert.equal(pageTitleForPath('/subscription'), 'Subscription')
-    assert.equal(pageTitleForPath('/recipes/abc-123'), 'Recipe Detail')
-    assert.equal(pageTitleForPath('/recipes/import'), 'AI Import')
-    assert.equal(pageTitleForPath('/recipes/import-review'), 'Import Review')
+    assert.equal(pageTitleForPath('/commerce'), 'Commerce Overview')
+    assert.equal(pageTitleForPath('/commerce/subscriptions'), 'Subscriptions')
     assert.equal(pageTitleForPath('/commerce/payments'), 'Payments')
-    assert.equal(pageTitleForPath('/analytics'), 'Analytics')
-    assert.equal(pageTitleForPath('/operations/jobs'), 'Operations')
-    assert.equal(pageTitleForPath('/settings/integrations'), 'Settings')
-    assert.equal(pageTitleForPath('/settings/ai-platform'), 'Settings')
-    assert.equal(pageTitleForPath('/settings/general'), 'Settings')
+    assert.equal(pageTitleForPath('/commerce/products'), 'Products & Plans')
+    assert.equal(pageTitleForPath('/content/recipes'), 'System Recipe Library')
+    assert.equal(pageTitleForPath('/content/recipes/abc-123'), 'System Recipe Detail')
+    assert.equal(pageTitleForPath('/content/import'), 'AI Import')
+    assert.equal(pageTitleForPath('/content/import-review'), 'Import Review')
+    assert.equal(pageTitleForPath('/content/taxonomy'), 'Taxonomy')
+    assert.equal(pageTitleForPath('/operations/health'), 'System Health')
+    assert.equal(pageTitleForPath('/operations/jobs'), 'Jobs & Syncs')
+    assert.equal(pageTitleForPath('/operations/errors'), 'Errors & Incidents')
+    assert.equal(pageTitleForPath('/operations/audit-log'), 'Audit Log')
+    assert.equal(pageTitleForPath('/settings/integrations'), 'Integrations')
+    assert.equal(pageTitleForPath('/settings/ai-platform'), 'AI Platform')
+    assert.equal(pageTitleForPath('/settings/runtime-config'), 'Runtime Config')
+    assert.equal(pageTitleForPath('/settings/general'), 'General')
     assert.equal(pageTitleForPath('/grocery'), 'Admin')
-    assert.equal(pageTitleForPath('/meal-plans'), 'Admin')
   })
 
-  it('does not mark AI Import as the Recipes catalog item', () => {
-    assert.equal(isNavHrefActive('/recipes', '/recipes'), true)
-    assert.equal(isNavHrefActive('/recipes', '/recipes/abc-123'), true)
-    assert.equal(isNavHrefActive('/recipes', '/recipes/import'), false)
-    assert.equal(isNavHrefActive('/recipes', '/recipes/import-review'), false)
-    assert.equal(isNavHrefActive('/recipes/import', '/recipes/import'), true)
+  it('does not mark AI Import as the System Recipe Library item', () => {
+    assert.equal(isNavHrefActive('/content/recipes', '/content/recipes'), true)
+    assert.equal(isNavHrefActive('/content/recipes', '/content/recipes/abc-123'), true)
+    assert.equal(isNavHrefActive('/content/recipes', '/content/import'), false)
+    assert.equal(isNavHrefActive('/content/recipes', '/content/import-review'), false)
+    assert.equal(isNavHrefActive('/content/import', '/content/import'), true)
+    assert.equal(isNavHrefActive('/commerce', '/commerce'), true)
+    assert.equal(isNavHrefActive('/commerce', '/commerce/payments'), false)
   })
 })
 
-describe('admin routes hide end-user personal pages and mount ops pages', () => {
+describe('admin routes mount §14 IA pages and redirect legacy paths', () => {
   it('does not mount grocery / meal-plan / pantry / collections pages', () => {
     const source = readFileSync(join(here, '../../App.tsx'), 'utf8')
     for (const token of [
@@ -125,7 +132,7 @@ describe('admin routes hide end-user personal pages and mount ops pages', () => 
     }
   })
 
-  it('mounts Gate-released operational pages instead of redirects', () => {
+  it('mounts §14 pages instead of placeholder redirects', () => {
     const source = readFileSync(join(here, '../../App.tsx'), 'utf8')
     for (const token of [
       'ImportPage',
@@ -133,11 +140,31 @@ describe('admin routes hide end-user personal pages and mount ops pages', () => 
       'PaymentsPage',
       'AnalyticsPage',
       'OperationsPage',
+      'CommerceOverviewPage',
+      'ProductsPage',
+      'TaxonomyPage',
+      'HealthPage',
+      'ErrorsPage',
+      'AuditLogPage',
     ]) {
       assert.equal(source.includes(token), true, `App.tsx missing ${token}`)
     }
-    assert.equal(source.includes('path="recipes/import" element={<Navigate'), false)
-    assert.equal(source.includes('path="analytics" element={<Navigate'), false)
-    assert.equal(source.includes('path="commerce/payments" element={<Navigate'), false)
+    assert.equal(source.includes('path="content/import"'), true)
+    assert.equal(source.includes('path="commerce/payments"'), true)
+    assert.equal(source.includes('path="operations/audit-log" element={<AuditLogPage'), true)
+    assert.equal(source.includes('path="operations/audit-log" element={<Navigate'), false)
+  })
+
+  it('redirects legacy catalog paths into §14 IA', () => {
+    const source = readFileSync(join(here, '../../App.tsx'), 'utf8')
+    assert.equal(source.includes('path="recipes" element={<Navigate to="/content/recipes"'), true)
+    assert.equal(
+      source.includes('path="ingredients" element={<Navigate to="/content/taxonomy"'),
+      true,
+    )
+    assert.equal(
+      source.includes('path="subscription" element={<Navigate to="/commerce/subscriptions"'),
+      true,
+    )
   })
 })

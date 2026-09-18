@@ -66,7 +66,14 @@ export interface RecipeSummary {
   category: string
   tags: string[]
   createdAt: string
+  updatedAt?: string
+  /** Display label — "System" for system_recommended; never used to browse user private content. */
   ownerEmail: string
+  libraryKind?: 'user_owned' | 'system_recommended'
+  publishStatus?: 'draft' | 'published' | 'archived' | 'user'
+  sourceUrl?: string | null
+  sourcePlatform?: string | null
+  publishedAt?: string | null
 }
 
 export interface RecipeIngredient {

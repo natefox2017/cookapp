@@ -17,6 +17,8 @@ export async function listRecipes(params: ListRecipesParams = {}): Promise<Recip
     return mockRequest(() => {
       const q = params.q?.trim().toLowerCase() ?? ''
       return mockRecipes.filter((recipe) => {
+        // System Recipe Library only — never list user private content.
+        if (recipe.libraryKind && recipe.libraryKind !== 'system_recommended') return false
         const matchesQuery = !q || recipe.title.toLowerCase().includes(q)
         const matchesCuisine = !params.cuisine || recipe.cuisine === params.cuisine
         const matchesCategory = !params.category || recipe.category === params.category
@@ -60,6 +62,9 @@ export async function updateRecipe(
           tags: next.tags,
           createdAt: next.createdAt,
           ownerEmail: next.ownerEmail,
+          libraryKind: next.libraryKind ?? 'system_recommended',
+          publishStatus: next.publishStatus,
+          sourceUrl: next.sourceUrl,
         }
       }
       return next

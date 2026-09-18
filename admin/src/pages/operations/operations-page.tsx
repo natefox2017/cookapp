@@ -83,7 +83,7 @@ export function OperationsPage() {
   return (
     <div>
       <PageHeader
-        title="Operations"
+        title="Jobs & Syncs"
         description="Unified Jobs & Syncs. Google Play stays Future Reserved. Manual runs use existing Backend workers."
         actions={
           <div className="flex flex-wrap items-center gap-2">

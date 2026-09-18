@@ -1,8 +1,9 @@
 // Admin catalog APIs: ops nav (recipes / ingredients / taxonomy / settings).
 // Personal-list routes (collections / grocery / meal-plans / pantry) are API-only — not Admin pages (#98).
+// Recipes resource = System Recommended Library only (library_kind=system_recommended). Issue #104.
 // Auth: custom admin bearer via requireAdminSession.
 // Deploy: supabase functions deploy admin-catalog --project-ref semsjyrqjnumpvanibip
-// Issue: #92 (parent #49)
+// Issue: #92 (parent #49) · #104
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
@@ -136,6 +137,9 @@ Deno.serve(async (req) => {
     if (resource === "settings") {
       return await handleSettings(req, method, db, actor, ctx);
     }
+    if (resource === "runtime-config") {
+      return await handleRuntimeConfig(req, method, parts.slice(1), db, actor, ctx);
+    }
 
     throw new AppError("not_found", "Unknown admin-catalog resource", 404);
   } catch (err) {
@@ -163,21 +167,25 @@ async function handleRecipes(
     const cuisine = url.searchParams.get("cuisine") ?? undefined;
     const category = url.searchParams.get("category") ?? undefined;
     const tag = url.searchParams.get("tag") ?? undefined;
+    const status = url.searchParams.get("status") ?? undefined;
 
-    const { data, error } = await db
+    // Admin System Recipe Library only — never list user_owned private recipes (#104).
+    let query = db
       .from("recipes")
       .select(
-        "id, user_id, title, cover_image, cuisine, category, tags, created_at",
+        "id, user_id, title, cover_image, cuisine, category, tags, created_at, updated_at, library_kind, publish_status, source_url, source_platform, published_at",
       )
+      .eq("library_kind", "system_recommended")
       .order("created_at", { ascending: false })
       .limit(500);
+    if (status && ["draft", "published", "archived"].includes(status)) {
+      query = query.eq("publish_status", status);
+    }
+
+    const { data, error } = await query;
     if (error) throw new AppError("internal_error", error.message, 500);
 
     const rows = data ?? [];
-    const profiles = await loadProfileMap(
-      db,
-      rows.map((r) => String(r.user_id)),
-    );
     const mapped = rows
       .filter((row) => {
         if (q && !String(row.title ?? "").toLowerCase().includes(q)) return false;
@@ -205,7 +213,7 @@ async function handleRecipes(
           cuisineLookup,
           categoryLookup,
           tagLookup,
-          ownerEmail: profiles.get(String(row.user_id))?.email ?? "",
+          ownerEmail: "System",
         })
       );
     return json(mapped, 200, publicCorsHeaders, ctx);
@@ -216,14 +224,22 @@ async function handleRecipes(
   if (error) throw new AppError("internal_error", error.message, 500);
   if (!row) throw new AppError("not_found", "Recipe not found", 404);
 
+  // Privacy boundary: Admin must not open user_owned recipe bodies (#104).
+  if (String(row.library_kind ?? "user_owned") !== "system_recommended") {
+    throw new AppError(
+      "forbidden",
+      "User private recipes are not available in Admin. System Recipe Library only.",
+      403,
+    );
+  }
+
   if (method === "GET") {
-    const profiles = await loadProfileMap(db, [String(row.user_id)]);
     return json(
       mapRecipeDetail(row, {
         cuisineLookup,
         categoryLookup,
         tagLookup,
-        ownerEmail: profiles.get(String(row.user_id))?.email ?? "",
+        ownerEmail: "System",
       }),
       200,
       publicCorsHeaders,
@@ -234,34 +250,47 @@ async function handleRecipes(
   if (method === "PATCH") {
     const body = await readJson(req);
     const cols = recipePayloadToColumns(body);
+    if (body.publishStatus != null || body.publish_status != null) {
+      const nextStatus = String(body.publishStatus ?? body.publish_status);
+      if (!["draft", "published", "archived"].includes(nextStatus)) {
+        throw new AppError("validation_error", "Invalid publish_status", 400);
+      }
+      cols.publish_status = nextStatus;
+      cols.published_at = nextStatus === "published"
+        ? (row.published_at ?? new Date().toISOString())
+        : null;
+    }
     if (!Object.keys(cols).length) {
       throw new AppError("validation_error", "No updatable fields", 400);
     }
+    // Never allow flipping library_kind / user_id via Admin patch.
+    delete cols.user_id;
+    delete cols.library_kind;
     const { data: updated, error: upErr } = await db
       .from("recipes")
       .update(cols)
       .eq("id", id)
+      .eq("library_kind", "system_recommended")
       .select("*")
       .maybeSingle();
     if (upErr) throw new AppError("internal_error", upErr.message, 500);
     if (!updated) throw new AppError("not_found", "Recipe not found", 404);
     await writeAdminAudit({
       actor,
-      action: "recipe.update",
-      objectType: "recipe",
+      action: "system_recipe.update",
+      objectType: "system_recipe",
       objectId: id,
-      before: { title: row.title },
-      after: { title: updated.title },
+      before: { title: row.title, publish_status: row.publish_status },
+      after: { title: updated.title, publish_status: updated.publish_status },
       ctx,
       req,
     });
-    const profiles = await loadProfileMap(db, [String(updated.user_id)]);
     return json(
       mapRecipeDetail(updated, {
         cuisineLookup,
         categoryLookup,
         tagLookup,
-        ownerEmail: profiles.get(String(updated.user_id))?.email ?? "",
+        ownerEmail: "System",
       }),
       200,
       publicCorsHeaders,
@@ -270,14 +299,18 @@ async function handleRecipes(
   }
 
   if (method === "DELETE") {
-    const { error: delErr } = await db.from("recipes").delete().eq("id", id);
+    const { error: delErr } = await db
+      .from("recipes")
+      .delete()
+      .eq("id", id)
+      .eq("library_kind", "system_recommended");
     if (delErr) throw new AppError("internal_error", delErr.message, 500);
     await writeAdminAudit({
       actor,
-      action: "recipe.delete",
-      objectType: "recipe",
+      action: "system_recipe.delete",
+      objectType: "system_recipe",
       objectId: id,
-      before: { title: row.title, user_id: row.user_id },
+      before: { title: row.title, publish_status: row.publish_status },
       ctx,
       req,
     });
@@ -564,7 +597,8 @@ async function handleTaxonomy(
     const usage = new Map<string, number>();
     const { data: recipes, error: rErr } = await db
       .from("recipes")
-      .select("cuisine, category, tags");
+      .select("cuisine, category, tags")
+      .eq("library_kind", "system_recommended");
     if (rErr) throw new AppError("internal_error", rErr.message, 500);
     for (const recipe of recipes ?? []) {
       if (col === "tags") {
@@ -712,4 +746,99 @@ async function handleSettings(
   }
 
   throw new AppError("method_not_allowed", "GET or PATCH", 405);
+}
+
+/** Non-secret runtime knobs only (Issue #104). Never return or accept provider secrets. */
+const RUNTIME_CONFIG_EDITABLE = new Set([
+  "maintenance_mode",
+  "ai_import_confidence_threshold",
+  "supported_import_sources",
+  "admin_import_destination",
+  "import_queue_concurrency",
+  "import_queue_max_attempts",
+  "import_queue_visibility_timeout_sec",
+]);
+
+const RUNTIME_CONFIG_HIDDEN = new Set([SETTINGS_KEY]);
+
+async function handleRuntimeConfig(
+  req: Request,
+  method: string,
+  parts: string[],
+  db: Db,
+  actor: { adminId: string; username: string },
+  ctx: ReturnType<typeof resolveRequestContext>,
+) {
+  const key = parts[0] ? decodeURIComponent(parts[0]) : "";
+
+  if (!key) {
+    if (method !== "GET") throw new AppError("method_not_allowed", "GET only", 405);
+    const { data, error } = await db
+      .from("runtime_config")
+      .select("key, value, description, updated_at")
+      .order("key", { ascending: true });
+    if (error) throw new AppError("internal_error", error.message, 500);
+    const rows = (data ?? [])
+      .filter((row) => !RUNTIME_CONFIG_HIDDEN.has(String(row.key)))
+      .map((row) => ({
+        key: String(row.key),
+        value: row.value,
+        description: (row.description as string | null) ?? null,
+        updatedAt: String(row.updated_at ?? ""),
+      }));
+    return json(rows, 200, publicCorsHeaders, ctx);
+  }
+
+  if (method === "PATCH" || method === "PUT") {
+    if (!RUNTIME_CONFIG_EDITABLE.has(key)) {
+      throw new AppError(
+        "forbidden",
+        `Runtime config key is not editable from Admin: ${key}`,
+        403,
+      );
+    }
+    const body = await readJson(req);
+    if (!("value" in body)) {
+      throw new AppError("validation_error", "value is required", 400);
+    }
+    const { data: before } = await db
+      .from("runtime_config")
+      .select("value, description")
+      .eq("key", key)
+      .maybeSingle();
+    const { data, error } = await db
+      .from("runtime_config")
+      .upsert({
+        key,
+        value: body.value as unknown,
+        description: before?.description ??
+          `Admin-managed runtime config (${key})`,
+      })
+      .select("key, value, description, updated_at")
+      .single();
+    if (error) throw new AppError("internal_error", error.message, 500);
+    await writeAdminAudit({
+      actor,
+      action: "runtime_config.update",
+      objectType: "runtime_config",
+      objectId: key,
+      before: before?.value != null ? { value: before.value } : undefined,
+      after: { value: data.value },
+      ctx,
+      req,
+    });
+    return json(
+      {
+        key: String(data.key),
+        value: data.value,
+        description: (data.description as string | null) ?? null,
+        updatedAt: String(data.updated_at ?? ""),
+      },
+      200,
+      publicCorsHeaders,
+      ctx,
+    );
+  }
+
+  throw new AppError("method_not_allowed", "GET list or PATCH by key", 405);
 }

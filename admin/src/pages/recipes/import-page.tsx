@@ -58,10 +58,10 @@ export function ImportPage() {
     <div>
       <PageHeader
         title="AI Import"
-        description="Paste recipe URLs. The shared Backend pipeline extracts, parses, validates, and enqueues work. Do not paste provider API keys."
+        description="Paste recipe URLs into the shared Backend pipeline. Successful imports land in the System Recipe Library (system_recommended) — never user private recipes. Do not paste provider API keys."
         actions={
           <Button variant="outline" asChild>
-            <Link to="/recipes/import-review">Review queue</Link>
+            <Link to="/content/import-review">Review queue</Link>
           </Button>
         }
       />

@@ -526,22 +526,20 @@ export async function runImportPipeline(
   }
 
   // --- import ---
+  // Admin jobs (destination_user_id null) → system_recommended on the same recipes table.
+  // User / iOS jobs require destination_user_id → user_owned.
   if (startIdx <= stageIndex("import")) {
-    if (!job.destination_user_id) {
-      await failJob(
-        admin,
-        job.id,
-        "import",
-        "MISSING_DESTINATION",
-        "destination_user_id required for auto-import",
-        "needs_review",
-      );
-      return { status: "needs_review" };
-    }
+    const isSystemLibrary = !job.destination_user_id;
 
     const imported = await importRecipe(admin, {
-      owner_user_id: job.destination_user_id,
+      owner_user_id: isSystemLibrary ? null : job.destination_user_id,
+      library_kind: isSystemLibrary ? "system_recommended" : "user_owned",
       recipe,
+      import_job_id: job.id,
+      source_url: job.source_url ?? job.canonical_url ?? null,
+      source_platform: job.source_type ?? null,
+      created_by_admin_id: job.created_by ?? null,
+      publish_status: isSystemLibrary ? "draft" : "user",
     });
     if (!imported.ok) {
       await failJob(
