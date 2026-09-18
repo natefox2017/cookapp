@@ -3,7 +3,7 @@
 Issue: [#52](https://github.com/natefox2017/cookapp/issues/52) · Parent [#49](https://github.com/natefox2017/cookapp/issues/49)  
 Notion: [Backend & Admin V2 §3 P0-B / §17](https://app.notion.com/p/3dfe1df1f5a7816b89c1fe67eded6242)  
 Nav scope: Issue [#61](https://github.com/natefox2017/cookapp/issues/61) rolled back #64 hierarchical / planned placeholder IA while Stage 4 Pilot Gate forbids Stage 5–7 Admin surface expansion.  
-Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-18).
+Audited against `main` (`8137bbd`, #93/#98/#99) + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-18).
 
 ## Rules
 
@@ -20,7 +20,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 |--------|---------|
 | **live** | Edge Function deployed; Admin client uses `/functions/v1/…` |
 | **missing** | No Admin Edge Function; live client returns `501`; mock-only UI |
-| **hybrid** | Partial live (e.g. Settings Security via `admin-auth`; general settings not persisted live) |
+| **hybrid** | Partial live (Settings: persist general/units/categories via `admin-catalog`; System diagnostics; Security via `admin-auth`) |
 | **planned** | Confirmed in Notion V2; tracked under #49 children — **not** exposed as Admin nav until Gate allows |
 
 ## Navigation (current Gate)
@@ -38,7 +38,7 @@ Shared source: `admin/src/components/layout/nav.ts` (flat list; no per-page fork
 | Settings | `/settings` → `/settings/general` | hybrid tabs | hybrid |
 | Settings → Integrations | `/settings/integrations` | live (`IntegrationsPanel`) | live (#63) |
 
-End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections). Typed clients may still exist for contract / live catalog merge; routes redirect to Dashboard.
+End-user personal surfaces are **not** Admin nav (Meal Plan, Grocery, Pantry, Collections) — confirmed product: those belong in the iOS app (#98/#99). Typed clients / Edge routes may still exist as API-only; old URLs redirect to Dashboard.
 
 Compatibility redirects (no dead links after #64 rollback): `/commerce/products` → `/subscription`; `/data/ingredients` · `/data/categories` → flat counterparts; `/collections` · `/grocery` · `/meal-plans` · `/pantry` · `/data/collections` · `/data/grocery` · `/data/meal-plans` · `/data/pantry` → `/`; `/analytics` · `/operations/*` · `/recipes/import*` · `/commerce/payments` → nearest existing page; unknown `/settings/:section` → `/settings/general`.
 
