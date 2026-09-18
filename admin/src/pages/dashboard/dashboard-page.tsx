@@ -1,6 +1,5 @@
 import {
   CreditCard,
-  Download,
   Heart,
   Library,
   CookingPot,
@@ -37,12 +36,10 @@ const growthConfig = {
 
 const revenueConfig = {
   revenueApple: { label: 'Apple', color: 'var(--chart-1)' },
-  revenueAndroid: { label: 'Android', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
 const downloadConfig = {
   downloadsIos: { label: 'iOS', color: 'var(--chart-1)' },
-  downloadsAndroid: { label: 'Android', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
 function storeLabel(store: string) {
@@ -84,7 +81,7 @@ export function DashboardPage() {
     {
       label: 'Total revenue',
       value: formatMoney(data.stats.revenueTotal),
-      hint: 'All-time paid events',
+      hint: 'Apple estimated · RC / payment_transactions',
     },
     {
       label: 'MRR (est.)',
@@ -94,29 +91,27 @@ export function DashboardPage() {
     {
       label: 'Apple revenue',
       value: formatMoney(data.stats.revenueApple),
-      hint: 'App Store',
+      hint: 'App Store (estimated until Financial Reports)',
     },
     {
       label: 'Android revenue',
-      value: formatMoney(data.stats.revenueAndroid),
-      hint: 'Play Store',
+      value: 'Not Connected',
+      hint: 'Google Play · Future Reserved',
     },
   ]
 
   const downloadCards = [
     {
-      label: 'Total downloads',
-      value: formatNumber(data.stats.downloadsTotal),
-      icon: Download,
-    },
-    {
       label: 'iOS downloads',
-      value: formatNumber(data.stats.downloadsIos),
+      value:
+        data.stats.downloadsIos == null
+          ? 'No data'
+          : formatNumber(data.stats.downloadsIos),
       icon: Smartphone,
     },
     {
       label: 'Android downloads',
-      value: formatNumber(data.stats.downloadsAndroid),
+      value: 'Not Connected',
       icon: Smartphone,
     },
     {
@@ -136,9 +131,14 @@ export function DashboardPage() {
     <div>
       <PageHeader
         title="Dashboard"
-        description="Detailed users, payments, and downloads overview for ops."
+        description="Real KPIs with source labels. Google Play is Future Reserved — never fake zeros."
       />
 
+      {data.platforms?.android?.availability === 'future_reserved' ? (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Android / Google Play: Not Connected (Future Reserved).
+        </p>
+      ) : null}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold tracking-tight">Users</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -223,8 +223,10 @@ export function DashboardPage() {
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Revenue by platform</CardTitle>
-            <CardDescription>Apple vs Android paid amounts</CardDescription>
+            <CardTitle>Apple revenue (estimated)</CardTitle>
+            <CardDescription>
+              RevenueCat / payment_transactions · Android Future Reserved
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={revenueConfig} className="h-64 w-full aspect-auto">
@@ -235,12 +237,6 @@ export function DashboardPage() {
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend />
                 <Bar dataKey="revenueApple" name="Apple" fill="var(--color-revenueApple)" radius={4} />
-                <Bar
-                  dataKey="revenueAndroid"
-                  name="Android"
-                  fill="var(--color-revenueAndroid)"
-                  radius={4}
-                />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -248,8 +244,10 @@ export function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Downloads trend</CardTitle>
-            <CardDescription>iOS vs Android installs by month</CardDescription>
+            <CardTitle>iOS downloads</CardTitle>
+            <CardDescription>
+              Real ASC / app_download_stats only · Android Not Connected
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={downloadConfig} className="h-64 w-full aspect-auto">
@@ -265,16 +263,6 @@ export function DashboardPage() {
                   name="iOS"
                   stroke="var(--color-downloadsIos)"
                   fill="var(--color-downloadsIos)"
-                  fillOpacity={0.18}
-                  strokeWidth={2}
-                  isAnimationActive={false}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="downloadsAndroid"
-                  name="Android"
-                  stroke="var(--color-downloadsAndroid)"
-                  fill="var(--color-downloadsAndroid)"
                   fillOpacity={0.18}
                   strokeWidth={2}
                   isAnimationActive={false}

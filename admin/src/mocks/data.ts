@@ -588,6 +588,15 @@ export const mockSubscriptionRevenue: SubscriptionRevenueData = {
 }
 
 export const mockDashboard: DashboardData = {
+  generatedAt: '2026-09-18T00:00:00.000Z',
+  platforms: {
+    ios: { availability: 'available' },
+    android: {
+      availability: 'future_reserved',
+      status: 'not_connected',
+      note: 'Google Play Future Reserved',
+    },
+  },
   stats: {
     totalUsers: mockUsers.length,
     totalRecipes: mockRecipes.length,
@@ -596,14 +605,14 @@ export const mockDashboard: DashboardData = {
     newUsersThisMonth: mockUsers.filter((user) => user.createdAt.startsWith('2026-03')).length,
     activePaidUsers: mockUsers.filter((user) => user.subscription !== 'free').length,
     suspendedUsers: mockUsers.filter((user) => user.status === 'suspended').length,
-    revenueTotal: mockSubscriptionRevenue.stats.appleRevenue + mockSubscriptionRevenue.stats.androidRevenue,
+    revenueTotal: mockSubscriptionRevenue.stats.appleRevenue,
     revenueMrr: mockSubscriptionRevenue.stats.mrr,
     revenueApple: mockSubscriptionRevenue.stats.appleRevenue,
-    revenueAndroid: mockSubscriptionRevenue.stats.androidRevenue,
+    revenueAndroid: null,
     paymentTransactions: 8,
-    downloadsTotal: 18420,
+    downloadsTotal: 11240,
     downloadsIos: 11240,
-    downloadsAndroid: 7180,
+    downloadsAndroid: null,
   },
   growth: [
     { month: 'Oct', users: 12, recipes: 18 },
@@ -620,9 +629,9 @@ export const mockDashboard: DashboardData = {
       recipes: 18,
       revenue: 44.98,
       revenueApple: 39.99,
-      revenueAndroid: 4.99,
+      revenueAndroid: null,
       downloadsIos: 820,
-      downloadsAndroid: 540,
+      downloadsAndroid: null,
     },
     {
       month: 'Nov',
@@ -630,9 +639,9 @@ export const mockDashboard: DashboardData = {
       recipes: 41,
       revenue: 54.96,
       revenueApple: 44.98,
-      revenueAndroid: 9.98,
+      revenueAndroid: null,
       downloadsIos: 1240,
-      downloadsAndroid: 780,
+      downloadsAndroid: null,
     },
     {
       month: 'Dec',
@@ -640,9 +649,9 @@ export const mockDashboard: DashboardData = {
       recipes: 67,
       revenue: 99.94,
       revenueApple: 84.97,
-      revenueAndroid: 14.97,
+      revenueAndroid: null,
       downloadsIos: 1680,
-      downloadsAndroid: 1020,
+      downloadsAndroid: null,
     },
     {
       month: 'Jan',
@@ -650,9 +659,9 @@ export const mockDashboard: DashboardData = {
       recipes: 94,
       revenue: 64.94,
       revenueApple: 44.98,
-      revenueAndroid: 19.96,
+      revenueAndroid: null,
       downloadsIos: 2100,
-      downloadsAndroid: 1280,
+      downloadsAndroid: null,
     },
     {
       month: 'Feb',
@@ -660,9 +669,9 @@ export const mockDashboard: DashboardData = {
       recipes: 128,
       revenue: 164.94,
       revenueApple: 119.97,
-      revenueAndroid: 44.97,
+      revenueAndroid: null,
       downloadsIos: 2560,
-      downloadsAndroid: 1640,
+      downloadsAndroid: null,
     },
     {
       month: 'Mar',
@@ -670,9 +679,9 @@ export const mockDashboard: DashboardData = {
       recipes: 156,
       revenue: 49.97,
       revenueApple: 39.99,
-      revenueAndroid: 9.98,
+      revenueAndroid: null,
       downloadsIos: 2840,
-      downloadsAndroid: 1920,
+      downloadsAndroid: null,
     },
   ],
   userBreakdown: {

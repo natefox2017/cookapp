@@ -220,6 +220,27 @@ export interface ListSubscriptionsParams {
   platform?: StorePlatform | 'all'
 }
 
+/** KPI availability from admin-dashboard (#60). */
+export type KpiAvailability =
+  | 'available'
+  | 'estimated'
+  | 'no_data'
+  | 'not_configured'
+  | 'schema_pending'
+  | 'future_reserved'
+
+export interface DashboardKpiMetric {
+  key: string
+  label: string
+  value: number | null
+  unit?: string | null
+  source: string | null
+  freshness: string | null
+  availability: KpiAvailability
+  estimated?: boolean
+  note?: string | null
+}
+
 export interface DashboardStats {
   totalUsers: number
   totalRecipes: number
@@ -229,14 +250,17 @@ export interface DashboardStats {
   newUsersThisMonth: number
   activePaidUsers: number
   suspendedUsers: number
-  revenueTotal: number
+  /** Null when no real paid events; never invent totals. */
+  revenueTotal: number | null
   revenueMrr: number
-  revenueApple: number
-  revenueAndroid: number
+  revenueApple: number | null
+  /** Always null — Google Play Future Reserved (#60). */
+  revenueAndroid: number | null
   paymentTransactions: number
-  downloadsTotal: number
-  downloadsIos: number
-  downloadsAndroid: number
+  downloadsTotal: number | null
+  downloadsIos: number | null
+  /** Always null — Google Play Future Reserved (#60). */
+  downloadsAndroid: number | null
 }
 
 export interface GrowthPoint {
@@ -249,11 +273,11 @@ export interface DashboardSeriesPoint {
   month: string
   users: number
   recipes: number
-  revenue: number
-  revenueApple: number
-  revenueAndroid: number
-  downloadsIos: number
-  downloadsAndroid: number
+  revenue: number | null
+  revenueApple: number | null
+  revenueAndroid: number | null
+  downloadsIos: number | null
+  downloadsAndroid: number | null
 }
 
 export interface DashboardBreakdownItem {
@@ -281,6 +305,13 @@ export interface RecentActivity {
 }
 
 export interface DashboardData {
+  generatedAt?: string
+  kpis?: DashboardKpiMetric[]
+  platforms?: {
+    ios?: { availability: string }
+    android?: { availability: string; status?: string; note?: string }
+  }
+  schema?: Record<string, string>
   stats: DashboardStats
   growth: GrowthPoint[]
   series: DashboardSeriesPoint[]

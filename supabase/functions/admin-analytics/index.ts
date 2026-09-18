@@ -1,7 +1,6 @@
-// Admin Dashboard: KPI aggregation with source + freshness (Issue #60 / #47).
-// Auth: custom admin bearer via requireAdminSession (verify_jwt=false).
-// Google Play: Future Reserved — never fake Android zeros.
-// Prefer payment_transactions / store_analytics_daily when #58/#59 present.
+// Admin Analytics aggregation API (Issue #60 / #47).
+// Real tables only; Google Play Future Reserved; source + freshness on KPIs.
+// Deploy: supabase functions deploy admin-analytics --project-ref semsjyrqjnumpvanibip
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
@@ -10,7 +9,7 @@ import { createServiceClient } from "../_shared/auth.ts";
 import { requireAdminSession } from "../_shared/admin-session.ts";
 import { resolveRequestContext } from "../_shared/request-context.ts";
 import { log } from "../_shared/logger.ts";
-import { buildDashboardAggregation } from "../_shared/operations/mod.ts";
+import { buildAnalyticsAggregation } from "../_shared/operations/mod.ts";
 
 Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
@@ -25,10 +24,14 @@ Deno.serve(async (req) => {
       throw new AppError("method_not_allowed", "Only GET is supported", 405);
     }
 
-    log("info", "admin_dashboard_request", {}, ctx);
+    const url = new URL(req.url);
+    const from = url.searchParams.get("from");
+    const to = url.searchParams.get("to");
 
-    const admin = createServiceClient();
-    const payload = await buildDashboardAggregation(admin);
+    log("info", "admin_analytics_request", { from, to }, ctx);
+
+    const db = createServiceClient();
+    const payload = await buildAnalyticsAggregation(db, { from, to });
     return json(payload, 200, headers, ctx);
   } catch (err) {
     return errorResponse(err, headers, ctx);

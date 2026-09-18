@@ -35,8 +35,8 @@ Shared source: `admin/src/components/layout/nav.ts` (no per-page forks).
 | Recipes → Import Review | `/recipes/import-review` | Not implemented page | planned |
 | Commerce → Products · Subscriptions | `/commerce/products` | live (`SubscriptionPage`) | live |
 | Commerce → Payments | `/commerce/payments` | Not implemented page | planned (backend `payment_transactions` #58; Admin list UI pending) |
-| Analytics | `/analytics` | Not implemented page | planned (#59/#60) |
-| Operations → Jobs & Syncs | `/operations/jobs` | Not implemented page | planned (#60) |
+| Analytics | `/analytics` | Not implemented page | planned UI; backend `admin-analytics` live (#60) |
+| Operations → Jobs & Syncs | `/operations/jobs` | Not implemented page | planned UI; backend `admin-operations` live (#60) |
 | Operations → Audit Log | `/operations/audit-log` | Not implemented page | planned (table #57; list UI pending) |
 | Data → Collections…Categories | `/data/*` | mock UI | missing |
 | Settings → General / Security / System | `/settings/{general,security,system}` | hybrid | hybrid / live / hybrid |
@@ -53,10 +53,12 @@ Legacy redirects (capabilities preserved): `/subscription` → `/commerce/produc
 | (auth) | `logout` | `POST /functions/v1/admin-auth/logout` | live | |
 | (auth) | `getSession` | `GET /functions/v1/admin-auth/session` | live | |
 | Settings → Security | `changePassword` | `POST /functions/v1/admin-auth/change-password` | live | |
-| `/` Dashboard | `getDashboard` | `GET /functions/v1/admin-dashboard` | live | Aggregation; Google Play must not fake zeros (#47/#49) |
+| `/` Dashboard | `getDashboard` | `GET /functions/v1/admin-dashboard` | live | #60 KPIs with source/freshness; prefers `payment_transactions` / `store_analytics_daily`; Google Play future_reserved |
 | `/users` | `listUsers` / `getUser` / `getUserRegistrationStats` | `GET /functions/v1/admin-users` · `…/:id` · `…/stats` | live | #44 · detail includes `commerceSummary` (#58) |
 | `/commerce/products` | plans / records / revenue | `…/admin-subscriptions/{plans,records,revenue}` | live | was `/subscription` |
 | (API) Payment transactions | `listTransactions` / `getTransaction` | `…/admin-subscriptions/transactions` · `…/transactions/:id` | live | #58 — RC amounts ≠ final financial truth |
+| (API) Analytics aggregation | — | `GET /functions/v1/admin-analytics` | live | #60 (Admin Analytics UI later) |
+| (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 Jobs & Syncs + Integrations status |
 | `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: build-time diagnostics only; no persist API |
 | `/recipes` | `listRecipes` / CRUD | — | missing | Library; AI Import UI planned separately |
 | `/data/collections` | `listCollections` | — | missing | Planned Admin Data APIs |
@@ -68,11 +70,12 @@ Legacy redirects (capabilities preserved): `/subscription` → `/commerce/produc
 | `/recipes/import` · `/recipes/import-review` | — | `admin-recipe-import/*` (backend) | planned | Backend #55/#56; Admin UI not wired |
 | `/settings/ai-platform` | — | `admin-ai/*` (backend) | planned | Backend #53; Admin UI not wired |
 | `/commerce/payments` | — | `admin-subscriptions/transactions` (API live) | planned | #58 Admin Payments page UI pending |
-| `/analytics` | — | `admin-store-sync/*` (backend) | planned | #59/#60 Dashboard aggregation pending |
-| `/operations/jobs` | — | — | planned | #60 |
+| `/analytics` | — | `admin-analytics` + `admin-store-sync/*` (backend) | planned | #59/#60 Admin Analytics page UI pending |
+| `/operations/jobs` | — | `admin-operations/*` (backend) | planned | #60 Admin Jobs UI pending |
 | `/operations/audit-log` | — | `admin_audit_logs` (write path #57) | planned | List/read Admin UI pending |
-| `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only |
+| `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
 | Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved |
+| Ops Jobs + Dashboard aggregation | jobs / integrations / analytics | `…/admin-operations/*` · `admin-analytics` · `admin-dashboard` | live | #60 / #47 |
 
 ## Live Edge Functions (inventory)
 
@@ -80,7 +83,9 @@ Legacy redirects (capabilities preserved): `/subscription` → `/commerce/produc
 |----------|--------------|---------|
 | `admin-auth` | false | Login / logout / session / change-password |
 | `admin-users` | false | User list, detail, registration mix stats |
-| `admin-dashboard` | false | Ops KPI aggregation |
+| `admin-dashboard` | false | Ops KPI aggregation (#60 source/freshness; prefers #58/#59 tables) |
+| `admin-analytics` | false | Analytics aggregation (#60) |
+| `admin-operations` | false | Jobs & Syncs + Integrations status (#60) |
 | `admin-subscriptions` | false | Plans CRUD, subscription records, revenue series, payment transactions (#58) |
 | `admin-ai` | false | AI Platform providers / models / routes / usage / health (#53) |
 | `admin-integrations` | false | Integration connection status / test / write-only secrets (#63) |
