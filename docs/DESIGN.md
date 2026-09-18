@@ -15,7 +15,9 @@ QA brief template: [`docs/ui-qa-brief.md`](ui-qa-brief.md).
 
 ## Goal
 
-**Zero cross-screen drift** + **1:1 screenshot match** + **Liquid Glass chrome** + **automated reject/redo on FAIL**.
+**Zero cross-screen drift** + **pixel-level screenshot match** + **Liquid Glass chrome** + **automated reject/redo on FAIL**.
+
+Figma Design QA (Issue #10): **only pixel-level PASS counts as done.** `PASS*` / structural-close is not completion.
 
 ## Architecture (mandatory)
 

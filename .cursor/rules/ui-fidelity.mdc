@@ -31,3 +31,12 @@ Works with `ui-consistency-lock.mdc` (shared tokens/components) and `ui-screensh
 | Overlays | Match `*-menu-open` (or equivalent) screenshot |
 
 Method: run at iPhone-like width → capture UI (no status bar / Dynamic Island / keyboard) → side-by-side with `docs/ui-screenshots/<name>.jpg` → fix until match. “Close enough” is a fail.
+
+## Pixel-level DoD (Figma Design QA · Issue #10)
+
+**只有像素级一致才算完成。** `PASS*` /「结构接近」/「chrome 对齐」一律不算完成，不得勾选 Issue checklist。
+
+- 对照：参考截图 ↔ Figma `get_screenshot` 导出（忽略状态栏 / 灵动岛 / 键盘）。
+- 边距、基线、控件、图标、分隔线：可见偏移 >~2–4px = FAIL。
+- 照片/内容须与参考构图一致；灰块占位不得报完成。
+- 缺参考图（MISSING_REF）→ 呈报补图，禁止凭记忆补正文。

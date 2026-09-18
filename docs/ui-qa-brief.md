@@ -12,13 +12,14 @@ You are the UI QA agent for cookapp. Do NOT implement features. Only audit and r
 - Capture live UI if the app runs (computerUse). Ignore status bar, Dynamic Island, keyboard.
 
 ## Enforce
-1. docs/ui-screenshots + .cursor/rules/ui-fidelity.mdc — 1:1 structure/spacing/type/color/controls
+1. docs/ui-screenshots + .cursor/rules/ui-fidelity.mdc — **pixel-level** structure/spacing/type/color/controls (PASS* / “close enough” = FAIL)
 2. .cursor/rules/ui-consistency-lock.mdc — shared tokens/kit; no per-screen visual forks
 3. .cursor/rules/liquid-glass.mdc — Liquid Glass only on nav/control layer; regular vs clear; light+dark; no glass on content; control states default/hover/active/disabled/loading
 4. .cursor/rules/ui-screenshots.mdc — ignore device chrome
 
 ## Output exactly
 VERDICT: PASS | FAIL
+(Note: Do **not** invent PASS*. If residuals remain → FAIL.)
 Screenshot fidelity: …
 Liquid Glass: …
 Consistency (shared chrome/tokens): …
