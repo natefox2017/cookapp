@@ -1,0 +1,53 @@
+{
+  "overall": "PASS",
+  "figmaFile": "FHbikS2jILAeMv8mote0vD",
+  "figmaPage": "37:2",
+  "nodes": {
+    "24": {
+      "instance": "115:18686",
+      "source": "115:7966",
+      "verdict": "PASS",
+      "x": 208,
+      "y": 1337,
+      "pixelBase": "423:9109",
+      "pixelBaseVisible": false
+    },
+    "25": { "instance": "115:18854", "source": "115:8136", "untouched": true },
+    "26": { "instance": "119:11940", "untouched": true },
+    "27": { "instance": "119:12010", "untouched": true },
+    "28": {
+      "instance": "119:12120",
+      "source": "118:10756",
+      "verdict": "PASS",
+      "x": 2768,
+      "y": 1337,
+      "pixelBase": "423:3837",
+      "pixelBaseVisible": false
+    },
+    "28b": {
+      "instance": "395:9346",
+      "source": "395:9193",
+      "verdict": "PASS*",
+      "x": 3408,
+      "y": 1337,
+      "ref": "IMG_4460"
+    },
+    "28c": {
+      "instance": "395:9455",
+      "source": "395:9302",
+      "verdict": "PASS*",
+      "x": 4048,
+      "y": 1337,
+      "ref": "IMG_4461"
+    }
+  },
+  "pngMapping": {
+    "IMG_4457.PNG": "25 filled (not 24)",
+    "IMG_4458.PNG": "26",
+    "IMG_4459.PNG": "27",
+    "IMG_4460.PNG": "28b Create Shopping List",
+    "IMG_4461.PNG": "28c Share List",
+    "IMG_4462.PNG": "28 Pantry New item"
+  },
+  "untouched": ["77:237", "115:8136", "25", "26", "27", "03-22", "31-49"]
+}
