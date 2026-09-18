@@ -126,6 +126,12 @@ struct GlassMenuButton: View {
             isMenuHostHighlighted: presenter.highlightsHost,
             action: toggle
         )
+        .background(alignment: .topTrailing) {
+            if presenter.phase.isVisible {
+                panel
+                    .offset(y: DesignTokens.Chrome.headerButtonSize + DesignTokens.Chrome.menuAnchorGap)
+            }
+        }
         .background {
             if presenter.phase.isVisible {
                 Color.clear
@@ -135,12 +141,6 @@ struct GlassMenuButton: View {
                     )
                     .contentShape(Rectangle())
                     .onTapGesture { dismiss() }
-            }
-        }
-        .background(alignment: .topTrailing) {
-            if presenter.phase.isVisible {
-                panel
-                    .offset(y: DesignTokens.Chrome.headerButtonSize + DesignTokens.Chrome.menuAnchorGap)
             }
         }
         .zIndex(presenter.phase.isVisible ? 20 : 0)
@@ -163,6 +163,7 @@ struct GlassMenuButton: View {
         .frame(minWidth: DesignTokens.Chrome.menuMinWidth)
         .frame(height: height)
         .fixedSize(horizontal: true, vertical: true)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
         .cookGlass(
             .regular,
             in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
