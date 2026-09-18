@@ -53,7 +53,9 @@ enum DesignTokens {
         static let menuItemHeight: CGFloat = 44
         static let menuHorizontalPadding: CGFloat = 16
         static let menuGlyphWidth: CGFloat = 20
-        static let menuMaxHeight: CGFloat = 280
+        static var menuMaxHeight: CGFloat {
+            (menuItemHeight * 8) + (DesignTokens.Spacing.xs * 2) + hairlineWidth
+        }
         static let menuDismissExtent: CGFloat = 2000
         static var overlayClearance: CGFloat {
             tabBarHeight + barTopPadding + barBottomPadding

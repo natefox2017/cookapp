@@ -129,6 +129,7 @@ struct FloatingTabBar: View {
             .opacity(isDisabled ? DesignTokens.Chrome.disabledOpacity : 1)
         }
         .buttonStyle(ChromePressButtonStyle(isEnabled: isEnabled, reduceMotion: reduceMotion))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.tabSelection, style: .continuous))
         .disabled(!isEnabled)
         .onHover { hovering in
             hoveredTab = hovering && isEnabled ? tab : (hoveredTab == tab ? nil : hoveredTab)

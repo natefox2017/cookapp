@@ -29,6 +29,7 @@ struct ChromeTokenTests {
         #expect(DesignTokens.Chrome.tabIconLabelSpacing == 2)
         #expect(DesignTokens.Chrome.menuGlyphWidth == 20)
         #expect(DesignTokens.Chrome.pressedFillOpacity == 0.08)
+        #expect(DesignTokens.Chrome.menuMaxHeight >= DesignTokens.Chrome.menuItemHeight * 8)
     }
 
     @Test func motionDurationsMatchFreeze() {

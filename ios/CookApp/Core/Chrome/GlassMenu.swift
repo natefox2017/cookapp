@@ -108,21 +108,21 @@ struct GlassMenuButton: View {
             isMenuHostHighlighted: presenter.highlightsHost,
             action: toggle
         )
+        .background {
+            if presenter.phase.isVisible {
+                Color.clear
+                    .frame(
+                        width: DesignTokens.Chrome.menuDismissExtent,
+                        height: DesignTokens.Chrome.menuDismissExtent
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismiss() }
+            }
+        }
         .overlay(alignment: .topTrailing) {
             if presenter.phase.isVisible {
-                ZStack(alignment: .topTrailing) {
-                    Color.clear
-                        .frame(
-                            width: DesignTokens.Chrome.menuDismissExtent,
-                            height: DesignTokens.Chrome.menuDismissExtent
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture { dismiss() }
-
-                    panel
-                        .offset(y: DesignTokens.Chrome.headerButtonSize + DesignTokens.Chrome.menuAnchorGap)
-                }
-                .allowsHitTesting(true)
+                panel
+                    .offset(y: DesignTokens.Chrome.headerButtonSize + DesignTokens.Chrome.menuAnchorGap)
             }
         }
         .zIndex(presenter.phase.isVisible ? 20 : 0)
@@ -130,20 +130,15 @@ struct GlassMenuButton: View {
     }
 
     private var panel: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(items) { item in
-                    if item.role == .separator {
-                        GlassMenuSeparator()
-                    } else {
-                        menuRow(item)
-                    }
-                }
+        ViewThatFits(in: .vertical) {
+            menuStack
+            ScrollView {
+                menuStack
             }
+            .frame(maxHeight: DesignTokens.Chrome.menuMaxHeight)
         }
         .frame(minWidth: DesignTokens.Chrome.menuMinWidth)
-        .frame(maxHeight: DesignTokens.Chrome.menuMaxHeight)
-        .padding(.vertical, DesignTokens.Spacing.xs)
+        .fixedSize(horizontal: true, vertical: false)
         .cookGlass(
             .regular,
             in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
@@ -153,6 +148,19 @@ struct GlassMenuButton: View {
             anchor: .topTrailing
         )
         .opacity(presenter.phase == .closing || presenter.phase == .closed ? 0 : 1)
+    }
+
+    private var menuStack: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(items) { item in
+                if item.role == .separator {
+                    GlassMenuSeparator()
+                } else {
+                    menuRow(item)
+                }
+            }
+        }
+        .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
     private func menuRow(_ item: GlassMenuItem) -> some View {

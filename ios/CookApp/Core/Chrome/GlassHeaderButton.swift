@@ -27,16 +27,26 @@ struct GlassHeaderButton: View {
     private var isEnabled: Bool { !isDisabled && !isLoading }
 
     var body: some View {
-        Button(action: action) {
-            labeledChrome
+        Group {
+            if shape == .circle {
+                chromeButton.clipShape(Circle())
+            } else {
+                chromeButton.clipShape(Capsule())
+            }
         }
-        .buttonStyle(ChromePressButtonStyle(isEnabled: isEnabled, reduceMotion: reduceMotion))
         .disabled(!isEnabled)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityAddTraits(isMenuHostHighlighted ? .isSelected : [])
         .onHover { hovering in
             isHovering = hovering && isEnabled
         }
+    }
+
+    private var chromeButton: some View {
+        Button(action: action) {
+            labeledChrome
+        }
+        .buttonStyle(ChromePressButtonStyle(isEnabled: isEnabled, reduceMotion: reduceMotion))
     }
 
     @ViewBuilder
