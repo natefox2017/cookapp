@@ -1,0 +1,42 @@
+{
+  "method": "status-stripped MAE @440w",
+  "pixelbase_banned": true,
+  "pages": {
+    "43": {
+      "full": 5.22,
+      "chrome": 8.82,
+      "mid": 5.56,
+      "bot": 1.34,
+      "H": 901,
+      "ref": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/refs/43-household.jpg",
+      "figma": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/figma/43-household.png"
+    },
+    "39": {
+      "full": 7.29,
+      "chrome": 12.44,
+      "mid": 7.93,
+      "bot": 1.34,
+      "H": 901,
+      "ref": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/refs/39-account.jpg",
+      "figma": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/figma/39-account.png"
+    },
+    "05": {
+      "full": 10.78,
+      "chrome": 23.28,
+      "mid": 10.49,
+      "bot": 1.34,
+      "H": 901,
+      "ref": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/refs/05-timer.jpg",
+      "figma": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/figma/05-timer.png"
+    },
+    "07": {
+      "full": 5.81,
+      "chrome": 4.53,
+      "mid": 4.93,
+      "bot": 9.23,
+      "H": 901,
+      "ref": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/refs/07-folders.jpg",
+      "figma": "/workspace/.cursor/walkthrough-artifacts/issue10-pixel-reconstruct-batch1/figma/07-folders.png"
+    }
+  }
+}
