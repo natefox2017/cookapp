@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { PRODUCTION_MOCK_BLOCKED } from '@/api/client'
 import { AuthProvider } from '@/auth/auth-context'
 import { AppShell } from '@/components/layout/app-shell'
@@ -14,6 +14,7 @@ import { PantryPage } from '@/pages/pantry/pantry-page'
 import { CategoriesPage } from '@/pages/categories/categories-page'
 import { SubscriptionPage } from '@/pages/subscription/subscription-page'
 import { SettingsPage } from '@/pages/settings/settings-page'
+import { NotImplementedPage } from '@/pages/placeholders/not-implemented-page'
 
 function ProductionMockBlocked() {
   return (
@@ -32,6 +33,16 @@ function ProductionMockBlocked() {
   )
 }
 
+const SETTINGS_SECTIONS = new Set(['general', 'security', 'system'])
+
+function SettingsSectionRoute() {
+  const { section } = useParams()
+  if (!section || !SETTINGS_SECTIONS.has(section)) {
+    return <Navigate to="/settings/general" replace />
+  }
+  return <SettingsPage section={section as 'general' | 'security' | 'system'} />
+}
+
 export default function App() {
   if (PRODUCTION_MOCK_BLOCKED) {
     return <ProductionMockBlocked />
@@ -45,16 +56,129 @@ export default function App() {
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
+
+            {/* Recipes */}
             <Route path="recipes" element={<RecipesPage />} />
+            <Route
+              path="recipes/import"
+              element={
+                <NotImplementedPage
+                  title="AI Import"
+                  description="Paste or batch-import recipe URLs through the shared Backend import pipeline."
+                  contractNote="Backend admin-recipe-import exists (#55/#56). Admin typed client + UI are not wired yet — this route is IA-only until the Import Admin module lands."
+                  relatedHref="/recipes"
+                  relatedLabel="Open Recipe Library"
+                />
+              }
+            />
+            <Route
+              path="recipes/import-review"
+              element={
+                <NotImplementedPage
+                  title="Import Review"
+                  description="Human review queue for low-confidence or failed AI imports."
+                  contractNote="Approve/reject/reparse APIs are on admin-recipe-import; Admin UI review board is not implemented yet."
+                  relatedHref="/recipes"
+                  relatedLabel="Open Recipe Library"
+                />
+              }
+            />
             <Route path="recipes/:id" element={<RecipeDetailPage />} />
-            <Route path="collections" element={<CollectionsPage />} />
-            <Route path="ingredients" element={<IngredientsPage />} />
-            <Route path="grocery" element={<GroceryPage />} />
-            <Route path="meal-plans" element={<MealPlansPage />} />
-            <Route path="pantry" element={<PantryPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="subscription" element={<SubscriptionPage />} />
-            <Route path="settings" element={<SettingsPage />} />
+
+            {/* Commerce */}
+            <Route path="commerce/products" element={<SubscriptionPage />} />
+            <Route
+              path="commerce/payments"
+              element={
+                <NotImplementedPage
+                  title="Payments"
+                  description="Normalized payment transactions, refunds, and proceeds (Notion V2 §7)."
+                  contractNote="Tracked under #58. Existing subscription catalog remains under Products · Subscriptions."
+                  relatedHref="/commerce/products"
+                  relatedLabel="Open Products · Subscriptions"
+                />
+              }
+            />
+            <Route path="subscription" element={<Navigate to="/commerce/products" replace />} />
+
+            {/* Analytics */}
+            <Route
+              path="analytics"
+              element={
+                <NotImplementedPage
+                  title="Analytics"
+                  description="Downloads, acquisition, conversion, and import quality — separate from Payments."
+                  contractNote="Planned under #59/#60. Dashboard continues to show only live aggregations."
+                  relatedHref="/"
+                  relatedLabel="Back to Dashboard"
+                />
+              }
+            />
+
+            {/* Operations */}
+            <Route
+              path="operations/jobs"
+              element={
+                <NotImplementedPage
+                  title="Jobs & Syncs"
+                  description="Unified view of import jobs, store syncs, and webhook health."
+                  contractNote="Planned under #60. Backend import queue exists (#56) without an Admin ops console yet."
+                />
+              }
+            />
+            <Route
+              path="operations/audit-log"
+              element={
+                <NotImplementedPage
+                  title="Audit Log"
+                  description="Privileged Admin action history (actor, action, object, redacted diff)."
+                  contractNote="admin_audit_logs + writers shipped in #57. Admin list/read UI is not implemented yet."
+                />
+              }
+            />
+
+            {/* Data */}
+            <Route path="data/collections" element={<CollectionsPage />} />
+            <Route path="data/ingredients" element={<IngredientsPage />} />
+            <Route path="data/grocery" element={<GroceryPage />} />
+            <Route path="data/meal-plans" element={<MealPlansPage />} />
+            <Route path="data/pantry" element={<PantryPage />} />
+            <Route path="data/categories" element={<CategoriesPage />} />
+            <Route path="collections" element={<Navigate to="/data/collections" replace />} />
+            <Route path="ingredients" element={<Navigate to="/data/ingredients" replace />} />
+            <Route path="grocery" element={<Navigate to="/data/grocery" replace />} />
+            <Route path="meal-plans" element={<Navigate to="/data/meal-plans" replace />} />
+            <Route path="pantry" element={<Navigate to="/data/pantry" replace />} />
+            <Route path="categories" element={<Navigate to="/data/categories" replace />} />
+
+            {/* Settings — static planned routes before :section */}
+            <Route path="settings" element={<Navigate to="/settings/general" replace />} />
+            <Route
+              path="settings/ai-platform"
+              element={
+                <NotImplementedPage
+                  title="AI Platform"
+                  description="Providers, models, routes, usage, and health — single model entry for Admin and App."
+                  contractNote="Backend admin-ai APIs shipped in #53. Admin Settings UI is not wired yet."
+                  relatedHref="/settings/general"
+                  relatedLabel="Open Settings · General"
+                />
+              }
+            />
+            <Route
+              path="settings/integrations"
+              element={
+                <NotImplementedPage
+                  title="Integrations"
+                  description="Connection status for Supabase, RevenueCat, App Store Connect, AI Gateway."
+                  contractNote="Planned under Backend V2 §11. Secrets stay write-only; no plaintext reads."
+                  relatedHref="/settings/system"
+                  relatedLabel="Open Settings · System"
+                />
+              }
+            />
+            <Route path="settings/:section" element={<SettingsSectionRoute />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
