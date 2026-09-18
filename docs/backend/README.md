@@ -38,11 +38,12 @@ supabase/
   migrations/          # ordered SQL migrations
   openapi/             # OpenAPI 3.1 (yaml + json)
   functions/
-    _shared/           # cors, auth, errors, logger
+    _shared/           # cors, auth, errors, logger, admin-session
     delete-account/
     revenuecat-webhook/
     health/
     openapi/
+    admin-auth/
 ```
 
 ## API documentation
@@ -88,6 +89,13 @@ Authorization: Bearer <access_token>
 | `revenuecat-webhook` | no (Bearer secret) | Persist subscription events |
 | `health` | yes | Module probe |
 | `openapi` | no | Serve OpenAPI JSON |
+| `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
+
+### Admin auth
+
+- Tables: `admin_accounts`, `admin_sessions` (service_role only; no client RLS policies)
+- Default seed: username `admin`, password `admin` (bcrypt via pgcrypto)
+- Endpoints under `/functions/v1/admin-auth/{login,logout,session,change-password}`
 
 ## Migrations
 

@@ -1,4 +1,5 @@
 export * from '@/api/users'
 export * from '@/api/recipes'
 export * from '@/api/catalog'
+export * from '@/api/auth'
 export { isMockMode, ApiError } from '@/api/client'
