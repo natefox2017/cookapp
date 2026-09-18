@@ -677,14 +677,13 @@ export const mockDashboard: DashboardData = {
   ],
   userBreakdown: {
     byRegistrationType: [
-      { key: 'apple', label: 'Apple', value: mockUsers.filter((u) => u.registrationType === 'apple').length },
-      { key: 'google', label: 'Google', value: mockUsers.filter((u) => u.registrationType === 'google').length },
-      { key: 'email', label: 'Email', value: mockUsers.filter((u) => u.registrationType === 'email').length },
-      { key: 'unknown', label: 'Unknown', value: mockUsers.filter((u) => u.registrationType === 'unknown').length },
+      { key: 'apple', label: 'Apple', value: mockUsers.filter((u) => u.registrationProvider === 'apple').length },
+      { key: 'google', label: 'Google', value: mockUsers.filter((u) => u.registrationProvider === 'google').length },
+      { key: 'email', label: 'Email', value: mockUsers.filter((u) => u.registrationProvider === 'email').length },
+      { key: 'unknown', label: 'Unknown', value: mockUsers.filter((u) => u.registrationProvider === 'unknown').length },
     ],
     byDeviceType: [
-      { key: 'iphone', label: 'iPhone', value: mockUsers.filter((u) => u.deviceType === 'iphone').length },
-      { key: 'ipad', label: 'iPad', value: mockUsers.filter((u) => u.deviceType === 'ipad').length },
+      { key: 'ios', label: 'iOS', value: mockUsers.filter((u) => u.deviceType === 'ios').length },
       { key: 'android', label: 'Android', value: mockUsers.filter((u) => u.deviceType === 'android').length },
       { key: 'web', label: 'Web', value: mockUsers.filter((u) => u.deviceType === 'web').length },
       { key: 'unknown', label: 'Unknown', value: mockUsers.filter((u) => u.deviceType === 'unknown').length },
