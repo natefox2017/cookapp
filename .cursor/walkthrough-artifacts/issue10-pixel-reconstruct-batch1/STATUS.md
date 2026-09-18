@@ -17,7 +17,7 @@
   | 07 | 9.07 |
 
 ## Blocked
-Figma Education MCP **200/day** exhausted. `use_figma` / `get_screenshot` paywalled. Timer armed for resume.
+Figma Education MCP **200/day** exhausted (shared Education seat). Brief probe returned once, then mutate calls paywalled again. Timers: `figma-quota-retry-1h` + daily `5 0 * * *` UTC.
 
 ## Next (on quota)
 1. Hide PixelBase `406:9087|9088|14356|14357`; unhide vector chrome on sources
