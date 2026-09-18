@@ -1,89 +1,55 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-/**
- * Lightweight structural checks for nav IA (Issue #64).
- * Imports the compiled TS via strip-types like password-policy tests.
- */
-import {
-  flattenNavLeaves,
-  isNavGroup,
-  isPathUnderGroup,
-  navItems,
-  pageTitleForPath,
-} from './nav.ts'
+import { navItems, pageTitleForPath } from './nav.ts'
 
-describe('admin nav IA (#64)', () => {
-  it('exposes Notion §14 top-level groups and leaves', () => {
-    const titles = navItems.map((entry) => entry.title)
+describe('admin nav (Issue #61 — #64 IA rollback)', () => {
+  it('exposes only approved flat capabilities (no hierarchical/planned IA)', () => {
+    const titles = navItems.map((item) => item.title)
     assert.deepEqual(titles, [
       'Dashboard',
       'Users',
       'Recipes',
-      'Commerce',
-      'Analytics',
-      'Operations',
-      'Data',
+      'Collections',
+      'Ingredients',
+      'Grocery',
+      'Meal Plans',
+      'Pantry',
+      'Categories',
+      'Subscription',
       'Settings',
     ])
   })
 
-  it('keeps existing capabilities reachable as leaves', () => {
-    const hrefs = new Set(flattenNavLeaves().map((leaf) => leaf.href))
-    for (const href of [
-      '/',
-      '/users',
-      '/recipes',
+  it('does not expose Gate-blocked planned modules as nav leaves', () => {
+    const hrefs = navItems.map((item) => item.href)
+    for (const blocked of [
+      '/analytics',
+      '/operations/jobs',
+      '/operations/audit-log',
+      '/commerce/payments',
       '/commerce/products',
+      '/recipes/import',
+      '/recipes/import-review',
+      '/settings/ai-platform',
       '/data/collections',
-      '/data/ingredients',
-      '/data/grocery',
-      '/data/meal-plans',
-      '/data/pantry',
-      '/data/categories',
-      '/settings/general',
-      '/settings/security',
-      '/settings/system',
     ]) {
-      assert.ok(hrefs.has(href), `missing leaf ${href}`)
+      assert.equal(hrefs.includes(blocked), false, `blocked nav leaf ${blocked}`)
     }
   })
 
-  it('marks planned secondary menus so they are not fake-complete', () => {
-    const planned = flattenNavLeaves().filter((leaf) => leaf.apiStatus === 'planned')
-    const titles = planned.map((leaf) => leaf.title).sort()
-    assert.deepEqual(titles, [
-      'AI Import',
-      'AI Platform',
-      'Analytics',
-      'Audit Log',
-      'Import Review',
-      'Jobs & Syncs',
-      'Payments',
-    ])
+  it('keeps Settings as hybrid entry (Integrations lives in Settings tabs via #63)', () => {
+    const settings = navItems.find((item) => item.href === '/settings')
+    assert.ok(settings)
+    assert.equal(settings?.apiStatus, 'hybrid')
   })
 
-  it('resolves page titles for nested routes and recipe detail', () => {
+  it('resolves page titles for existing routes and recipe detail', () => {
     assert.equal(pageTitleForPath('/'), 'Dashboard')
-    assert.equal(pageTitleForPath('/commerce/products'), 'Products · Subscriptions')
-    assert.equal(pageTitleForPath('/data/grocery'), 'Grocery')
-    assert.equal(pageTitleForPath('/recipes/import'), 'AI Import')
+    assert.equal(pageTitleForPath('/subscription'), 'Subscription')
+    assert.equal(pageTitleForPath('/grocery'), 'Grocery')
     assert.equal(pageTitleForPath('/recipes/abc-123'), 'Recipe Detail')
-    assert.equal(pageTitleForPath('/settings/ai-platform'), 'AI Platform')
+    assert.equal(pageTitleForPath('/settings/integrations'), 'Settings')
+    assert.equal(pageTitleForPath('/settings/general'), 'Settings')
   })
-
-  it('detects path membership for collapsible groups', () => {
-    const recipes = navItems.find((entry) => isNavGroup(entry) && entry.title === 'Recipes')
-    assert.ok(recipes && isNavGroup(recipes))
-    assert.equal(isPathUnderGroup('/recipes', recipes), true)
-    assert.equal(isPathUnderGroup('/recipes/import', recipes), true)
-    assert.equal(isPathUnderGroup('/recipes/xyz', recipes), true)
-    assert.equal(isPathUnderGroup('/users', recipes), false)
-  })
-  it('marks Integrations as live after #63', () => {
-    const leaf = flattenNavLeaves().find((item) => item.href === '/settings/integrations')
-    assert.ok(leaf)
-    assert.equal(leaf?.apiStatus, 'live')
-  })
-
 })
