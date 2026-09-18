@@ -32,6 +32,7 @@ tags:
   - name: AdminUsers
   - name: AdminDashboard
   - name: AdminSubscriptions
+  - name: AdminRecipeImport
 
 paths:
   /auth/v1/token:
@@ -842,6 +843,216 @@ paths:
         '200':
           description: OK
 
+  /functions/v1/admin-recipe-import/jobs:
+    get:
+      tags: [AdminRecipeImport]
+      summary: List recipe import jobs
+      operationId: adminListRecipeImportJobs
+      security:
+        - AdminBearer: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, running, imported, needs_review, failed, rejected, duplicate]
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Job list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RecipeImportJob"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [AdminRecipeImport]
+      summary: Create single import job and run pipeline
+      description: |
+        Shared Backend AI Recipe Import pipeline (Issue #55).
+        Exact active source URL returns 409 DUPLICATE.
+        Uses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.
+      operationId: adminCreateRecipeImportJob
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeImportCreateRequest"
+      responses:
+        "201":
+          description: Job created and pipeline executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: "#/components/schemas/RecipeImportJob"
+                  result:
+                    type: object
+                    additionalProperties: true
+        "409":
+          description: Exact URL duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+
+  /functions/v1/admin-recipe-import/jobs/{jobId}:
+    get:
+      tags: [AdminRecipeImport]
+      summary: Get import job detail
+      operationId: adminGetRecipeImportJob
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/RecipeImportJobId"
+      responses:
+        "200":
+          description: Job + result + artifact metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: "#/components/schemas/RecipeImportJob"
+                  result:
+                    oneOf:
+                      - $ref: "#/components/schemas/RecipeImportResult"
+                      - type: "null"
+                  artifacts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RecipeImportArtifact"
+        "404":
+          description: Not found
+
+  /functions/v1/admin-recipe-import/jobs/{jobId}/retry:
+    post:
+      tags: [AdminRecipeImport]
+      summary: Retry job from a pipeline stage
+      operationId: adminRetryRecipeImportJob
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/RecipeImportJobId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromStage:
+                  $ref: "#/components/schemas/RecipeImportStage"
+      responses:
+        "200":
+          description: Retry result
+
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reparse:
+    post:
+      tags: [AdminRecipeImport]
+      summary: Re-run AI parse from parse stage
+      operationId: adminReparseRecipeImportJob
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/RecipeImportJobId"
+      responses:
+        "200":
+          description: Reparse result
+
+  /functions/v1/admin-recipe-import/jobs/{jobId}/approve:
+    post:
+      tags: [AdminRecipeImport]
+      summary: Approve needs-review job and import
+      operationId: adminApproveRecipeImportJob
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/RecipeImportJobId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destinationUserId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Approve / import result
+
+  /functions/v1/admin-recipe-import/jobs/{jobId}/reject:
+    post:
+      tags: [AdminRecipeImport]
+      summary: Reject import job
+      operationId: adminRejectRecipeImportJob
+      security:
+        - AdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/RecipeImportJobId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        "200":
+          description: Rejected job
+
+  /functions/v1/admin-recipe-import/batches:
+    post:
+      tags: [AdminRecipeImport]
+      summary: Create batch import (jobs pending; queue worker #56)
+      operationId: adminCreateRecipeImportBatch
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [urls]
+              properties:
+                urls:
+                  type: array
+                  items: { type: string, format: uri }
+                destinationUserId: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Batch created with pending jobs
+
+  /functions/v1/admin-recipe-import/batches/{batchId}:
+    get:
+      tags: [AdminRecipeImport]
+      summary: Get batch summary + jobs
+      operationId: adminGetRecipeImportBatch
+      security:
+        - AdminBearer: []
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Batch summary
+
+
 components:
   securitySchemes:
     BearerAuth:
@@ -871,6 +1082,12 @@ components:
       schema:
         type: string
         example: return=representation
+
+    RecipeImportJobId:
+      name: jobId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
 
   responses:
     Unauthorized:
@@ -1274,6 +1491,96 @@ components:
           enum: [active, trialing, cancelled, expired, billing_issue, none]
         expire_date: { type: [string, "null"], format: date-time }
         updated_at: { type: string, format: date-time }
+
+
+    RecipeImportStage:
+      type: string
+      enum: [resolve, extract, normalize, parse, validate, quality, duplicate, import, done]
+
+    RecipeImportErrorCode:
+      type: string
+      enum:
+        - RESOLVE_FAILED
+        - FETCH_FAILED
+        - EXTRACT_FAILED
+        - AI_PARSE_FAILED
+        - SCHEMA_INVALID
+        - QUALITY_VALIDATION_FAILED
+        - DUPLICATE
+        - IMPORT_FAILED
+        - SSRF_BLOCKED
+        - SOURCE_UNSUPPORTED
+        - MISSING_DESTINATION
+
+    RecipeImportCreateRequest:
+      type: object
+      properties:
+        sourceUrl: { type: string, format: uri }
+        sourceText: { type: string }
+        destinationUserId: { type: string, format: uuid }
+      description: Provide sourceUrl and/or sourceText (text paste fallback).
+
+    RecipeImportJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        batchId: { type: [string, "null"], format: uuid }
+        sourceType:
+          type: string
+          enum: [web, tiktok, instagram, youtube, xiaohongshu, text]
+        sourceUrl: { type: [string, "null"] }
+        canonicalUrl: { type: [string, "null"] }
+        sourceExternalId: { type: [string, "null"] }
+        status:
+          type: string
+          enum: [pending, running, imported, needs_review, failed, rejected, duplicate]
+        stage:
+          $ref: "#/components/schemas/RecipeImportStage"
+        confidence: { type: [number, "null"] }
+        duplicateStatus:
+          type: string
+          enum: [none, exact, similar, marked]
+        recipeId: { type: [string, "null"], format: uuid }
+        errorCode:
+          oneOf:
+            - $ref: "#/components/schemas/RecipeImportErrorCode"
+            - type: "null"
+        errorMessage: { type: [string, "null"] }
+        retryCount: { type: integer }
+        routeKey: { type: [string, "null"] }
+        aiProvider: { type: [string, "null"] }
+        aiModel: { type: [string, "null"] }
+        promptVersion: { type: [string, "null"] }
+        schemaVersion: { type: string }
+        destinationUserId: { type: [string, "null"], format: uuid }
+        startedAt: { type: [string, "null"], format: date-time }
+        completedAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    RecipeImportResult:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        schema_version: { type: string }
+        structured_recipe: { type: object, additionalProperties: true }
+        validation_result: { type: object, additionalProperties: true }
+        confidence: { type: object, additionalProperties: true }
+        evidence: { type: array, items: { type: object, additionalProperties: true } }
+        created_at: { type: string, format: date-time }
+
+    RecipeImportArtifact:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        artifact_type: { type: string }
+        storage_provider: { type: [string, "null"] }
+        bucket: { type: [string, "null"] }
+        object_key: { type: [string, "null"] }
+        mime_type: { type: [string, "null"] }
+        size_bytes: { type: [integer, "null"] }
+        created_at: { type: string, format: date-time }
+
 
 security:
   - BearerAuth: []

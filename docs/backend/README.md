@@ -104,6 +104,7 @@ Authorization: Bearer <access_token>
 | `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
 | `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) |
 
 ### Admin auth
 
@@ -117,6 +118,24 @@ Authorization: Bearer <access_token>
 - Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
 - Google Play: Future Reserved — do not display mock Android revenue as live ops data
+
+### Admin Recipe Import (Issue #55)
+
+Shared Backend pipeline for Admin + future iOS (single pipeline — no Admin-only parser):
+
+`SourceResolver → ContentExtractor → Media/TextNormalizer → RecipeAIParser(route_key) → SchemaValidator → RecipeQualityValidator → DuplicateDetector → RecipeImporter`
+
+- Tables: `recipe_import_jobs`, `recipe_import_batches`, `recipe_import_results`, `recipe_import_artifacts`
+- Bucket: `recipe-import-artifacts` (private; accessed via `MediaStorageProvider` — #54)
+- AI via `AIRouter` (`route_key` only — #53); never a second AI client / hardcoded Storage URL
+- Deterministic schema.org/JSON-LD extract before AI; anti-hallucination (missing→null, inferred flagged)
+- Exact active source URL → HTTP 409 / job status `duplicate`
+- Endpoints under `/functions/v1/admin-recipe-import/{jobs,batches,…}`
+- Async queue worker is **#56** (batch creates pending jobs only)
+
+```bash
+deno test --allow-env supabase/functions/_shared/recipe-import/
+```
 
 ## Migrations
 
