@@ -1,12 +1,10 @@
-# Why FAIL happened (told, not silent)
+# FAIL reasons — resolved (2026-09-18)
 
-Stopping after FAIL without saying why and without patching is **not** the correct loop. Reasons for the remaining FAILs:
+Independent re-QA [Re-QA 04 13 22 31](bc-52b224e3-60e8-565d-826f-568a6049dad1) returned **PASS** on all four. Earlier FAILs were either stale captures or the gaps listed below, which were patched on Figma sources:
 
-1. **04 Cooking** — greens were applied but the sheet was short, so Close/Next sat as inset pills with white below; some captures still looked like recipe-detail 1/23. Sheet is now pinned to the footer with **1/21**.
-2. **13 Editor** — steps/nutrition were expanded; ingredients still skipped salt/pepper/tomato/flour/parsley vs IMG_4429–4430. Those rows are now on source `118:10814`.
-3. **22 New Recipe** — hollow cover icon; solid green confirm; cuisine ring. Cover landscape mark, glass check, utensils-ish cuisine icon applied on `118:11949`.
-4. **31 Add Menu** — empty week was correct; peek still had a title overlay (owner is photo + **4½** only); menu was opaque. Title hidden, 4½ pill added, glass + green bloom on the menu.
+1. **04** — short cooking sheet / 1/23 chrome → overlay **1/21** + split Close/Next + greens
+2. **13** — missing ingredient rows → salt/pepper/tomato/flour/parsley on `118:10814`
+3. **22** — hollow cover, solid green check, cuisine ring → landscape glyph, glass check, utensils
+4. **31** — titled peek / opaque menu → photo + **4½**, glass menu + bloom
 
-21 / 32 PixelBase FAILs were **stale screenshots** from before hiding filled bases — current instances are Cookbook+popover and nested Add Section.
-
-Re-QA in flight for 04 / 13 / 22 / 31. Pack is not complete until those PASS. 47/48 stay undrawn.
+Do not stop on FAIL: state the reason, patch the source, re-QA until PASS.
