@@ -11,14 +11,7 @@ struct MealPlanHomeView: View {
             .toolbar {
 #if DEBUG
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu("Routes") {
-                        ForEach(AppSheet.mealPlanSheets, id: \.self) { sheet in
-                            Button(sheet.placeholderTitle) {
-                                navigation.present(sheet)
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("debug.routes.mealPlan")
+                    DebugRouteChromeMenu(tab: .mealPlan, navigation: navigation)
                 }
 #endif
             }

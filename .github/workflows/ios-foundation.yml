@@ -20,6 +20,10 @@ jobs:
           test -f ios/project.yml
           test -f ios/CookApp/App/CookAppApp.swift
           test -f ios/CookApp/Core/Theme/DesignTokens.swift
+          test -f ios/CookApp/Core/Chrome/CookGlassStyle.swift
+          test -f ios/CookApp/Core/Chrome/FloatingTabBar.swift
+          test -f ios/CookApp/Core/Chrome/GlassHeaderButton.swift
+          test -f ios/CookApp/Core/Chrome/GlassMenu.swift
           test -f ios/CookApp/Features/Auth/AuthService.swift
           test -f ios/CookApp/Features/Subscription/SubscriptionService.swift
           echo "iOS foundation paths OK (Xcode build reserved for macOS runners)."

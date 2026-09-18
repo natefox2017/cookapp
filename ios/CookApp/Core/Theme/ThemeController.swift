@@ -38,22 +38,13 @@ final class ThemeController {
     }
 }
 
-/// Floating chrome should prefer system materials / future Liquid Glass.
-/// Prefer native bars, sheets, and toolbars — they adopt Liquid Glass automatically on iOS 26+.
-struct GlassChromeModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(
-                .ultraThinMaterial,
-                in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
-            )
-    }
-}
-
 extension View {
-    /// Apply translucent chrome for custom floating containers.
-    /// Prefer Apple system chrome (tab/toolbar/sheet) when possible.
+    /// Apply shared Liquid Glass chrome for custom floating containers.
+    /// Prefer `cookGlass(_:in:)` with an explicit shape. Do not use on content.
     func cookGlassChrome() -> some View {
-        modifier(GlassChromeModifier())
+        cookGlass(
+            .regular,
+            in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
+        )
     }
 }

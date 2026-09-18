@@ -97,4 +97,13 @@ extension AppRoute {
     static var mealPlanPushRoutes: [AppRoute] {
         allCases.filter { $0.owningTab == .mealPlan }
     }
+
+    static func pushRoutes(for tab: AppTab) -> [AppRoute] {
+        switch tab {
+        case .cookbook: cookbookPushRoutes
+        case .groceries: groceriesPushRoutes
+        case .mealPlan: mealPlanPushRoutes
+        case .settings: settingsPushRoutes
+        }
+    }
 }

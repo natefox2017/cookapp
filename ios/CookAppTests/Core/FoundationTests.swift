@@ -17,6 +17,7 @@ struct DesignTokenTests {
     @Test func spacingScaleIsStable() {
         #expect(DesignTokens.Spacing.md == 16)
         #expect(DesignTokens.Radius.card == 16)
+        #expect(DesignTokens.Radius.tabSelection == 14)
     }
 }
 
