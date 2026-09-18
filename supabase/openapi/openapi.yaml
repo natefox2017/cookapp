@@ -28,6 +28,7 @@ tags:
   - name: Storage
   - name: Subscription
   - name: System
+  - name: AdminAuth
 
 paths:
   /auth/v1/token:
@@ -80,6 +81,146 @@ paths:
       responses:
         "200":
           description: Healthy
+
+  /functions/v1/admin-auth/login:
+    post:
+      tags: [AdminAuth]
+      summary: Admin login
+      description: |
+        Issues a custom admin bearer session (not end-user JWT).
+        Production rejects default `admin`/`admin` credentials (Issue #51).
+        Set `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`
+        only for local/dev.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: Session issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSessionPayload"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Default credentials blocked in production
+
+  /functions/v1/admin-auth/bootstrap:
+    post:
+      tags: [AdminAuth]
+      summary: Bootstrap Owner credentials
+      description: |
+        Replaces the default seed account with a strong Owner password.
+        Requires current default password when a seed row exists.
+        No prior session required. Does not return secret values.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPassword]
+              properties:
+                username: { type: string, default: admin }
+                newPassword: { type: string, format: password, minLength: 12 }
+                currentPassword: { type: string, format: password }
+      responses:
+        "200":
+          description: Owner bootstrapped and session issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSessionPayload"
+        "400":
+          description: Weak password or invalid bootstrap state
+        "401":
+          description: Current default password incorrect
+        "409":
+          description: Bootstrap not available
+
+  /functions/v1/admin-auth/logout:
+    post:
+      tags: [AdminAuth]
+      summary: Admin logout
+      description: Revokes the current admin bearer session.
+      security:
+        - AdminBearer: []
+      responses:
+        "200":
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-auth/session:
+    get:
+      tags: [AdminAuth]
+      summary: Current admin session
+      security:
+        - AdminBearer: []
+      responses:
+        "200":
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [admin]
+                properties:
+                  admin:
+                    $ref: "#/components/schemas/AdminIdentity"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /functions/v1/admin-auth/change-password:
+    post:
+      tags: [AdminAuth]
+      summary: Change admin password
+      description: |
+        Requires strong password policy (min 12, upper, lower, digit).
+        Revokes all sessions for the account and returns a fresh token.
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, format: password }
+                newPassword: { type: string, format: password, minLength: 12 }
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/AdminSessionPayload"
+                  - type: object
+                    properties:
+                      ok: { type: boolean }
+        "400":
+          description: Weak password
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /rest/v1/profiles:
     get:
@@ -519,6 +660,11 @@ components:
       in: header
       name: apikey
       description: Supabase anon key (required alongside JWT for PostgREST)
+    AdminBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Admin Dashboard session token from admin-auth/login (not end-user JWT)
 
   parameters:
     PreferReturn:
@@ -546,6 +692,26 @@ components:
             code: { type: string }
             message: { type: string }
             details: {}
+
+    AdminIdentity:
+      type: object
+      required: [id, username]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        role:
+          type: string
+          enum: [owner, admin, operator, readonly]
+        mustChangePassword: { type: boolean }
+
+    AdminSessionPayload:
+      type: object
+      required: [token, expiresAt, admin]
+      properties:
+        token: { type: string }
+        expiresAt: { type: string, format: date-time }
+        admin:
+          $ref: "#/components/schemas/AdminIdentity"
 
     UserProfile:
       type: object
