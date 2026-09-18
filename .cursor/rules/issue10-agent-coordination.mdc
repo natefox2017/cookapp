@@ -1,0 +1,11 @@
+# Issue #10 Agent Coordination（防冲突）
+
+任何涉及 Figma Design QA / Issue #10 / Interaction Tree `37:2` / PixelBase 的任务：
+
+1. **先读** `docs/ui-screenshots/ISSUE10-PAGE-STATUS.md`（与 `.cursor/walkthrough-artifacts/issue10-pixel-gate/PAGE-STATUS.md` 同步）。
+2. **再读** GitHub Issue [#10](https://github.com/natefox2017/cookapp/issues/10) 最新 body。
+3. 遵守台账状态码：`PIXELBASE_LOCKED` 禁止重做；`OWNER_SKIP`（46/47/48）禁止绘制；仅 `RESIDUAL` / 明确认领的 hard-pixel 批次可改。
+4. PixelBase 填图 **≠** hard pixel PASS；不得勾 Issue 完成框。
+5. 不要新开与 PR #73 并行的全量 pixel-gate 分支。
+
+映射事实源：同目录 `REF-MAP.md`；Owner 素材：`docs/ui-screenshots/missing-ref/`（PR #38）。

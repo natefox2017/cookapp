@@ -2,6 +2,9 @@
 
 Owner 提供的缺图页素材。文件夹编号 = Figma Interaction Tree 正式页编码。
 
+**逐页进度 / 防冲突台账（先读）** → [`../ISSUE10-PAGE-STATUS.md`](../ISSUE10-PAGE-STATUS.md)  
+（PixelBase 已锁 ≠ Issue hard pixel PASS；46/47/48 不画；残 28b。）
+
 **Design QA 用法**
 
 1. 同一编号多张 PNG = 长页滚动切片 → 按重叠拼成长图，不要固定一屏高度。

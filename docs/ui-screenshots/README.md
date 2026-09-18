@@ -2,6 +2,8 @@
 
 Pestle / cookapp 参考截屏，共 42 张命名 JPG，另加 Issue #10 **missing-ref 编号包**（PNG + 录屏）。按页面与交互状态命名，用作 UI 还原与设计参考。
 
+Issue #10 逐页状态（已处理 / 未完成 / Owner skip / 防 Agent 冲突）：[`ISSUE10-PAGE-STATUS.md`](./ISSUE10-PAGE-STATUS.md)。
+
 编号包目录：[`missing-ref/`](missing-ref/)（长页多图拼接、录屏补交互页）。
 
 **优先用本目录截图，不必再看录屏。** 还原 UI 时一律忽略手机状态栏、灵动岛（Dynamic Island）和键盘。

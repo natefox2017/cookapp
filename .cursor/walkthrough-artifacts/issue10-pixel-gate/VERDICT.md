@@ -1,51 +1,51 @@
 # Issue #10 Pixel Gate — Progress
 
-Date: 2026-09-18  
-DoD: **only pixel-level PASS counts** (PASS* rejected).
+Date: 2026-09-18T10:45Z  
+DoD: **only hard pixel-level PASS counts** for Issue completion (PASS* / PixelBase fill rejected as done).
+
+## Canonical status（勿与下文冲突）
+
+→ **`PAGE-STATUS.md`**（镜像：`docs/ui-screenshots/ISSUE10-PAGE-STATUS.md`）
 
 ## Correction (owner challenge)
 
-Owner screenshots were already in `docs/ui-screenshots/missing-ref/` (PR #38, morning). Prior 缺图 rows were **mapping errors**.
+Owner screenshots were already in `docs/ui-screenshots/missing-ref/` (PR #38). Prior 缺图 rows were **mapping errors** — see `REF-MAP.md`.
 
-## Method
+## Method (intermediate lock)
 
 1. Status-strip (~5.5% top) + resize → `440×956` (tall pages may be taller).
 2. `PixelBase` RECTANGLE on source; **only PixelBase visible**.
 3. `upload_assets` IMAGE fill; `imageHash` ≡ crop SHA1.
 4. Interaction Tree INSTANCEs inherit.
 
-## Pixel PASS
+## Status summary
 
-**Primaries 01–45, 49** + **variants** (10 Date Added, 16 Scoped, 19 All/History Empty) + **extras 04b–d / 08b–f**: PixelBase fills hash-verified.
+| Layer | Result |
+|-------|--------|
+| PixelBase lock (primaries 01–45, 49 + variants + 04b–d/08b–f) | **DONE** — `PIXELBASE_LOCKED` |
+| Visibility bulk restore | **58/59** `vis=[PixelBase]`; residual **28b** |
+| Owner skip | **46 / 47 / 48** — do not draw |
+| Hard pixel PASS (Issue DoD) | **NONE** — PR #73 Gate FAIL (fill ≠ page pixel PASS) |
 
-### Visibility repair (this turn)
+### Unfinished (actionable)
 
-Several mains had PixelBase **hidden** with vectors re-shown (broke pixel gate). Bulk restore: **58/59** tree pages now `vis=[PixelBase]` only. Residual: **28b Create Shopping List** (Stage wrapper — apply pending next Figma quota).
+1. **28b** Create Shopping List — Stage wrapper not PixelBase-only  
+2. All locked pages still **`HARD_PIXEL_OPEN`** until independent QA hard PASS  
+3. Soft gaps: 04d / 19-all-four / 24-empty (weak stills — not 缺图)
 
-### Extras locked this turn
+### Extras locked
 
 | Node | PixelBase | Source |
 |------|-----------|--------|
-| 04b Timers | `458:3820` | `04/` recording ~20s empty Timers |
-| 04c Ingredients | `458:3821` | `04/` recording ~26s checklist (tall) |
-| 04d Cooking Step | `458:3822` | `04/IMG_4405` scroll slice (pack has no discrete 2/21 still) |
-| 08b Layout Menu | `458:3823` | `08-09/IMG_4412` |
-| 08c Appearance | `458:3824` | `08-09/IMG_4417` |
-| 08d List | `458:3826` | `08-09/IMG_4413` |
-| 08e Photo List | `458:3827` | `08-09/IMG_4415` |
-| 08f Sort Menu | `458:3825` | `08-09/IMG_4422` |
+| 04b Timers | `458:3820` | `04/` recording ~20s |
+| 04c Ingredients | `458:3821` | `04/` recording ~26s |
+| 04d Cooking Step | `458:3822` | `04/IMG_4405` scroll slice |
+| 08b–f | `458:3823–3827` | `08-09/` IMG_* |
 
 Also re-fixed **22** Peek/Chrome/Form overwrite → PixelBase only.
-
-## Not drawn (owner instruction)
-
-| Page | Reason |
-|------|--------|
-| 46 Export/Share | System share sheet |
-| 47 / 48 | `OWNER SKIP` |
 
 ## Evidence
 
 - Figma `FHbikS2jILAeMv8mote0vD` / `37:2`
-- Crops: `/opt/cursor/artifacts/figma-qa/pixel-gate/` + walkthrough folder
-- `REF-MAP.md` · `CHAT-FINDING.md`
+- `PAGE-STATUS.md` · `REF-MAP.md` · `CHAT-FINDING.md` · crops in this folder
+- Active coordination PR: #73
