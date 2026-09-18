@@ -1,7 +1,7 @@
 // Admin Dashboard: users list / detail / registration stats.
 // Auth: custom admin bearer (admin_sessions) via requireAdminSession.
 // Deploy: supabase functions deploy admin-users --project-ref semsjyrqjnumpvanibip
-// Issue: #44
+// Issues: #44, #58 (commerce summary from user_commerce_summary)
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
@@ -49,23 +49,61 @@ function mapPlan(plan: string | null, productId: string | null): Plan {
   return "free";
 }
 
-function mapStore(store: unknown): "app_store" | "play_store" | null {
-  if (store === "app_store" || store === "play_store") return store;
+function mapStore(store: unknown): "app_store" | "google_play" | "play_store" | null {
+  if (store === "app_store") return "app_store";
+  if (store === "google_play" || store === "play_store") return "google_play";
   return null;
 }
 
-function mapPayment(row: Record<string, unknown>) {
-  const raw = (row.raw_event ?? {}) as Record<string, unknown>;
-  const amount = Number(raw.price_in_purchased_currency ?? raw.price ?? NaN);
+function mapPaymentFromTransaction(row: Record<string, unknown>) {
   return {
     id: row.id,
     eventType: String(row.event_type ?? ""),
     productId: (row.product_id as string | null) ?? null,
     store: mapStore(row.store),
-    amount: Number.isFinite(amount) ? amount : null,
-    currency: raw.currency ? String(raw.currency) : null,
+    amount: row.gross_amount == null ? null : Number(row.gross_amount),
+    currency: (row.currency as string | null) ?? null,
     environment: (row.environment as string | null) ?? null,
-    purchasedAt: row.created_at,
+    purchasedAt: row.purchase_at ?? row.created_at,
+    status: (row.status as string | null) ?? null,
+    providerSource: (row.provider_source as string | null) ?? null,
+  };
+}
+
+function mapCommerceSummary(row: Record<string, unknown> | null) {
+  if (!row) {
+    return {
+      subscriptionPlan: null,
+      subscriptionStatus: null,
+      subscriptionExpiresAt: null,
+      firstPurchaseAt: null,
+      lastPurchaseAt: null,
+      purchaseCount: 0,
+      refundCount: 0,
+      grossSpend: 0,
+      refundedAmount: 0,
+      netSpend: 0,
+      estimatedLtvUsd: 0,
+      primaryCurrency: null,
+      storeTerritory: null,
+      source: "user_commerce_summary",
+    };
+  }
+  return {
+    subscriptionPlan: (row.subscription_plan as string | null) ?? null,
+    subscriptionStatus: (row.subscription_status as string | null) ?? null,
+    subscriptionExpiresAt: (row.subscription_expires_at as string | null) ?? null,
+    firstPurchaseAt: (row.first_purchase_at as string | null) ?? null,
+    lastPurchaseAt: (row.last_purchase_at as string | null) ?? null,
+    purchaseCount: Number(row.purchase_count ?? 0),
+    refundCount: Number(row.refund_count ?? 0),
+    grossSpend: Number(row.gross_spend ?? 0),
+    refundedAmount: Number(row.refunded_amount ?? 0),
+    netSpend: Number(row.net_spend ?? 0),
+    estimatedLtvUsd: Number(row.estimated_ltv_usd ?? 0),
+    primaryCurrency: (row.primary_currency as string | null) ?? null,
+    storeTerritory: (row.store_territory as string | null) ?? null,
+    source: "user_commerce_summary",
   };
 }
 
@@ -148,7 +186,7 @@ Deno.serve(async (req) => {
       if (error) throw new AppError("internal_error", error.message, 500);
       if (!profile) throw new AppError("not_found", "User not found", 404);
 
-      const [{ data: sub }, { count: recipeCount }, { data: events }] =
+      const [{ data: sub }, { count: recipeCount }, { data: events }, { data: summary }] =
         await Promise.all([
           admin
             .from("subscriptions")
@@ -160,13 +198,18 @@ Deno.serve(async (req) => {
             .select("*", { count: "exact", head: true })
             .eq("user_id", id),
           admin
-            .from("purchase_events")
+            .from("payment_transactions")
             .select(
-              "id, event_type, product_id, store, environment, raw_event, created_at",
+              "id, event_type, product_id, store, environment, currency, gross_amount, status, provider_source, purchase_at, created_at",
             )
             .eq("user_id", id)
-            .order("created_at", { ascending: false })
+            .order("purchase_at", { ascending: false, nullsFirst: false })
             .limit(100),
+          admin
+            .from("user_commerce_summary")
+            .select("*")
+            .eq("user_id", id)
+            .maybeSingle(),
         ]);
 
       return json(
@@ -189,8 +232,11 @@ Deno.serve(async (req) => {
           locale: profile.locale || "en-US",
           timezone: profile.timezone || "UTC",
           registrationIp: profile.registration_ip ?? null,
+          commerceSummary: mapCommerceSummary(
+            (summary as Record<string, unknown> | null) ?? null,
+          ),
           payments: (events ?? []).map((row) =>
-            mapPayment(row as Record<string, unknown>)
+            mapPaymentFromTransaction(row as Record<string, unknown>)
           ),
         },
         200,

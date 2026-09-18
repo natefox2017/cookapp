@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getSettings, isMockMode, updateSettings } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { authErrorMessage, useAuth } from '@/auth/auth-context'
@@ -20,12 +21,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { validateAdminPassword } from '@/lib/password-policy'
 import { IntegrationsPanel } from '@/pages/settings/integrations-panel'
 
-export function SettingsPage() {
+export type SettingsSection = 'general' | 'security' | 'system' | 'integrations'
+type SettingsTab = SettingsSection | 'units' | 'categories'
+
+export function SettingsPage({ section = 'general' }: { section?: SettingsSection }) {
+  const navigate = useNavigate()
   const { data, loading, error, reload } = useAsyncData(() => getSettings(), [])
   const { admin, changePassword } = useAuth()
   const [draft, setDraft] = useState<AdminSettings | null>(null)
   const [baseline, setBaseline] = useState<AdminSettings | null>(null)
-  const [tab, setTab] = useState('general')
+  const [tab, setTab] = useState<SettingsTab>(section)
   const [saving, setSaving] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -41,6 +46,23 @@ export function SettingsPage() {
       setBaseline(structuredClone(data))
     }
   }, [data])
+
+  useEffect(() => {
+    setTab(section)
+  }, [section])
+
+  function onTabChange(next: string) {
+    const nextTab = next as SettingsTab
+    setTab(nextTab)
+    if (nextTab === 'security' || nextTab === 'system' || nextTab === 'integrations') {
+      navigate(`/settings/${nextTab}`, { replace: true })
+      return
+    }
+    // general + units + categories stay under Settings → General (existing capability tabs)
+    if (section !== 'general') {
+      navigate('/settings/general', { replace: true })
+    }
+  }
 
   const dirty =
     Boolean(draft && baseline) && JSON.stringify(draft) !== JSON.stringify(baseline)
@@ -118,7 +140,7 @@ export function SettingsPage() {
         }
       />
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="units">Units</TabsTrigger>

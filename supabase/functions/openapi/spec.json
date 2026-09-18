@@ -73,6 +73,9 @@
       "name": "AdminAI"
     },
     {
+      "name": "AdminStoreSync"
+    },
+    {
       "name": "AdminIntegrations"
     }
   ],
@@ -92,496 +95,71 @@
         }
       }
     },
-    "/functions/v1/delete-account": {
-      "post": {
-        "tags": [
-          "Auth",
-          "User"
-        ],
-        "summary": "Delete account",
-        "description": "Purges user storage objects and deletes the auth user (cascades all owned rows).",
-        "operationId": "deleteAccount",
-        "responses": {
-          "200": {
-            "description": "Account deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
-    "/functions/v1/revenuecat-webhook": {
-      "post": {
-        "tags": [
-          "Subscription"
-        ],
-        "summary": "RevenueCat webhook",
-        "description": "Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.\nJWT verification disabled; service role used internally.\n",
-        "security": [
-          {
-            "WebhookBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Event received"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XJobId"
-          },
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/health": {
+    "/functions/v1/admin-ai/health": {
       "get": {
         "tags": [
-          "System"
+          "AdminAI"
         ],
-        "summary": "Backend health / module probe",
-        "responses": {
-          "200": {
-            "description": "Healthy"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-auth/login": {
-      "post": {
-        "tags": [
-          "AdminAuth"
-        ],
-        "summary": "Admin login",
-        "description": "Issues a custom admin bearer session (not end-user JWT).\nProduction rejects default `admin`/`admin` credentials (Issue #51).\nSet `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`\nonly for local/dev.\n",
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "username",
-                  "password"
-                ],
-                "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Session issued",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminSessionPayload"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "description": "Default credentials blocked in production"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-auth/bootstrap": {
-      "post": {
-        "tags": [
-          "AdminAuth"
-        ],
-        "summary": "Bootstrap Owner credentials",
-        "description": "Replaces the default seed account with a strong Owner password.\nRequires current default password when a seed row exists.\nProduction requires header `X-CookApp-Bootstrap-Token` matching\nsecret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).\nLocal/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.\n",
-        "security": [],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "X-CookApp-Bootstrap-Token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "newPassword"
-                ],
-                "properties": {
-                  "username": {
-                    "type": "string",
-                    "default": "admin"
-                  },
-                  "newPassword": {
-                    "type": "string",
-                    "format": "password",
-                    "minLength": 12
-                  },
-                  "currentPassword": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Owner bootstrapped and session issued",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminSessionPayload"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Weak password or invalid bootstrap state"
-          },
-          "401": {
-            "description": "Current default password incorrect"
-          },
-          "409": {
-            "description": "Bootstrap not available"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-auth/logout": {
-      "post": {
-        "tags": [
-          "AdminAuth"
-        ],
-        "summary": "Admin logout",
-        "description": "Revokes the current admin bearer session.",
+        "summary": "AI provider health",
         "security": [
           {
             "AdminBearer": []
           }
         ],
+        "operationId": "adminAiHealth",
         "responses": {
           "200": {
-            "description": "Session revoked",
+            "description": "Health snapshot",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-auth/session": {
-      "get": {
-        "tags": [
-          "AdminAuth"
-        ],
-        "summary": "Current admin session",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Session valid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "admin"
-                  ],
-                  "properties": {
-                    "admin": {
-                      "$ref": "#/components/schemas/AdminIdentity"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-auth/change-password": {
-      "post": {
-        "tags": [
-          "AdminAuth"
-        ],
-        "summary": "Change admin password",
-        "description": "Requires strong password policy (min 12, upper, lower, digit).\nRevokes all sessions for the account and returns a fresh token.\n",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "currentPassword",
-                  "newPassword"
-                ],
-                "properties": {
-                  "currentPassword": {
-                    "type": "string",
-                    "format": "password"
-                  },
-                  "newPassword": {
-                    "type": "string",
-                    "format": "password",
-                    "minLength": 12
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Password updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/AdminSessionPayload"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "ok": {
-                          "type": "boolean"
-                        }
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AiProviderHealth"
                       }
                     }
-                  ]
+                  }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Weak password"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
           }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
+        }
       }
     },
-    "/rest/v1/profiles": {
+    "/functions/v1/admin-ai/models": {
       "get": {
         "tags": [
-          "User"
+          "AdminAI"
         ],
-        "summary": "GET User Profile",
-        "operationId": "getUserProfile",
+        "summary": "List AI models",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminAiListModels",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PreferReturn"
-          },
-          {
-            "name": "id",
+            "name": "providerId",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            },
-            "description": "Filter `eq.<user_id>` (own id only under RLS)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Profile rows",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserProfile"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "User"
-        ],
-        "summary": "UPDATE User Profile",
-        "operationId": "updateUserProfile",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/PreferReturn"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserProfileUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated profile",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserProfile"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rest/v1/recipes": {
-      "get": {
-        "tags": [
-          "Recipe"
-        ],
-        "summary": "Recipe List / Detail",
-        "description": "List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).\nUpdate: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).\nDelete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).\n",
-        "operationId": "listRecipes",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "description": "Filter e.g. `eq.<uuid>` for single recipe",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "order",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "example": "created_at.desc"
-            }
-          },
-          {
-            "name": "select",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "example": "*"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Own recipes",
+            "description": "Model list",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Recipe"
+                    "$ref": "#/components/schemas/AiModel"
                   }
                 }
               }
@@ -591,522 +169,32 @@
       },
       "post": {
         "tags": [
-          "Recipe"
+          "AdminAI"
         ],
-        "summary": "Create Recipe",
-        "operationId": "createRecipe",
-        "parameters": [
+        "summary": "Register AI model (Owner)",
+        "security": [
           {
-            "$ref": "#/components/parameters/PreferReturn"
+            "AdminBearer": []
           }
         ],
+        "operationId": "adminAiCreateModel",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RecipeCreate"
+                "$ref": "#/components/schemas/AiModelCreate"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Recipe"
-        ],
-        "summary": "Update Recipe",
-        "operationId": "updateRecipe",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "eq.<uuid>"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/PreferReturn"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecipeCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Recipe"
-        ],
-        "summary": "Delete Recipe",
-        "operationId": "deleteRecipe",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "eq.<uuid>"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/collections": {
-      "get": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "GET Collections",
-        "operationId": "listCollections",
-        "responses": {
-          "200": {
-            "description": "Own collections",
+            "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Collection"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "POST Collection",
-        "operationId": "createCollection",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CollectionCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "UPDATE Collection",
-        "operationId": "updateCollection",
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "DELETE Collection",
-        "operationId": "deleteCollection",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/collection_recipes": {
-      "get": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "List recipes in collections",
-        "responses": {
-          "200": {
-            "description": "Membership rows"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "Add recipe to collection",
-        "responses": {
-          "201": {
-            "description": "Added"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Collection"
-        ],
-        "summary": "Remove recipe from collection",
-        "responses": {
-          "204": {
-            "description": "Removed"
-          }
-        }
-      }
-    },
-    "/rest/v1/ingredients": {
-      "get": {
-        "tags": [
-          "Ingredient"
-        ],
-        "summary": "List ingredients (system + own)",
-        "responses": {
-          "200": {
-            "description": "Ingredient catalog",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Ingredient"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Ingredient"
-        ],
-        "summary": "Create user ingredient",
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Ingredient"
-        ],
-        "summary": "Update own user ingredient",
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Ingredient"
-        ],
-        "summary": "Delete own user ingredient",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/grocery_lists": {
-      "get": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "GET Grocery Lists",
-        "responses": {
-          "200": {
-            "description": "Lists",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GroceryList"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "Create grocery list",
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "UPDATE Grocery List",
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "DELETE Grocery List",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/grocery_items": {
-      "get": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "List grocery items",
-        "responses": {
-          "200": {
-            "description": "Items"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "POST Item",
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "UPDATE Item",
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Grocery"
-        ],
-        "summary": "DELETE Item",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/meal_plans": {
-      "get": {
-        "tags": [
-          "MealPlan"
-        ],
-        "summary": "List meal plans",
-        "responses": {
-          "200": {
-            "description": "Meal plan entries",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MealPlan"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "MealPlan"
-        ],
-        "summary": "Create meal plan entry",
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "MealPlan"
-        ],
-        "summary": "Update meal plan entry",
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "MealPlan"
-        ],
-        "summary": "Delete meal plan entry",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/pantry_items": {
-      "get": {
-        "tags": [
-          "Pantry"
-        ],
-        "summary": "List pantry items",
-        "responses": {
-          "200": {
-            "description": "Pantry",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PantryItem"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Pantry"
-        ],
-        "summary": "Create pantry item",
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Pantry"
-        ],
-        "summary": "Update pantry item",
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Pantry"
-        ],
-        "summary": "Delete pantry item",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/rest/v1/cuisines": {
-      "get": {
-        "tags": [
-          "Category"
-        ],
-        "summary": "List cuisines",
-        "responses": {
-          "200": {
-            "description": "Cuisine catalog"
-          }
-        }
-      }
-    },
-    "/rest/v1/meal_categories": {
-      "get": {
-        "tags": [
-          "Category"
-        ],
-        "summary": "List meal categories",
-        "responses": {
-          "200": {
-            "description": "Meal category catalog"
-          }
-        }
-      }
-    },
-    "/rest/v1/tags": {
-      "get": {
-        "tags": [
-          "Category"
-        ],
-        "summary": "List tags",
-        "responses": {
-          "200": {
-            "description": "Tag catalog"
-          }
-        }
-      }
-    },
-    "/rest/v1/subscriptions": {
-      "get": {
-        "tags": [
-          "Subscription"
-        ],
-        "summary": "Get own subscription row",
-        "description": "Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.",
-        "responses": {
-          "200": {
-            "description": "Subscription entitlement",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubscriptionRow"
-                  }
+                  "$ref": "#/components/schemas/AiModel"
                 }
               }
             }
@@ -1114,1158 +202,65 @@
         }
       }
     },
-    "/rest/v1/subscription_status": {
-      "get": {
-        "tags": [
-          "Subscription"
-        ],
-        "summary": "Get subscription status (plan / status / expire_date)",
-        "responses": {
-          "200": {
-            "description": "Simplified subscription view matching Subscription Service contract",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubscriptionStatus"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/storage/v1/object/{bucket}/{user_id}/{object}": {
+    "/functions/v1/admin-ai/models/{id}": {
       "parameters": [
         {
-          "name": "bucket",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "enum": [
-              "avatars",
-              "recipe-covers",
-              "recipe-images"
-            ]
-          }
-        },
-        {
-          "name": "user_id",
+          "name": "id",
           "in": "path",
           "required": true,
           "schema": {
             "type": "string",
             "format": "uuid"
           }
-        },
-        {
-          "name": "object",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
         }
       ],
-      "post": {
-        "tags": [
-          "Storage"
-        ],
-        "summary": "Upload object (private bucket, path must start with auth user id)",
-        "responses": {
-          "200": {
-            "description": "Uploaded"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Storage"
-        ],
-        "summary": "Download / signed access to own object",
-        "responses": {
-          "200": {
-            "description": "Object bytes"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Storage"
-        ],
-        "summary": "Delete own object",
-        "responses": {
-          "200": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-users": {
-      "get": {
-        "tags": [
-          "AdminUsers"
-        ],
-        "summary": "List users (paginated, filterable)",
-        "operationId": "adminListUsers",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "subscription",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "registrationProvider",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "deviceType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedAdminUsers"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-users/stats": {
-      "get": {
-        "tags": [
-          "AdminUsers"
-        ],
-        "summary": "Registration mix stats",
-        "operationId": "adminUserStats",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserRegistrationStats"
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-users/{id}": {
-      "get": {
-        "tags": [
-          "AdminUsers"
-        ],
-        "summary": "User detail + payment timeline",
-        "operationId": "adminGetUser",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminUserDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-dashboard": {
-      "get": {
-        "tags": [
-          "AdminDashboard"
-        ],
-        "summary": "Dashboard KPI aggregation",
-        "operationId": "adminDashboard",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DashboardData"
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-subscriptions/plans": {
-      "get": {
-        "tags": [
-          "AdminSubscriptions"
-        ],
-        "summary": "List subscription plan products",
-        "operationId": "adminListPlans",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubscriptionPlanProduct"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "AdminSubscriptions"
-        ],
-        "summary": "Create subscription plan product",
-        "operationId": "adminCreatePlan",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubscriptionPlanProduct"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-subscriptions/plans/{id}": {
       "put": {
         "tags": [
-          "AdminSubscriptions"
+          "AdminAI"
         ],
-        "summary": "Update subscription plan product",
-        "operationId": "adminUpdatePlan",
+        "summary": "Update AI model (Owner)",
         "security": [
           {
             "AdminBearer": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
+        "operationId": "adminAiUpdateModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiModelUpdate"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiModel"
+                }
+              }
+            }
           }
         }
       },
       "delete": {
         "tags": [
-          "AdminSubscriptions"
+          "AdminAI"
         ],
-        "summary": "Delete subscription plan product",
-        "operationId": "adminDeletePlan",
+        "summary": "Delete AI model (Owner)",
         "security": [
           {
             "AdminBearer": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "operationId": "adminAiDeleteModel",
         "responses": {
           "200": {
             "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-subscriptions/records": {
-      "get": {
-        "tags": [
-          "AdminSubscriptions"
-        ],
-        "summary": "List subscription records",
-        "operationId": "adminListSubscriptionRecords",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-subscriptions/revenue": {
-      "get": {
-        "tags": [
-          "AdminSubscriptions"
-        ],
-        "summary": "Subscription revenue series",
-        "operationId": "adminSubscriptionRevenue",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-recipe-import/jobs": {
-      "get": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "List recipe import jobs",
-        "operationId": "adminListRecipeImportJobs",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "pending",
-                "running",
-                "imported",
-                "needs_review",
-                "failed",
-                "rejected",
-                "duplicate"
-              ]
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 200,
-              "default": 50
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Job list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "jobs": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/RecipeImportJob"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Create single import job and enqueue for async worker",
-        "description": "Shared Backend AI Recipe Import pipeline (Issue #55).\nExact active source URL returns 409 DUPLICATE.\nUses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.\nJob is enqueued on Supabase Queues (pgmq) — Issue #56. Worker runs pipeline asynchronously.\n",
-        "operationId": "adminCreateRecipeImportJob",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecipeImportCreateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Job created and enqueued (pending)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "job": {
-                      "$ref": "#/components/schemas/RecipeImportJob"
-                    },
-                    "queued": {
-                      "type": "boolean"
-                    },
-                    "queueMsgId": {
-                      "type": [
-                        "integer",
-                        "null"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Exact URL duplicate",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-recipe-import/jobs/{jobId}": {
-      "get": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Get import job detail",
-        "operationId": "adminGetRecipeImportJob",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "$ref": "#/components/parameters/RecipeImportJobId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Job + result + artifact metadata",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "job": {
-                      "$ref": "#/components/schemas/RecipeImportJob"
-                    },
-                    "result": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/RecipeImportResult"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "artifacts": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/RecipeImportArtifact"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-recipe-import/jobs/{jobId}/retry": {
-      "post": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Enqueue retry from a pipeline stage",
-        "operationId": "adminRetryRecipeImportJob",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "$ref": "#/components/parameters/RecipeImportJobId"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fromStage": {
-                    "$ref": "#/components/schemas/RecipeImportStage"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Retry enqueued",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "job": {
-                      "$ref": "#/components/schemas/RecipeImportJob"
-                    },
-                    "queued": {
-                      "type": "boolean"
-                    },
-                    "queueMsgId": {
-                      "type": [
-                        "integer",
-                        "null"
-                      ]
-                    },
-                    "fromStage": {
-                      "$ref": "#/components/schemas/RecipeImportStage"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-recipe-import/jobs/{jobId}/reparse": {
-      "post": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Enqueue re-run AI parse from parse stage",
-        "operationId": "adminReparseRecipeImportJob",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "$ref": "#/components/parameters/RecipeImportJobId"
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Reparse enqueued"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-recipe-import/jobs/{jobId}/approve": {
-      "post": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Approve needs-review job and enqueue import",
-        "operationId": "adminApproveRecipeImportJob",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "$ref": "#/components/parameters/RecipeImportJobId"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "destinationUserId": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Approve / import enqueued"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-recipe-import/jobs/{jobId}/reject": {
-      "post": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Reject import job",
-        "operationId": "adminRejectRecipeImportJob",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "$ref": "#/components/parameters/RecipeImportJobId"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reason": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Rejected job"
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-recipe-import/batches": {
-      "post": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Create batch import and enqueue jobs (async)",
-        "description": "Returns immediately. Jobs are processed by recipe-import-worker\nvia Supabase Queues / pgmq (Issue #56). Single-job failure does not block the batch.\n",
-        "operationId": "adminCreateRecipeImportBatch",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "urls"
-                ],
-                "properties": {
-                  "urls": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "uri"
-                    }
-                  },
-                  "destinationUserId": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Batch created; jobs enqueued pending",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "batch": {
-                      "$ref": "#/components/schemas/RecipeImportBatch"
-                    },
-                    "jobIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "format": "uuid"
-                      }
-                    },
-                    "skipped": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "url": {
-                            "type": "string"
-                          },
-                          "reason": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    },
-                    "queuedCount": {
-                      "type": "integer"
-                    },
-                    "queueMsgIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/admin-recipe-import/batches/{batchId}": {
-      "get": {
-        "tags": [
-          "AdminRecipeImport"
-        ],
-        "summary": "Get batch summary + jobs",
-        "operationId": "adminGetRecipeImportBatch",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "name": "batchId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Batch summary",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "batch": {
-                      "$ref": "#/components/schemas/RecipeImportBatch"
-                    },
-                    "jobs": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/RecipeImportJob"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/functions/v1/recipe-import-worker": {
-      "post": {
-        "tags": [
-          "Operations",
-          "AdminRecipeImport"
-        ],
-        "summary": "Process recipe import queue (pgmq worker tick)",
-        "description": "Operational job type `recipe_import_worker` (Issue #56).\nReads up to `import_queue_concurrency` messages from Supabase Queues (pgmq),\ncalls shared `runImportPipeline`, archives on success / poison.\nServer/cron only — auth via `Authorization: Bearer <RECIPE_IMPORT_WORKER_SECRET>`.\nConcurrency / VT / max attempts come from `runtime_config` (not secrets).\n",
-        "operationId": "recipeImportWorkerTick",
-        "security": [
-          {
-            "WorkerBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": false,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "recoverStale": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Re-enqueue pending jobs older than 60s"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Worker tick result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    },
-                    "job_type": {
-                      "type": "string"
-                    },
-                    "claimed": {
-                      "type": "integer"
-                    },
-                    "processed": {
-                      "type": "integer"
-                    },
-                    "succeeded": {
-                      "type": "integer"
-                    },
-                    "failed": {
-                      "type": "integer"
-                    },
-                    "poisoned": {
-                      "type": "integer"
-                    },
-                    "skipped": {
-                      "type": "integer"
-                    },
-                    "recovered": {
-                      "type": "integer"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XCorrelationId"
-          },
-          {
-            "$ref": "#/components/parameters/XRequestId"
-          },
-          {
-            "$ref": "#/components/parameters/XJobId"
-          }
-        ]
-      }
-    },
-    "/functions/v1/storage-cleanup-import-artifacts": {
-      "post": {
-        "tags": [
-          "Storage",
-          "Operations"
-        ],
-        "summary": "Cleanup expired recipe-import-artifacts",
-        "description": "Operational job type `storage_cleanup_import_artifacts`.\nDeletes Storage objects whose `recipe_import_artifact_objects.expires_at`\nhas passed and marks rows deleted. Server/cron only — auth via\n`Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.\nNever uses permanent signed URLs; never returns service_role secrets.\n",
-        "operationId": "storageCleanupImportArtifacts",
-        "security": [
-          {
-            "CleanupBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": false,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "limit": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 1000,
-                    "default": 200
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Cleanup run result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StorageCleanupResult"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "500": {
-            "description": "Misconfigured (missing STORAGE_CLEANUP_SECRET)"
           }
         }
       }
@@ -2573,138 +568,39 @@
         }
       }
     },
-    "/functions/v1/admin-ai/models": {
-      "get": {
+    "/functions/v1/admin-ai/resolve": {
+      "post": {
         "tags": [
           "AdminAI"
         ],
-        "summary": "List AI models",
+        "summary": "Resolve route model chain (Owner, no provider call)",
         "security": [
           {
             "AdminBearer": []
           }
         ],
-        "operationId": "adminAiListModels",
-        "parameters": [
-          {
-            "name": "providerId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Model list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AiModel"
+        "operationId": "adminAiResolveRoute",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "routeKey"
+                ],
+                "properties": {
+                  "routeKey": {
+                    "type": "string"
                   }
                 }
               }
             }
           }
-        }
-      },
-      "post": {
-        "tags": [
-          "AdminAI"
-        ],
-        "summary": "Register AI model (Owner)",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "operationId": "adminAiCreateModel",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AiModelCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AiModel"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-ai/models/{id}": {
-      "parameters": [
-        {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      ],
-      "put": {
-        "tags": [
-          "AdminAI"
-        ],
-        "summary": "Update AI model (Owner)",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "operationId": "adminAiUpdateModel",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AiModelUpdate"
-              }
-            }
-          }
         },
         "responses": {
           "200": {
-            "description": "Updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AiModel"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "AdminAI"
-        ],
-        "summary": "Delete AI model (Owner)",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "operationId": "adminAiDeleteModel",
-        "responses": {
-          "200": {
-            "description": "Deleted"
+            "description": "Resolved chain (no secrets)"
           }
         }
       }
@@ -2861,52 +757,31 @@
         }
       }
     },
-    "/functions/v1/admin-ai/health": {
-      "get": {
-        "tags": [
-          "AdminAI"
-        ],
-        "summary": "AI provider health",
-        "security": [
-          {
-            "AdminBearer": []
-          }
-        ],
-        "operationId": "adminAiHealth",
-        "responses": {
-          "200": {
-            "description": "Health snapshot",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "providers": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/AiProviderHealth"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/functions/v1/admin-ai/resolve": {
+    "/functions/v1/admin-auth/bootstrap": {
       "post": {
         "tags": [
-          "AdminAI"
+          "AdminAuth"
         ],
-        "summary": "Resolve route model chain (Owner, no provider call)",
-        "security": [
+        "summary": "Bootstrap Owner credentials",
+        "description": "Replaces the default seed account with a strong Owner password.\nRequires current default password when a seed row exists.\nProduction requires header `X-CookApp-Bootstrap-Token` matching\nsecret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).\nLocal/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.\n",
+        "security": [],
+        "parameters": [
           {
-            "AdminBearer": []
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "X-CookApp-Bootstrap-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Required in production; equals COOKAPP_ADMIN_BOOTSTRAP_TOKEN"
           }
         ],
-        "operationId": "adminAiResolveRoute",
         "requestBody": {
           "required": true,
           "content": {
@@ -2914,11 +789,21 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "routeKey"
+                  "newPassword"
                 ],
                 "properties": {
-                  "routeKey": {
-                    "type": "string"
+                  "username": {
+                    "type": "string",
+                    "default": "admin"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 12
+                  },
+                  "currentPassword": {
+                    "type": "string",
+                    "format": "password"
                   }
                 }
               }
@@ -2927,9 +812,281 @@
         },
         "responses": {
           "200": {
-            "description": "Resolved chain (no secrets)"
+            "description": "Owner bootstrapped and session issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionPayload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Weak password or invalid bootstrap state"
+          },
+          "401": {
+            "description": "Current default password incorrect"
+          },
+          "409": {
+            "description": "Bootstrap not available"
           }
         }
+      }
+    },
+    "/functions/v1/admin-auth/change-password": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Change admin password",
+        "description": "Requires strong password policy (min 12, upper, lower, digit).\nRevokes all sessions for the account and returns a fresh token.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 12
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/AdminSessionPayload"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "ok": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Weak password"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-auth/login": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Admin login",
+        "description": "Issues a custom admin bearer session (not end-user JWT).\nProduction rejects default `admin`/`admin` credentials (Issue #51).\nSet `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`\nonly for local/dev.\n",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionPayload"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "Default credentials blocked in production"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-auth/logout": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Admin logout",
+        "description": "Revokes the current admin bearer session.",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-auth/session": {
+      "get": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Current admin session",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "admin"
+                  ],
+                  "properties": {
+                    "admin": {
+                      "$ref": "#/components/schemas/AdminIdentity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-dashboard": {
+      "get": {
+        "tags": [
+          "AdminDashboard"
+        ],
+        "summary": "Dashboard KPI aggregation",
+        "operationId": "adminDashboard",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardData"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-integrations": {
@@ -3009,7 +1166,7 @@
         }
       }
     },
-    "/functions/v1/admin-integrations/{id}/test": {
+    "/functions/v1/admin-integrations/{id}/config": {
       "parameters": [
         {
           "name": "id",
@@ -3020,25 +1177,51 @@
           }
         }
       ],
-      "post": {
+      "put": {
         "tags": [
           "AdminIntegrations"
         ],
-        "summary": "Test integration connection",
-        "description": "Backend-initiated probe. Admin browser never calls third-party providers\ndirectly. Google Play test is rejected (Future Reserved).\n",
+        "summary": "Update non-secret integration config (Owner)",
+        "description": "Non-secret fields only (e.g. ASC issuerId / keyId). Never accepts secret values.",
         "security": [
           {
             "AdminBearer": []
           }
         ],
-        "operationId": "adminIntegrationsTest",
+        "operationId": "adminIntegrationsPutConfig",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "issuerId": {
+                    "type": "string"
+                  },
+                  "keyId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Probe result",
+            "description": "Config saved",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IntegrationTestResult"
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "integration": {
+                      "$ref": "#/components/schemas/IntegrationStatus"
+                    }
+                  }
                 }
               }
             }
@@ -3127,7 +1310,7 @@
         }
       }
     },
-    "/functions/v1/admin-integrations/{id}/config": {
+    "/functions/v1/admin-integrations/{id}/test": {
       "parameters": [
         {
           "name": "id",
@@ -3138,29 +1321,456 @@
           }
         }
       ],
-      "put": {
+      "post": {
         "tags": [
           "AdminIntegrations"
         ],
-        "summary": "Update non-secret integration config (Owner)",
-        "description": "Non-secret fields only (e.g. ASC issuerId / keyId). Never accepts secret values.",
+        "summary": "Test integration connection",
+        "description": "Backend-initiated probe. Admin browser never calls third-party providers\ndirectly. Google Play test is rejected (Future Reserved).\n",
         "security": [
           {
             "AdminBearer": []
           }
         ],
-        "operationId": "adminIntegrationsPutConfig",
+        "operationId": "adminIntegrationsTest",
+        "responses": {
+          "200": {
+            "description": "Probe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationTestResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-recipe-import/batches": {
+      "post": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Create batch import and enqueue jobs (async)",
+        "description": "Returns immediately. Jobs are processed by recipe-import-worker\nvia Supabase Queues / pgmq (Issue #56). Single-job failure does not block the batch.\n",
+        "operationId": "adminCreateRecipeImportBatch",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "urls"
+                ],
                 "properties": {
-                  "issuerId": {
-                    "type": "string"
+                  "urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    }
                   },
-                  "keyId": {
+                  "destinationUserId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Batch created; jobs enqueued pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch": {
+                      "$ref": "#/components/schemas/RecipeImportBatch"
+                    },
+                    "jobIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "skipped": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "queuedCount": {
+                      "type": "integer"
+                    },
+                    "queueMsgIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-recipe-import/batches/{batchId}": {
+      "get": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Get batch summary + jobs",
+        "operationId": "adminGetRecipeImportBatch",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Batch summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch": {
+                      "$ref": "#/components/schemas/RecipeImportBatch"
+                    },
+                    "jobs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RecipeImportJob"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-recipe-import/jobs": {
+      "get": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "List recipe import jobs",
+        "operationId": "adminListRecipeImportJobs",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "running",
+                "imported",
+                "needs_review",
+                "failed",
+                "rejected",
+                "duplicate"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RecipeImportJob"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Create single import job and enqueue for async worker",
+        "description": "Shared Backend AI Recipe Import pipeline (Issue #55).\nExact active source URL returns 409 DUPLICATE.\nUses AIRouter route_key (`recipe_import_text` / `recipe_import_vision`); no Admin-side model keys.\nJob is enqueued on Supabase Queues (pgmq) — Issue #56. Worker runs pipeline asynchronously.\n",
+        "operationId": "adminCreateRecipeImportJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeImportCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created and enqueued (pending)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "job": {
+                      "$ref": "#/components/schemas/RecipeImportJob"
+                    },
+                    "queued": {
+                      "type": "boolean"
+                    },
+                    "queueMsgId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Exact URL duplicate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-recipe-import/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Get import job detail",
+        "operationId": "adminGetRecipeImportJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/RecipeImportJobId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job + result + artifact metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "job": {
+                      "$ref": "#/components/schemas/RecipeImportJob"
+                    },
+                    "result": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/RecipeImportResult"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RecipeImportArtifact"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-recipe-import/jobs/{jobId}/approve": {
+      "post": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Approve needs-review job and enqueue import",
+        "operationId": "adminApproveRecipeImportJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/RecipeImportJobId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "destinationUserId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Approve / import enqueued"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-recipe-import/jobs/{jobId}/reject": {
+      "post": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Reject import job",
+        "operationId": "adminRejectRecipeImportJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/RecipeImportJobId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
                     "type": "string"
                   }
                 }
@@ -3170,7 +1780,1051 @@
         },
         "responses": {
           "200": {
-            "description": "Config saved",
+            "description": "Rejected job"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-recipe-import/jobs/{jobId}/reparse": {
+      "post": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Enqueue re-run AI parse from parse stage",
+        "operationId": "adminReparseRecipeImportJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/RecipeImportJobId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Reparse enqueued"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-recipe-import/jobs/{jobId}/retry": {
+      "post": {
+        "tags": [
+          "AdminRecipeImport"
+        ],
+        "summary": "Enqueue retry from a pipeline stage",
+        "operationId": "adminRetryRecipeImportJob",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/RecipeImportJobId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fromStage": {
+                    "$ref": "#/components/schemas/RecipeImportStage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Retry enqueued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "job": {
+                      "$ref": "#/components/schemas/RecipeImportJob"
+                    },
+                    "queued": {
+                      "type": "boolean"
+                    },
+                    "queueMsgId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "fromStage": {
+                      "$ref": "#/components/schemas/RecipeImportStage"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/analytics/daily": {
+      "get": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "Query store_analytics_daily",
+        "description": "Normalized App Store analytics. `metricValue` may be null when Apple\nomitted data (privacy threshold). Clients must not coerce null to 0.\nNot final financial truth — use financial/rows for proceeds.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminStoreAnalyticsDaily",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android"
+              ]
+            }
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "app_store",
+                "google_play"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics daily rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreAnalyticsDailyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/analytics/sync": {
+      "post": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "Trigger store analytics sync (Owner)",
+        "description": "Runs `StoreAnalyticsProvider` for the given provider and records a\n`store_sync_runs` row. Missing ASC credentials → `skipped_not_configured`\nwith zero invented series. Google Play → `skipped_reserved`.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminStoreAnalyticsSync",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync run result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreSyncRunResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/financial/rows": {
+      "get": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "Query financial_report_rows",
+        "description": "Apple Financial Reports reconciliation rows. Kept separate from analytics —\nnever merge into one \"final revenue\" field with analytics estimates.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminFinancialReportRows",
+        "parameters": [
+          {
+            "name": "fiscalPeriod",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Apple fiscal month YYYY-MM"
+            }
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "app_store",
+                "google_play"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Financial report rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialReportRowsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/financial/sync": {
+      "post": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "Trigger financial report sync (Owner)",
+        "description": "Runs `FinancialReportProvider` and upserts `financial_report_rows`.\nSeparate from analytics sync — never writes analytics metrics as proceeds.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminFinancialReportSync",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync run result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreSyncRunResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/integrations/apple_app_store/credentials": {
+      "put": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "Set App Store Connect credentials (Owner, write-only)",
+        "description": "Stores ASC private key ciphertext in `store_secrets`. Never returns plaintext.\nNon-secret fields (issuerId, keyId, vendorNumber, appAppleId) stored on\n`store_integrations`. Env fallbacks documented in OWNER_CONFIG.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminStoreSetAppleCredentials",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleStoreCredentialsWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credentials stored (status only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "enum": [
+                        "apple_app_store"
+                      ]
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "secretConfigured": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/runs": {
+      "get": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "List store sync runs",
+        "description": "Unified job model rows from `store_sync_runs` (analytics + financial).",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminStoreSyncListRuns",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "apple_app_store",
+                "google_play"
+              ]
+            }
+          },
+          {
+            "name": "jobType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "store_analytics_sync",
+                "financial_report_sync"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sync run list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StoreSyncRun"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-store-sync/status": {
+      "get": {
+        "tags": [
+          "AdminStoreSync"
+        ],
+        "summary": "Store integration connection status",
+        "description": "Returns App Store Connect + Google Play connection status.\nSecrets never returned — only `secretConfigured` booleans.\nGoogle Play remains `future_reserved` until Android work starts (Issue #59).\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "operationId": "adminStoreSyncStatus",
+        "responses": {
+          "200": {
+            "description": "Integration status list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreIntegrationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-subscriptions/plans": {
+      "get": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "List subscription plan products",
+        "operationId": "adminListPlans",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionPlanProduct"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "Create subscription plan product",
+        "operationId": "adminCreatePlan",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionPlanProduct"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-subscriptions/plans/{id}": {
+      "put": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "Update subscription plan product",
+        "operationId": "adminUpdatePlan",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "Delete subscription plan product",
+        "operationId": "adminDeletePlan",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-subscriptions/records": {
+      "get": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "List subscription records",
+        "operationId": "adminListSubscriptionRecords",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-subscriptions/revenue": {
+      "get": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "Subscription revenue series",
+        "operationId": "adminSubscriptionRevenue",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-subscriptions/transactions": {
+      "get": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "List normalized payment transactions",
+        "description": "Reads `payment_transactions` (#58). Amounts from RevenueCat are estimated only;\n`final_proceeds` is null until financial reports (#59). Google Play is schema-reserved\n— responses include `googlePlay.status=reserved_not_implemented` (no fake Android revenue).\n",
+        "operationId": "adminListPaymentTransactions",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "app_store",
+                "google_play",
+                "play_store"
+              ]
+            },
+            "description": "play_store accepted as alias for google_play"
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android"
+              ]
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPaymentTransactions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-subscriptions/transactions/{id}": {
+      "get": {
+        "tags": [
+          "AdminSubscriptions"
+        ],
+        "summary": "Payment transaction detail",
+        "operationId": "adminGetPaymentTransaction",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-users": {
+      "get": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "List users (paginated, filterable)",
+        "operationId": "adminListUsers",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subscription",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "registrationProvider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedAdminUsers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-users/stats": {
+      "get": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "Registration mix stats",
+        "operationId": "adminUserStats",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRegistrationStats"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/admin-users/{id}": {
+      "get": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "User detail + payment timeline",
+        "operationId": "adminGetUser",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/functions/v1/delete-account": {
+      "post": {
+        "tags": [
+          "Auth",
+          "User"
+        ],
+        "summary": "Delete account",
+        "description": "Purges user storage objects and deletes the auth user (cascades all owned rows).",
+        "operationId": "deleteAccount",
+        "responses": {
+          "200": {
+            "description": "Account deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/functions/v1/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Backend health / module probe",
+        "responses": {
+          "200": {
+            "description": "Healthy"
+          }
+        }
+      }
+    },
+    "/functions/v1/recipe-import-worker": {
+      "post": {
+        "tags": [
+          "Operations",
+          "AdminRecipeImport"
+        ],
+        "summary": "Process recipe import queue (pgmq worker tick)",
+        "description": "Operational job type `recipe_import_worker` (Issue #56).\nReads up to `import_queue_concurrency` messages from Supabase Queues (pgmq),\ncalls shared `runImportPipeline`, archives on success / poison.\nServer/cron only — auth via `Authorization: Bearer <RECIPE_IMPORT_WORKER_SECRET>`.\nConcurrency / VT / max attempts come from `runtime_config` (not secrets).\n",
+        "operationId": "recipeImportWorkerTick",
+        "security": [
+          {
+            "WorkerBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recoverStale": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Re-enqueue pending jobs older than 60s"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Worker tick result",
             "content": {
               "application/json": {
                 "schema": {
@@ -3179,13 +2833,948 @@
                     "ok": {
                       "type": "boolean"
                     },
-                    "integration": {
-                      "$ref": "#/components/schemas/IntegrationStatus"
+                    "job_type": {
+                      "type": "string"
+                    },
+                    "claimed": {
+                      "type": "integer"
+                    },
+                    "processed": {
+                      "type": "integer"
+                    },
+                    "succeeded": {
+                      "type": "integer"
+                    },
+                    "failed": {
+                      "type": "integer"
+                    },
+                    "poisoned": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "integer"
+                    },
+                    "recovered": {
+                      "type": "integer"
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/XJobId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/revenuecat-webhook": {
+      "post": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "RevenueCat webhook",
+        "description": "Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.\nJWT verification disabled; service role used internally.\n",
+        "security": [
+          {
+            "WebhookBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event received"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XJobId"
+          },
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
+      }
+    },
+    "/functions/v1/storage-cleanup-import-artifacts": {
+      "post": {
+        "tags": [
+          "Storage",
+          "Operations"
+        ],
+        "summary": "Cleanup expired recipe-import-artifacts",
+        "description": "Operational job type `storage_cleanup_import_artifacts`.\nDeletes Storage objects whose `recipe_import_artifact_objects.expires_at`\nhas passed and marks rows deleted. Server/cron only — auth via\n`Authorization: Bearer <STORAGE_CLEANUP_SECRET>`.\nNever uses permanent signed URLs; never returns service_role secrets.\n",
+        "operationId": "storageCleanupImportArtifacts",
+        "security": [
+          {
+            "CleanupBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "default": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cleanup run result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageCleanupResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "description": "Misconfigured (missing STORAGE_CLEANUP_SECRET)"
+          }
+        }
+      }
+    },
+    "/functions/v1/store-sync-worker": {
+      "post": {
+        "tags": [
+          "Operations",
+          "AdminStoreSync"
+        ],
+        "summary": "Cron worker tick for Apple store sync",
+        "description": "Server/cron only. Auth via `Authorization: Bearer <STORE_SYNC_WORKER_SECRET>`.\nSyncs Apple analytics + financial only. Never auto-syncs Google Play.\n",
+        "security": [
+          {
+            "StoreSyncWorkerBearer": []
+          }
+        ],
+        "operationId": "storeSyncWorkerTick",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XJobId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "analytics": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "financial": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Worker tick completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "job_type": {
+                      "type": "string"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StoreSyncRunResult"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "description": "Misconfigured (missing STORE_SYNC_WORKER_SECRET)"
+          }
+        }
+      }
+    },
+    "/rest/v1/collection_recipes": {
+      "get": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "List recipes in collections",
+        "responses": {
+          "200": {
+            "description": "Membership rows"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "Add recipe to collection",
+        "responses": {
+          "201": {
+            "description": "Added"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "Remove recipe from collection",
+        "responses": {
+          "204": {
+            "description": "Removed"
+          }
+        }
+      }
+    },
+    "/rest/v1/collections": {
+      "get": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "GET Collections",
+        "operationId": "listCollections",
+        "responses": {
+          "200": {
+            "description": "Own collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Collection"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "POST Collection",
+        "operationId": "createCollection",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "UPDATE Collection",
+        "operationId": "updateCollection",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Collection"
+        ],
+        "summary": "DELETE Collection",
+        "operationId": "deleteCollection",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/cuisines": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "List cuisines",
+        "responses": {
+          "200": {
+            "description": "Cuisine catalog"
+          }
+        }
+      }
+    },
+    "/rest/v1/grocery_items": {
+      "get": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "List grocery items",
+        "responses": {
+          "200": {
+            "description": "Items"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "POST Item",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "UPDATE Item",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "DELETE Item",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/grocery_lists": {
+      "get": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "GET Grocery Lists",
+        "responses": {
+          "200": {
+            "description": "Lists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroceryList"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "Create grocery list",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "UPDATE Grocery List",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Grocery"
+        ],
+        "summary": "DELETE Grocery List",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/ingredients": {
+      "get": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "List ingredients (system + own)",
+        "responses": {
+          "200": {
+            "description": "Ingredient catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Ingredient"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Create user ingredient",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Update own user ingredient",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Ingredient"
+        ],
+        "summary": "Delete own user ingredient",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/meal_categories": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "List meal categories",
+        "responses": {
+          "200": {
+            "description": "Meal category catalog"
+          }
+        }
+      }
+    },
+    "/rest/v1/meal_plans": {
+      "get": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "List meal plans",
+        "responses": {
+          "200": {
+            "description": "Meal plan entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MealPlan"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "Create meal plan entry",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "Update meal plan entry",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MealPlan"
+        ],
+        "summary": "Delete meal plan entry",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/pantry_items": {
+      "get": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "List pantry items",
+        "responses": {
+          "200": {
+            "description": "Pantry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PantryItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "Create pantry item",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "Update pantry item",
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pantry"
+        ],
+        "summary": "Delete pantry item",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/profiles": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "GET User Profile",
+        "operationId": "getUserProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter `eq.<user_id>` (own id only under RLS)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "UPDATE User Profile",
+        "operationId": "updateUserProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/recipes": {
+      "get": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Recipe List / Detail",
+        "description": "List own recipes. For detail use `id=eq.<uuid>` (maps to GET /recipes/:id).\nUpdate: `PATCH` with `id=eq.<uuid>` (PUT /recipes/:id).\nDelete: `DELETE` with `id=eq.<uuid>` (DELETE /recipes/:id).\n",
+        "operationId": "listRecipes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Filter e.g. `eq.<uuid>` for single recipe",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "created_at.desc"
+            }
+          },
+          {
+            "name": "select",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "*"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own recipes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recipe"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Create Recipe",
+        "operationId": "createRecipe",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Update Recipe",
+        "operationId": "updateRecipe",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eq.<uuid>"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PreferReturn"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Recipe"
+        ],
+        "summary": "Delete Recipe",
+        "operationId": "deleteRecipe",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eq.<uuid>"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/rest/v1/subscription_status": {
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Get subscription status (plan / status / expire_date)",
+        "responses": {
+          "200": {
+            "description": "Simplified subscription view matching Subscription Service contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionStatus"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/subscriptions": {
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Get own subscription row",
+        "description": "Table row uses `expires_at`. Prefer `/rest/v1/subscription_status` for spec-shaped `expire_date`.",
+        "responses": {
+          "200": {
+            "description": "Subscription entitlement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionRow"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/tags": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "List tags",
+        "responses": {
+          "200": {
+            "description": "Tag catalog"
+          }
+        }
+      }
+    },
+    "/storage/v1/object/{bucket}/{user_id}/{object}": {
+      "parameters": [
+        {
+          "name": "bucket",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "avatars",
+              "recipe-covers",
+              "recipe-images"
+            ]
+          }
+        },
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "object",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Upload object (private bucket, path must start with auth user id)",
+        "responses": {
+          "200": {
+            "description": "Uploaded"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Download / signed access to own object",
+        "responses": {
+          "200": {
+            "description": "Object bytes"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Delete own object",
+        "responses": {
+          "200": {
+            "description": "Deleted"
           }
         }
       }
@@ -3225,6 +3814,11 @@
         "type": "http",
         "scheme": "bearer",
         "description": "RECIPE_IMPORT_WORKER_SECRET (cron / import queue worker only)"
+      },
+      "StoreSyncWorkerBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "STORE_SYNC_WORKER_SECRET (cron / App Store sync worker only; Issue"
       }
     },
     "parameters": {
@@ -3287,16 +3881,6 @@
           }
         }
       },
-      "NotFound": {
-        "description": "Resource not found",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ErrorEnvelope"
-            }
-          }
-        }
-      },
       "ErrorEnvelope": {
         "description": "Unified Edge Function error body. Always includes `request_id` (may be\nnull only on legacy paths that predate Issue #57). Secrets are never\nreturned in `details`.\n",
         "headers": {
@@ -3307,6 +3891,16 @@
             "$ref": "#/components/headers/XCorrelationId"
           }
         },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
         "content": {
           "application/json": {
             "schema": {
@@ -3521,15 +4115,398 @@
                   "null"
                 ]
               },
+              "commerceSummary": {
+                "$ref": "#/components/schemas/UserCommerceSummary"
+              },
               "payments": {
                 "type": "array",
+                "description": "Timeline from payment_transactions (not ad-hoc purchase_events totals)",
                 "items": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserPaymentRecord"
                 }
               }
             }
           }
         ]
+      },
+      "UserCommerceSummary": {
+        "type": "object",
+        "description": "Derived aggregates from view user_commerce_summary only (#58)",
+        "properties": {
+          "subscriptionPlan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "subscriptionStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "subscriptionExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "firstPurchaseAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastPurchaseAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "purchaseCount": {
+            "type": "integer"
+          },
+          "refundCount": {
+            "type": "integer"
+          },
+          "grossSpend": {
+            "type": "number"
+          },
+          "refundedAmount": {
+            "type": "number"
+          },
+          "netSpend": {
+            "type": "number"
+          },
+          "estimatedLtvUsd": {
+            "type": "number"
+          },
+          "primaryCurrency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "storeTerritory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "user_commerce_summary"
+            ]
+          }
+        }
+      },
+      "UserPaymentRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "productId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "store": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "app_store",
+              "google_play",
+              "play_store",
+              null
+            ]
+          },
+          "amount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "purchasedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "providerSource": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PaymentTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "platform": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ios",
+              "android",
+              null
+            ]
+          },
+          "store": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "app_store",
+              "google_play",
+              "stripe",
+              "promotional",
+              "rc_billing",
+              "unknown",
+              null
+            ]
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "sandbox",
+              "production",
+              null
+            ]
+          },
+          "productId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entitlementId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transactionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "originalTransactionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "orderId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Google Play reserved"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "purchaseAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grossAmount": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Original currency amount from provider (estimated when source is RevenueCat)"
+          },
+          "refundAmount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "estimatedProceeds": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "finalProceeds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Settled proceeds only after financial reports (#59); null for RC rows"
+          },
+          "estimatedGrossUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "territory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "providerSource": {
+            "type": "string"
+          },
+          "providerEventId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PaymentTransactionDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaymentTransaction"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "purchaseTokenMasked": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "amountSource": {
+                "type": "string",
+                "enum": [
+                  "estimated_provider"
+                ]
+              },
+              "finalProceedsNote": {
+                "type": "string"
+              },
+              "user": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedPaymentTransactions": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentTransaction"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "googlePlay": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "reserved_not_implemented"
+                ]
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        }
       },
       "PaginatedAdminUsers": {
         "type": "object",
@@ -5419,6 +6396,472 @@
           }
         }
       },
+      "StoreIntegrationStatus": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "apple_app_store",
+              "google_play"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "store": {
+            "type": "string",
+            "enum": [
+              "app_store",
+              "google_play"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_configured",
+              "configured",
+              "degraded",
+              "error",
+              "future_reserved"
+            ]
+          },
+          "secretConfigured": {
+            "type": "boolean"
+          },
+          "issuerIdConfigured": {
+            "type": "boolean"
+          },
+          "keyIdConfigured": {
+            "type": "boolean"
+          },
+          "vendorNumberConfigured": {
+            "type": "boolean"
+          },
+          "appAppleIdConfigured": {
+            "type": "boolean"
+          },
+          "lastSuccessAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastErrorAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "StoreIntegrationsResponse": {
+        "type": "object",
+        "properties": {
+          "integrations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreIntegrationStatus"
+            }
+          }
+        }
+      },
+      "StoreSyncRun": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobType": {
+            "type": "string",
+            "enum": [
+              "store_analytics_sync",
+              "financial_report_sync"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "apple_app_store",
+              "google_play"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed",
+              "skipped_not_configured",
+              "skipped_reserved"
+            ]
+          },
+          "triggeredBy": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "cron",
+              "worker"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "rowsUpserted": {
+            "type": "integer"
+          },
+          "errorCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rangeStart": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "rangeEnd": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "requestId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "correlationId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "StoreSyncRunResult": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobType": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "rowsUpserted": {
+            "type": "integer"
+          },
+          "errorCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "StoreSyncRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "apple_app_store",
+              "google_play"
+            ],
+            "default": "apple_app_store"
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "StoreAnalyticsDailyRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "metricDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string"
+          },
+          "territory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "acquisitionSource": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metricKey": {
+            "type": "string"
+          },
+          "metricValue": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Null when Apple omitted / privacy threshold — never invent 0"
+          },
+          "dataStatus": {
+            "type": "string",
+            "enum": [
+              "available",
+              "insufficient",
+              "not_returned",
+              "not_configured"
+            ]
+          },
+          "providerSource": {
+            "type": "string"
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "syncRunId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "syncedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "StoreAnalyticsDailyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreAnalyticsDailyRow"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "FinancialReportRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string"
+          },
+          "fiscalPeriod": {
+            "type": "string"
+          },
+          "reportDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "territory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "productId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "units": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "grossAmount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "developerProceeds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Confirmed proceeds from financial reports only"
+          },
+          "taxes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "adjustments": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "exchangeRate": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "reportStatus": {
+            "type": "string"
+          },
+          "providerSource": {
+            "type": "string"
+          },
+          "providerRowKey": {
+            "type": "string"
+          },
+          "syncRunId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "syncedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FinancialReportRowsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialReportRow"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "AppleStoreCredentialsWrite": {
+        "type": "object",
+        "required": [
+          "issuerId",
+          "keyId",
+          "privateKeyPem"
+        ],
+        "properties": {
+          "issuerId": {
+            "type": "string"
+          },
+          "keyId": {
+            "type": "string"
+          },
+          "privateKeyPem": {
+            "type": "string",
+            "description": "ASC .p8 private key PEM (write-only; never returned)"
+          },
+          "vendorNumber": {
+            "type": "string"
+          },
+          "appAppleId": {
+            "type": "string"
+          }
+        }
+      },
       "IntegrationId": {
         "type": "string",
         "enum": [
@@ -5603,7 +7046,8 @@
           "type": "string"
         }
       }
-    }
+    },
+    "requestBodies": {}
   },
   "security": [
     {

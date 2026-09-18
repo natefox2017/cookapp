@@ -44,9 +44,26 @@ Default local credentials `admin` / `admin` are **dev-only**. Production must bo
 | Auth | `/functions/v1/admin-auth/*` | live |
 | Users | `/functions/v1/admin-users/*` | live |
 | Dashboard | `/functions/v1/admin-dashboard` | live |
-| Subscription | `/functions/v1/admin-subscriptions/*` | live |
-| Recipes / Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories | — | **missing** → live client returns `501`; sidebar marks **Pending** |
-| Settings | hybrid + Integrations live | Security via `admin-auth`; Integrations via `admin-integrations` (#63); general settings diagnostics-only in live mode |
+| Commerce → Products · Subscriptions | `/functions/v1/admin-subscriptions/*` | live |
+| Data (Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories) | — | **missing** → live client `501`; sidebar **Pending** |
+| Recipes → Library | — | **missing** → **Pending** |
+| Recipes → AI Import / Import Review | — | **Not implemented** page (IA reserved) |
+| Commerce → Payments / Analytics / Operations | — | **Not implemented** page (IA reserved) |
+| Settings → General / Security / System | hybrid | Security via `admin-auth`; general diagnostics-only |
+| Settings → Integrations | `/functions/v1/admin-integrations/*` | **live** (#63) — Google Play Future Reserved |
+| Settings → AI Platform | — | **Not implemented** page (backend `admin-ai` exists) |
+
+Navigation IA (Issue #64) lives in `admin/src/components/layout/nav.ts` only:
+
+- Dashboard · Users
+- Recipes → Library / AI Import / Import Review
+- Commerce → Products · Subscriptions / Payments
+- Analytics
+- Operations → Jobs & Syncs / Audit Log
+- Data → Collections / Ingredients / Grocery / Meal Plans / Pantry / Categories
+- Settings → General / AI Platform / Integrations / Security / System
+
+Legacy paths redirect (`/subscription` → `/commerce/products`, `/collections` → `/data/collections`, etc.).
 
 ## Auth
 
