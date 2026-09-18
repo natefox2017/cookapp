@@ -24,7 +24,7 @@ Figma `FHbikS2jILAeMv8mote0vD` / `37:2`. Refs: `docs/ui-screenshots/missing-ref/
 
 Independent QA (batch2): see `batch2/QA-VERDICT.md` → **VERDICT PASS** (all PASS*).
 
-## Batch 3 (this PR update)
+## Batch 3 (prior)
 
 | Page | Node | Ref | Verdict | Notes |
 |------|------|-----|---------|-------|
@@ -36,8 +36,20 @@ Independent QA (batch2): see `batch2/QA-VERDICT.md` → **VERDICT PASS** (all PA
 
 Independent QA (batch3): see `batch3/QA-VERDICT.md` → **VERDICT PASS** (all PASS*).
 
+## Batch 4 (this PR)
+
+| Page | Node | Ref | Verdict | Notes |
+|------|------|-----|---------|-------|
+| **16** Search ENTER | `115:19051` ← `115:8329` | `16-21/IMG_4441.PNG` | **PASS*** | History + Clear + zucchini. MAE≈14.8 |
+| **17** Search Focused | `219:6885` ← `216:16333` | `16-21/IMG_4442.PNG` | **PASS*** | Empty focused chrome. MAE≈2.0 |
+| **18** Search Results | `115:18812` ← `115:8090` | `16-21/IMG_4444.PNG` | **PASS*** | Query `1` + 6 Matches Ingredient cards. MAE≈37.4 |
+| **19** Scope Filter | `119:12608` ← `118:11228` | `16-21/IMG_4445.PNG` | **PASS*** | Include / History ✓. MAE≈5.1 |
+| **21** Add Recipe Menu | `119:13222` ← `118:11826` | formal menu | **PASS*** | New/Import/How-to. `IMG_4446` = Search browse ≠ this page. |
+
+Independent QA (batch4): see `batch4/QA-VERDICT.md` → **VERDICT PASS** (all PASS*).
+
 ## Still open (next batches)
 
-04 long stitch · 06 · **12** Following filter (no dedicated pack shot) · **13** Editor · **14** Category · **16–21** Search/Scope/Add Recipe Menu · **24/28** Groceries · **45/46** How To / Import · FIGMA_MISSING pantry/filter/etc. · **47/48 Owner: do not draw**.
+**12** Following filter (no dedicated pack shot) · **13** Editor long · **14** Category · Search list-browse (`IMG_4446`) · **24/28** Groceries · **45/46** How To / Import · **04** long stitch · **06** if still needed · FIGMA_MISSING pantry/filter/etc. · **47/48 Owner: do not draw**.
 
-Evidence: `figma/` + `batch2/figma/` + `batch3/figma/`.
+Evidence: `figma/` + `batch2/` + `batch3/` + `batch4/`.
