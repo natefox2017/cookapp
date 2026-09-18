@@ -3,7 +3,7 @@
   "info": {
     "title": "CookApp Cloud Backend API",
     "version": "1.0.0",
-    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` \u00b7 Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
+    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
     "contact": {
       "name": "CookApp"
     }
@@ -130,7 +130,18 @@
           "200": {
             "description": "Event received"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XJobId"
+          },
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/health": {
@@ -194,7 +205,15 @@
           "403": {
             "description": "Default credentials blocked in production"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-auth/bootstrap": {
@@ -206,6 +225,12 @@
         "description": "Replaces the default seed account with a strong Owner password.\nRequires current default password when a seed row exists.\nProduction requires header `X-CookApp-Bootstrap-Token` matching\nsecret `COOKAPP_ADMIN_BOOTSTRAP_TOKEN` (never commit the token).\nLocal/dev may omit the token when `COOKAPP_ADMIN_ENV=development`.\n",
         "security": [],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "name": "X-CookApp-Bootstrap-Token",
             "in": "header",
@@ -298,7 +323,15 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-auth/session": {
@@ -334,7 +367,15 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-auth/change-password": {
@@ -403,7 +444,15 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/rest/v1/profiles": {
@@ -1160,6 +1209,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
             "name": "q",
             "in": "query",
             "schema": {
@@ -1246,7 +1301,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-users/{id}": {
@@ -1262,6 +1325,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "name": "id",
             "in": "path",
@@ -1309,7 +1378,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-subscriptions/plans": {
@@ -1338,7 +1415,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -1365,7 +1450,15 @@
           "201": {
             "description": "Created"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-subscriptions/plans/{id}": {
@@ -1381,6 +1474,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "name": "id",
             "in": "path",
@@ -1409,6 +1508,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "name": "id",
             "in": "path",
@@ -1442,7 +1547,15 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-subscriptions/revenue": {
@@ -1461,7 +1574,15 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-recipe-import/jobs": {
@@ -1477,6 +1598,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "name": "status",
             "in": "query",
@@ -1580,7 +1707,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-recipe-import/jobs/{jobId}": {
@@ -1596,6 +1731,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "$ref": "#/components/parameters/RecipeImportJobId"
           }
@@ -1652,6 +1793,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
             "$ref": "#/components/parameters/RecipeImportJobId"
           }
         ],
@@ -1690,6 +1837,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
             "$ref": "#/components/parameters/RecipeImportJobId"
           }
         ],
@@ -1713,6 +1866,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "$ref": "#/components/parameters/RecipeImportJobId"
           }
@@ -1752,6 +1911,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "$ref": "#/components/parameters/RecipeImportJobId"
           }
@@ -1819,7 +1984,15 @@
           "201": {
             "description": "Batch created with pending jobs"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          }
+        ]
       }
     },
     "/functions/v1/admin-recipe-import/batches/{batchId}": {
@@ -1835,6 +2008,12 @@
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
           {
             "name": "batchId",
             "in": "path",
@@ -1896,6 +2075,36 @@
           "type": "string",
           "format": "uuid"
         }
+      },
+      "XRequestId": {
+        "name": "X-Request-Id",
+        "in": "header",
+        "required": false,
+        "description": "Client-supplied request id. When omitted, the server generates a UUID.\nEchoed on every Admin / webhook response and included in structured logs\nand `admin_audit_logs.request_id`.\n",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "XCorrelationId": {
+        "name": "X-Correlation-Id",
+        "in": "header",
+        "required": false,
+        "description": "Cross-service correlation id. Defaults to `X-Request-Id` when omitted.\n",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "XJobId": {
+        "name": "X-Job-Id",
+        "in": "header",
+        "required": false,
+        "description": "Optional async job / sync run id (import jobs, provider syncs, webhook\nevent id). Stored on audit rows and structured logs when present.\n",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
       }
     },
     "responses": {
@@ -1905,6 +2114,24 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorBody"
+            }
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "description": "Unified Edge Function error body. Always includes `request_id` (may be\nnull only on legacy paths that predate Issue #57). Secrets are never\nreturned in `details`.\n",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/XRequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/XCorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
             }
           }
         }
@@ -2779,7 +3006,7 @@
       },
       "SubscriptionStatus": {
         "type": "object",
-        "description": "View `subscription_status` \u2014 matches Subscription Service contract.",
+        "description": "View `subscription_status` — matches Subscription Service contract.",
         "properties": {
           "user_id": {
             "type": "string",
@@ -3098,6 +3325,154 @@
             "type": "string",
             "format": "date-time"
           }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "description": "Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).\n",
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Machine-readable code (e.g. unauthorized, validation_error)"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "description": "Optional non-secret details (never passwords/tokens/keys)",
+                "type": [
+                  "object",
+                  "null",
+                  "array",
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            }
+          },
+          "request_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Same value as `X-Request-Id` response header"
+          }
+        }
+      },
+      "AdminAuditLog": {
+        "type": "object",
+        "description": "Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.\n",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actor_admin_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "actor_username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "description": "e.g. admin.login, subscription_plan.update, ai.provider.update,\nrecipe.delete, user.admin_action, integration.config_update\n"
+          },
+          "object_type": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "before_diff": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "after_diff": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "request_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "correlation_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "job_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "headers": {
+      "XRequestId": {
+        "description": "Request id for this response (echo or server-generated).",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "XCorrelationId": {
+        "description": "Correlation id for this response.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "XJobId": {
+        "description": "Job / sync id when applicable.",
+        "schema": {
+          "type": "string"
         }
       }
     }

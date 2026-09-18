@@ -45,7 +45,7 @@ supabase/
   migrations/          # ordered SQL migrations
   openapi/             # OpenAPI 3.1 (yaml + json)
   functions/
-    _shared/           # cors, auth, errors, logger, admin-session
+    _shared/           # cors, auth, errors, logger, admin-session, request-context, audit, monitor
     delete-account/
     revenuecat-webhook/
     health/
@@ -100,11 +100,12 @@ Authorization: Bearer <access_token>
 | `revenuecat-webhook` | no (Bearer secret) | Persist subscription events |
 | `health` | yes | Module probe |
 | `openapi` | no | Serve OpenAPI JSON |
-| `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
+| `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password (+ audit) |
 | `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
 | `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
 | `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
 | `admin-recipe-import` | no (custom admin bearer) | Shared AI Recipe Import pipeline (#55) |
+| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue (+ audit) |
 
 ### Admin auth
 
@@ -122,9 +123,7 @@ Authorization: Bearer <access_token>
 ### Admin Recipe Import (Issue #55)
 
 Shared Backend pipeline for Admin + future iOS (single pipeline — no Admin-only parser):
-
 `SourceResolver → ContentExtractor → Media/TextNormalizer → RecipeAIParser(route_key) → SchemaValidator → RecipeQualityValidator → DuplicateDetector → RecipeImporter`
-
 - Tables: `recipe_import_jobs`, `recipe_import_batches`, `recipe_import_results`, `recipe_import_artifacts`
 - Bucket: `recipe-import-artifacts` (private; accessed via `MediaStorageProvider` — #54)
 - AI via `AIRouter` (`route_key` only — #53); never a second AI client / hardcoded Storage URL
@@ -132,10 +131,16 @@ Shared Backend pipeline for Admin + future iOS (single pipeline — no Admin-onl
 - Exact active source URL → HTTP 409 / job status `duplicate`
 - Endpoints under `/functions/v1/admin-recipe-import/{jobs,batches,…}`
 - Async queue worker is **#56** (batch creates pending jobs only)
-
 ```bash
 deno test --allow-env supabase/functions/_shared/recipe-import/
 ```
+### Audit log + observability (Issue #57)
+- Table: `admin_audit_logs` (service_role only; secret-redacted before/after diffs)
+- Shared helpers: `_shared/logger.ts` (redaction), `_shared/request-context.ts`, `_shared/audit.ts`, `_shared/monitor.ts`
+- Admin APIs + RevenueCat webhook propagate `X-Request-Id` / `X-Correlation-Id` / optional `X-Job-Id`
+- Error envelope: `{ error: { code, message, details }, request_id }`
+- Monitoring: structured `monitor.webhook_failure` (etc.) events — **no** fake Operational status
+- Redaction tests: `deno test supabase/functions/_shared/logger_test.ts`
 
 ## Migrations
 
@@ -155,6 +160,9 @@ Admin live vs mock matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md).
     "code": "unauthorized",
     "message": "…",
     "details": null
-  }
+  },
+  "request_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
+
+Response headers (Admin / webhook): `X-Request-Id`, `X-Correlation-Id`, optional `X-Job-Id`.
