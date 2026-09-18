@@ -28,6 +28,8 @@ import {
 } from "../_shared/media-storage/mod.ts";
 ```
 
+Production `recipe-import-worker` injects `createSupabaseMediaStorageProvider(serviceClient)` via `createImportPipelineRuntime`. In-memory / stub providers are test-only and cannot be the runtime default.
+
 Do **not**:
 
 - Hardcode Supabase Storage URLs in feature modules

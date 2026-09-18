@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSettings, isMockMode, updateSettings } from '@/api'
+import { pendingWriteMessage } from '@/api/capabilities'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { authErrorMessage, useAuth } from '@/auth/auth-context'
 import type { AdminSettings } from '@/types/admin'
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { ErrorState, LoadingBlock, PageHeader, PendingApiNotice } from '@/components/ui/page'
 import {
   Select,
   SelectContent,
@@ -121,6 +122,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
   const showSettingsSave =
     tab !== 'security' && tab !== 'integrations' && isMockMode()
   const liveDiagnostics = !isMockMode()
+  const diagnosticsMessage = pendingWriteMessage('settings-persist')
 
   return (
     <div>
@@ -139,6 +141,9 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
           ) : null
         }
       />
+      {liveDiagnostics && tab !== 'security' && tab !== 'integrations' ? (
+        <PendingApiNotice message={`${diagnosticsMessage} These fields are read-only diagnostics.`} />
+      ) : null}
 
       <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList>
@@ -162,6 +167,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Input
                   id="appName"
                   value={draft.general.appName}
+                  disabled={liveDiagnostics}
+                  readOnly={liveDiagnostics}
                   onChange={(event) =>
                     setDraft({
                       ...draft,
@@ -175,6 +182,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Input
                   id="supportEmail"
                   value={draft.general.supportEmail}
+                  disabled={liveDiagnostics}
+                  readOnly={liveDiagnostics}
                   onChange={(event) =>
                     setDraft({
                       ...draft,
@@ -188,6 +197,8 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Input
                   id="locale"
                   value={draft.general.defaultLocale}
+                  disabled={liveDiagnostics}
+                  readOnly={liveDiagnostics}
                   onChange={(event) =>
                     setDraft({
                       ...draft,
@@ -207,6 +218,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                   id="maintenance-mode"
                   aria-labelledby="maintenance-mode-label"
                   checked={draft.general.maintenanceMode}
+                  disabled={liveDiagnostics}
                   onCheckedChange={(checked) =>
                     setDraft({
                       ...draft,
@@ -230,6 +242,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Label htmlFor="measurement-system">Measurement system</Label>
                 <Select
                   value={draft.units.measurementSystem}
+                  disabled={liveDiagnostics}
                   onValueChange={(value) =>
                     setDraft({
                       ...draft,
@@ -253,6 +266,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Label htmlFor="temperature-unit">Temperature unit</Label>
                 <Select
                   value={draft.units.temperatureUnit}
+                  disabled={liveDiagnostics}
                   onValueChange={(value) =>
                     setDraft({
                       ...draft,
@@ -294,6 +308,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                   id="allow-user-tags"
                   aria-labelledby="allow-user-tags-label"
                   checked={draft.categories.allowUserTags}
+                  disabled={liveDiagnostics}
                   onCheckedChange={(checked) =>
                     setDraft({
                       ...draft,
@@ -313,6 +328,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                   id="require-cuisine"
                   aria-labelledby="require-cuisine-label"
                   checked={draft.categories.requireCuisine}
+                  disabled={liveDiagnostics}
                   onCheckedChange={(checked) =>
                     setDraft({
                       ...draft,
@@ -444,6 +460,7 @@ export function SettingsPage({ section = 'general' }: { section?: SettingsSectio
                 <Label htmlFor="log-level">Log level</Label>
                 <Select
                   value={draft.system.logLevel}
+                  disabled={liveDiagnostics}
                   onValueChange={(value) =>
                     setDraft({
                       ...draft,

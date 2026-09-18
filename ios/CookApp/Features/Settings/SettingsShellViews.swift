@@ -55,22 +55,7 @@ struct ExperimentsShellView: View {
 }
 
 struct AccountShellView: View {
-    @Environment(AppDependencyContainer.self) private var dependencies
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Text(AppRoute.account.placeholderTitle)
-                .font(.title2)
-            Button("Sign Out", role: .destructive) {
-                Task { try? await dependencies.authService.signOut() }
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
-        .navigationTitle(AppRoute.account.placeholderTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .accessibilityIdentifier("route.placeholder.Account")
-    }
+    var body: some View { RoutePlaceholderView(title: AppRoute.account.placeholderTitle) }
 }
 
 struct CreateAccountShellView: View {

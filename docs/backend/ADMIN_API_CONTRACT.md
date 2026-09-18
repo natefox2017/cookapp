@@ -9,7 +9,7 @@ Audited against `main` + live Edge Functions on `semsjyrqjnumpvanibip` (2026-09-
 
 1. Admin typed client live paths must match `/functions/v1/<function>/…` (never invent `/admin/…` REST unless an Edge Function exists).
 2. Production / live mode must **not** silently serve mock KPI or catalog data.
-3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”).
+3. Domains without a live Admin API throw explicit `501 not_implemented` in the Admin client (UI shows pending — not “empty success”). Live pending pages **hide write buttons** and diagnostics-only Settings fields are **read-only** (`writeCapability` / `isMockMode()`).
 4. Admin **nav / formal routes** only expose capabilities already approved for the current Gate (implemented or existing mock UI). Future modules stay in Notion / Issues — not as navigable placeholders. Backend APIs (e.g. #60 `admin-analytics` / `admin-operations`) may ship without Admin nav pages.
 5. Every **live** Admin endpoint is documented in `supabase/openapi/openapi.yaml`.
 6. Mock mode (`VITE_ADMIN_USE_MOCK=true`) is local/dev only — see #51 production hardening.
@@ -58,14 +58,14 @@ Compatibility redirects (no dead links after #64 rollback): `/commerce/products`
 | (API) Payment transactions | `listTransactions` / `getTransaction` | `…/admin-subscriptions/transactions` · `…/transactions/:id` | live | #58 — RC amounts ≠ final financial truth; Admin Payments **page** not shipped |
 | (API) Analytics aggregation | — | `GET /functions/v1/admin-analytics` | live | #60 — backend only; Admin Analytics UI not in nav (#61) |
 | (API) Operations jobs / integrations | — | `…/admin-operations/{jobs,integrations}` | live | #60 — backend only; Admin Jobs UI not in nav (#61) |
-| `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: build-time diagnostics only; no persist API |
-| `/recipes` | `listRecipes` / CRUD | — | missing | |
+| `/settings` · `/settings/general` · `/settings/system` | `getSettings` / `updateSettings` | — | hybrid | Live: diagnostics **read-only** (no persist API); Security / Integrations stay writable |
+| `/recipes` | `listRecipes` / CRUD | — | missing | Live writes hidden (#61 capability gate) |
 | `/collections` | `listCollections` | — | missing | |
-| `/ingredients` | ingredients CRUD | — | missing | |
+| `/ingredients` | ingredients CRUD | — | missing | Live writes hidden (#61 capability gate) |
 | `/grocery` | grocery users/items | — | missing | |
 | `/meal-plans` | `listMealPlans` | — | missing | |
 | `/pantry` | `listPantry` | — | missing | |
-| `/categories` | taxonomy CRUD | — | missing | End-user category tables exist via PostgREST; no Admin ops API yet |
+| `/categories` | taxonomy CRUD | — | missing | Live writes hidden (#61 capability gate). End-user category tables exist via PostgREST; no Admin ops API yet |
 | `/settings/integrations` | list / get / test / secret / config | `…/admin-integrations/*` | live | #63 — Google Play Future Reserved; secrets write-only; ops also exposes `admin-operations/integrations` (#60) |
 | (future) AI Platform / AI Import / Payments UI / Analytics UI / Ops UI | — | backends may exist | planned | Stay out of Admin nav until Gate allows (#61) |
 | Store Analytics / Financial sync | status / runs / sync / credentials | `…/admin-store-sync/*` | live | #59 — Google Play Future Reserved; not an Admin nav module |

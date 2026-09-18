@@ -3,8 +3,10 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
   createTaxonomyItem,
   deleteTaxonomyItem,
+  isMockMode,
   listTaxonomy,
   updateTaxonomyItem,
+  writeCapability,
 } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import type { TaxonomyItem } from '@/types/admin'
@@ -19,7 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { EmptyState, ErrorState, LoadingBlock, PageHeader } from '@/components/ui/page'
+import { EmptyState, ErrorState, LoadingBlock, PageHeader, PendingApiNotice } from '@/components/ui/page'
 import {
   Table,
   TableBody,
@@ -38,14 +40,17 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
   const [editing, setEditing] = useState<TaxonomyItem | null>(null)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
+  const capability = writeCapability('categories', isMockMode())
 
   function openCreate() {
+    if (!capability.canWrite) return
     setEditing(null)
     setName('')
     setOpen(true)
   }
 
   function openEdit(item: TaxonomyItem) {
+    if (!capability.canWrite) return
     setEditing(item)
     setName(item.name)
     setOpen(true)
@@ -71,6 +76,7 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
   }
 
   async function onDelete(id: string) {
+    if (!capability.canWrite) return
     if (!window.confirm('Delete this item?')) return
     try {
       await deleteTaxonomyItem(kind, id)
@@ -83,10 +89,12 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
   return (
     <div>
       <div className="mb-3 flex justify-end">
-        <Button size="sm" onClick={openCreate}>
-          <Plus />
-          Create
-        </Button>
+        {capability.canWrite ? (
+          <Button size="sm" onClick={openCreate}>
+            <Plus />
+            Create
+          </Button>
+        ) : null}
       </div>
 
       {loading ? <LoadingBlock label="Loading…" /> : null}
@@ -94,12 +102,18 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
       {!loading && !error && data?.length === 0 ? (
         <EmptyState
           title={`No ${kind} items`}
-          description="Create the first item to populate this taxonomy."
+          description={
+            capability.canWrite
+              ? 'Create the first item to populate this taxonomy.'
+              : 'No taxonomy rows. Live write API is pending.'
+          }
           action={
-            <Button size="sm" onClick={openCreate}>
-              <Plus />
-              Create
-            </Button>
+            capability.canWrite ? (
+              <Button size="sm" onClick={openCreate}>
+                <Plus />
+                Create
+              </Button>
+            ) : undefined
           }
         />
       ) : null}
@@ -112,7 +126,7 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
                 <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
                 <TableHead>Usage</TableHead>
-                <TableHead className="w-28">Actions</TableHead>
+                {capability.canWrite ? <TableHead className="w-28">Actions</TableHead> : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,21 +135,23 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell className="font-mono text-xs">{item.slug}</TableCell>
                   <TableCell className="tabular-nums">{item.usageCount}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => openEdit(item)}>
-                        <Pencil />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Delete"
-                        onClick={() => onDelete(item.id)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {capability.canWrite ? (
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => openEdit(item)}>
+                          <Pencil />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Delete"
+                          onClick={() => onDelete(item.id)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))}
             </TableBody>
@@ -143,7 +159,7 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
         </div>
       ) : null}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={capability.canWrite && open} onOpenChange={(next) => capability.canWrite && setOpen(next)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editing ? 'Update' : 'Create'} {kind}</DialogTitle>
@@ -168,12 +184,18 @@ function TaxonomyTable({ kind }: { kind: Kind }) {
 }
 
 export function CategoriesPage() {
+  const capability = writeCapability('categories', isMockMode())
   return (
     <div>
       <PageHeader
         title="Categories"
-        description="Manage cuisine, category, and tag taxonomies."
+        description={
+          capability.canWrite
+            ? 'Manage cuisine, category, and tag taxonomies.'
+            : 'Live Categories API is pending. Taxonomy is read-only until the contract is live.'
+        }
       />
+      {capability.reason ? <PendingApiNotice message={capability.reason} /> : null}
       <Tabs defaultValue="cuisine">
         <TabsList>
           <TabsTrigger value="cuisine">Cuisine</TabsTrigger>
