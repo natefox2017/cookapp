@@ -1,4 +1,5 @@
-import { httpRequest, isMockMode, mockRequest } from '@/api/client'
+import { API_BASE, isMockMode, mockRequest } from '@/api/client'
+import { notImplemented } from '@/api/not-implemented'
 import {
   mockCategories,
   mockCollections,
@@ -29,12 +30,12 @@ function replaceList<T>(target: T[], next: T[]) {
 
 export async function listCollections(): Promise<CollectionSummary[]> {
   if (isMockMode()) return mockRequest(() => mockCollections)
-  return httpRequest('/admin/collections')
+  return notImplemented('collections')
 }
 
 export async function listIngredients(): Promise<Ingredient[]> {
   if (isMockMode()) return mockRequest(() => [...mockIngredients])
-  return httpRequest('/admin/ingredients')
+  return notImplemented('ingredients')
 }
 
 export async function createIngredient(input: IngredientInput): Promise<Ingredient> {
@@ -45,7 +46,7 @@ export async function createIngredient(input: IngredientInput): Promise<Ingredie
       return item
     })
   }
-  return httpRequest('/admin/ingredients', { method: 'POST', body: JSON.stringify(input) })
+  return notImplemented('ingredients')
 }
 
 export async function updateIngredient(id: string, input: IngredientInput): Promise<Ingredient> {
@@ -58,7 +59,7 @@ export async function updateIngredient(id: string, input: IngredientInput): Prom
       return next
     })
   }
-  return httpRequest(`/admin/ingredients/${id}`, { method: 'PUT', body: JSON.stringify(input) })
+  return notImplemented('ingredients')
 }
 
 export async function deleteIngredient(id: string): Promise<void> {
@@ -70,7 +71,7 @@ export async function deleteIngredient(id: string): Promise<void> {
       )
     })
   }
-  return httpRequest(`/admin/ingredients/${id}`, { method: 'DELETE' })
+  return notImplemented('ingredients')
 }
 
 export async function listGroceryUsers(): Promise<GroceryUser[]> {
@@ -86,24 +87,24 @@ export async function listGroceryUsers(): Promise<GroceryUser[]> {
       }),
     )
   }
-  return httpRequest('/admin/grocery/users')
+  return notImplemented('grocery')
 }
 
 export async function listGroceryItems(userId: string): Promise<GroceryItem[]> {
   if (isMockMode()) {
     return mockRequest(() => mockGroceryItems.filter((item) => item.userId === userId))
   }
-  return httpRequest(`/admin/grocery/users/${userId}/items`)
+  return notImplemented('grocery')
 }
 
 export async function listMealPlans(): Promise<MealPlanEntry[]> {
   if (isMockMode()) return mockRequest(() => mockMealPlans)
-  return httpRequest('/admin/meal-plans')
+  return notImplemented('meal-plans')
 }
 
 export async function listPantry(): Promise<PantryItem[]> {
   if (isMockMode()) return mockRequest(() => mockPantry)
-  return httpRequest('/admin/pantry')
+  return notImplemented('pantry')
 }
 
 function taxonomyList(kind: 'cuisine' | 'category' | 'tags') {
@@ -118,7 +119,7 @@ export async function listTaxonomy(
   if (isMockMode()) {
     return mockRequest(() => [...taxonomyList(kind)])
   }
-  return httpRequest(`/admin/categories/${kind}`)
+  return notImplemented('categories')
 }
 
 export async function createTaxonomyItem(
@@ -137,10 +138,7 @@ export async function createTaxonomyItem(
       return item
     })
   }
-  return httpRequest(`/admin/categories/${kind}`, {
-    method: 'POST',
-    body: JSON.stringify({ name }),
-  })
+  return notImplemented('categories')
 }
 
 export async function updateTaxonomyItem(
@@ -162,10 +160,7 @@ export async function updateTaxonomyItem(
       return next
     })
   }
-  return httpRequest(`/admin/categories/${kind}/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ name }),
-  })
+  return notImplemented('categories')
 }
 
 export async function deleteTaxonomyItem(
@@ -181,12 +176,37 @@ export async function deleteTaxonomyItem(
       )
     })
   }
-  return httpRequest(`/admin/categories/${kind}/${id}`, { method: 'DELETE' })
+  return notImplemented('categories')
+}
+
+/** Live: build-time diagnostics only (no `/admin/settings` Edge Function). */
+export function liveSettingsDiagnostics(): AdminSettings {
+  return {
+    general: {
+      appName: 'CookApp',
+      supportEmail: '',
+      defaultLocale: 'en-US',
+      maintenanceMode: false,
+    },
+    units: {
+      measurementSystem: 'metric',
+      temperatureUnit: 'celsius',
+    },
+    categories: {
+      allowUserTags: true,
+      requireCuisine: true,
+    },
+    system: {
+      mockMode: false,
+      apiBaseUrl: API_BASE || '(set VITE_ADMIN_API_BASE_URL)',
+      logLevel: 'info',
+    },
+  }
 }
 
 export async function getSettings(): Promise<AdminSettings> {
   if (isMockMode()) return mockRequest(() => structuredClone(mockSettings))
-  return httpRequest('/admin/settings')
+  return liveSettingsDiagnostics()
 }
 
 export async function updateSettings(payload: AdminSettings): Promise<AdminSettings> {
@@ -199,5 +219,5 @@ export async function updateSettings(payload: AdminSettings): Promise<AdminSetti
       return structuredClone(mockSettings)
     })
   }
-  return httpRequest('/admin/settings', { method: 'PUT', body: JSON.stringify(payload) })
+  return notImplemented('settings-persist')
 }

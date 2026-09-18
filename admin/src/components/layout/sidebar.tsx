@@ -37,13 +37,21 @@ export function SidebarNav({
       <nav className={cn('flex-1 space-y-0.5 overflow-y-auto py-4', collapsed ? 'px-2' : 'px-3')}>
         {navItems.map((item) => {
           const Icon = item.icon
+          const showPending = !isMockMode() && item.apiStatus === 'mock_only'
+          const showHybrid = !isMockMode() && item.apiStatus === 'hybrid'
           return (
             <NavLink
               key={item.href}
               to={item.href}
               end={item.href === '/'}
               onClick={onNavigate}
-              title={item.title}
+              title={
+                showPending
+                  ? `${item.title} (live API pending)`
+                  : showHybrid
+                    ? `${item.title} (partial live)`
+                    : item.title
+              }
               className={({ isActive }) =>
                 cn(
                   'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-primary-foreground active:bg-sidebar-accent/80',
@@ -53,7 +61,21 @@ export function SidebarNav({
               }
             >
               <Icon className="h-4 w-4 shrink-0 opacity-80" />
-              {!collapsed ? <span>{item.title}</span> : null}
+              {!collapsed ? (
+                <>
+                  <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                  {showPending ? (
+                    <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                      Pending
+                    </span>
+                  ) : null}
+                  {showHybrid ? (
+                    <span className="shrink-0 rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-700 dark:text-sky-400">
+                      Partial
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
             </NavLink>
           )
         })}

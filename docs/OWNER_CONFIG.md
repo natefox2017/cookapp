@@ -89,8 +89,11 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | 字段 | 状态 | 填写值 / 备注 | 更新日期 |
 |------|------|---------------|----------|
 | Apple 内购 Shared Secret / ASC API（若 RC 需要） | todo | | |
-| 监控（Sentry / Analytics）DSN | n/a | Phase 后续 | |
-| 管理后台 URL / 密钥 | todo | 见相关 Issue | |
+| 监控（Sentry / Analytics）DSN | n/a | Phase 后续 · #57 correlation IDs first | |
+| 管理后台 URL / 密钥 | todo | Local Admin；生产禁止默认 `admin`/`admin`（#51） | |
+| Admin Owner bootstrap password | todo | 生产首次 `admin-auth` bootstrap / change-password；勿写入 Git | 2026-09-18 |
+| AI Gateway Base URL / API Key secret ref | todo | V2 AI Platform #53；密钥只进 Supabase secrets | 2026-09-18 |
+| App Store Connect API (Analytics) | todo | V2 #59；未接前 Dashboard 不得用假下载 KPI 冒充 | 2026-09-18 |
 
 ---
 
@@ -109,3 +112,4 @@ cp ios/Config/Secrets.example.xcconfig ios/Config/Secrets.xcconfig
 | 日期 | 说明 |
 |------|------|
 | 2026-09-17 | 初版：汇总 Apple / Google / RevenueCat / Secrets |
+| 2026-09-18 | V2：Admin 生产凭据 / AI Gateway / ASC Analytics 行；契约见 `docs/backend/ADMIN_API_CONTRACT.md` |

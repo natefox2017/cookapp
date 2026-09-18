@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSettings, updateSettings } from '@/api'
+import { getSettings, isMockMode, updateSettings } from '@/api'
 import { useAsyncData } from '@/hooks/use-async-data'
 import { authErrorMessage, useAuth } from '@/auth/auth-context'
 import type { AdminSettings } from '@/types/admin'
@@ -93,13 +93,18 @@ export function SettingsPage() {
     )
   }
 
-  const showSettingsSave = tab !== 'security'
+  const showSettingsSave = tab !== 'security' && isMockMode()
+  const liveDiagnostics = !isMockMode()
 
   return (
     <div>
       <PageHeader
         title="Settings"
-        description="General, units, category policy, and system configuration."
+        description={
+          liveDiagnostics
+            ? 'Live mode: Security uses admin-auth. General/units/categories are diagnostics-only (no persist API).'
+            : 'General, units, category policy, and system configuration.'
+        }
         actions={
           showSettingsSave ? (
             <Button loading={saving} onClick={onSave} disabled={!dirty && !saving}>

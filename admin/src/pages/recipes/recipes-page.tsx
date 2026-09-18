@@ -40,7 +40,7 @@ export function RecipesPage() {
     <div>
       <PageHeader
         title="Recipes"
-        description="Browse recipe catalog via GET /admin/recipes."
+        description="Mock-only until Admin Recipes / AI Import APIs ship (see ADMIN_API_CONTRACT.md)."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
