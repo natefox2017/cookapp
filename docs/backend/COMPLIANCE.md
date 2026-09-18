@@ -50,8 +50,8 @@ Contract: `supabase/openapi/openapi.yaml` (served by `/functions/v1/openapi`).
 ## How to re-verify
 
 ```bash
-# OpenAPI representations
-python3 -c "import json,yaml,pathlib; s=yaml.safe_load(pathlib.Path('supabase/openapi/openapi.yaml').read_text()); assert json.loads(pathlib.Path('supabase/functions/openapi/spec.json').read_text())==s"
+# OpenAPI representations (yaml ↔ openapi.json ↔ Edge Function spec.json)
+python3 -c "import json,yaml,pathlib; s=yaml.safe_load(pathlib.Path('supabase/openapi/openapi.yaml').read_text()); assert json.loads(pathlib.Path('supabase/openapi/openapi.json').read_text())==s; assert json.loads(pathlib.Path('supabase/functions/openapi/spec.json').read_text())==s"
 
 # Live OpenAPI
 curl -sS https://semsjyrqjnumpvanibip.supabase.co/functions/v1/openapi | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['info']['title'], len(d['paths']))"
