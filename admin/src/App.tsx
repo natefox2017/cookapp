@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { PRODUCTION_MOCK_BLOCKED } from '@/api/client'
 import { AuthProvider } from '@/auth/auth-context'
 import { AppShell } from '@/components/layout/app-shell'
 import { LoginPage } from '@/pages/login/login-page'
@@ -14,7 +15,28 @@ import { CategoriesPage } from '@/pages/categories/categories-page'
 import { SubscriptionPage } from '@/pages/subscription/subscription-page'
 import { SettingsPage } from '@/pages/settings/settings-page'
 
+function ProductionMockBlocked() {
+  return (
+    <div className="flex min-h-svh items-center justify-center bg-background p-6">
+      <div className="max-w-lg rounded-xl border border-destructive/40 bg-card p-6 shadow-sm">
+        <h1 className="text-xl font-semibold tracking-tight text-destructive">
+          Production mock blocked
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This Admin build was compiled with <code>VITE_ADMIN_USE_MOCK=true</code>. Mock KPI and
+          fake commerce data are forbidden in production (Issue #51 / Backend V2). Rebuild with
+          mock disabled and point <code>VITE_ADMIN_API_BASE_URL</code> at the live Backend.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
+  if (PRODUCTION_MOCK_BLOCKED) {
+    return <ProductionMockBlocked />
+  }
+
   return (
     <AuthProvider>
       <BrowserRouter>

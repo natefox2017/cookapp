@@ -1,5 +1,7 @@
 import { httpRequest, isMockMode, mockRequest, ApiError } from '@/api/client'
+import { validateAdminPassword } from '@/lib/password-policy'
 import type {
+  AdminBootstrapResult,
   AdminChangePasswordResult,
   AdminIdentity,
   AdminLoginResult,
@@ -13,6 +15,8 @@ const MOCK_PASSWORD_KEY = 'cookapp-admin-mock-password'
 const mockAdmin: AdminIdentity = {
   id: 'adm_mock_01',
   username: 'admin',
+  role: 'owner',
+  mustChangePassword: false,
 }
 
 const mockSessions = new Map<string, { adminId: string; expiresAt: number }>()
@@ -87,6 +91,39 @@ export async function loginAdmin(
   })
 }
 
+export async function bootstrapAdminOwner(input: {
+  username?: string
+  newPassword: string
+  currentPassword?: string
+}): Promise<AdminBootstrapResult> {
+  const strength = validateAdminPassword(input.newPassword)
+  if (!strength.ok) {
+    throw new ApiError(strength.message ?? 'Weak password', 400)
+  }
+
+  if (isMockMode()) {
+    return mockRequest(() => {
+      writeMockPassword(input.newPassword)
+      mockAdmin.username = (input.username ?? 'admin').trim().toLowerCase()
+      mockAdmin.mustChangePassword = false
+      mockSessions.clear()
+      const token = mockToken()
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      mockSessions.set(token, { adminId: mockAdmin.id, expiresAt: Date.parse(expiresAt) })
+      return { token, expiresAt, admin: { ...mockAdmin } }
+    })
+  }
+
+  return httpRequest<AdminBootstrapResult>('/functions/v1/admin-auth/bootstrap', {
+    method: 'POST',
+    body: JSON.stringify({
+      username: input.username ?? 'admin',
+      newPassword: input.newPassword,
+      currentPassword: input.currentPassword ?? 'admin',
+    }),
+  })
+}
+
 export async function logoutAdmin(): Promise<void> {
   const token = getStoredToken()
   if (isMockMode()) {
@@ -117,10 +154,10 @@ export async function getAdminSession(): Promise<AdminSessionResult> {
       }
       // Rehydrate after full page reload in mock mode
       const storedAdmin = getStoredAdmin()
-      if (token.startsWith('mock_') && storedAdmin?.username === 'admin') {
+      if (token.startsWith('mock_') && storedAdmin) {
         const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000
         mockSessions.set(token, { adminId: mockAdmin.id, expiresAt })
-        return { admin: { ...mockAdmin } }
+        return { admin: { ...mockAdmin, ...storedAdmin } }
       }
       mockSessions.delete(token)
       throw new ApiError('Invalid or expired admin session', 401)
@@ -140,15 +177,18 @@ export async function changeAdminPassword(
   const token = getStoredToken()
   if (!token) throw new ApiError('Not authenticated', 401)
 
+  const strength = validateAdminPassword(newPassword)
+  if (!strength.ok) {
+    throw new ApiError(strength.message ?? 'Weak password', 400)
+  }
+
   if (isMockMode()) {
     return mockRequest(() => {
       if (currentPassword !== readMockPassword()) {
         throw new ApiError('Current password is incorrect', 401)
       }
-      if (newPassword.length < 4) {
-        throw new ApiError('newPassword must be at least 4 characters', 400)
-      }
       writeMockPassword(newPassword)
+      mockAdmin.mustChangePassword = false
       mockSessions.clear()
       const next = mockToken()
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()

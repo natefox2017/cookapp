@@ -3,7 +3,7 @@
   "info": {
     "title": "CookApp Cloud Backend API",
     "version": "1.0.0",
-    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
+    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` \u00b7 Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
     "contact": {
       "name": "CookApp"
     }
@@ -50,6 +50,9 @@
     },
     {
       "name": "System"
+    },
+    {
+      "name": "AdminAuth"
     }
   ],
   "paths": {
@@ -127,6 +130,255 @@
         "responses": {
           "200": {
             "description": "Healthy"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-auth/login": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Admin login",
+        "description": "Issues a custom admin bearer session (not end-user JWT).\nProduction rejects default `admin`/`admin` credentials (Issue #51).\nSet `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`\nonly for local/dev.\n",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionPayload"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "Default credentials blocked in production"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-auth/bootstrap": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Bootstrap Owner credentials",
+        "description": "Replaces the default seed account with a strong Owner password.\nRequires current default password when a seed row exists.\nNo prior session required. Does not return secret values.\n",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newPassword"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "default": "admin"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 12
+                  },
+                  "currentPassword": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Owner bootstrapped and session issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionPayload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Weak password or invalid bootstrap state"
+          },
+          "401": {
+            "description": "Current default password incorrect"
+          },
+          "409": {
+            "description": "Bootstrap not available"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-auth/logout": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Admin logout",
+        "description": "Revokes the current admin bearer session.",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-auth/session": {
+      "get": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Current admin session",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "admin"
+                  ],
+                  "properties": {
+                    "admin": {
+                      "$ref": "#/components/schemas/AdminIdentity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/functions/v1/admin-auth/change-password": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "summary": "Change admin password",
+        "description": "Requires strong password policy (min 12, upper, lower, digit).\nRevokes all sessions for the account and returns a fresh token.\n",
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 12
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/AdminSessionPayload"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "ok": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Weak password"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -890,6 +1142,12 @@
         "in": "header",
         "name": "apikey",
         "description": "Supabase anon key (required alongside JWT for PostgREST)"
+      },
+      "AdminBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "opaque",
+        "description": "Admin Dashboard session token from admin-auth/login (not end-user JWT)"
       }
     },
     "parameters": {
@@ -1492,7 +1750,7 @@
       },
       "SubscriptionStatus": {
         "type": "object",
-        "description": "View `subscription_status` — matches Subscription Service contract.",
+        "description": "View `subscription_status` \u2014 matches Subscription Service contract.",
         "properties": {
           "user_id": {
             "type": "string",
