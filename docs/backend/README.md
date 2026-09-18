@@ -45,7 +45,7 @@ supabase/
   migrations/          # ordered SQL migrations
   openapi/             # OpenAPI 3.1 (yaml + json)
   functions/
-    _shared/           # cors, auth, errors, logger, admin-session
+    _shared/           # cors, auth, errors, logger, admin-session, request-context, audit, monitor
     delete-account/
     revenuecat-webhook/
     health/
@@ -100,10 +100,10 @@ Authorization: Bearer <access_token>
 | `revenuecat-webhook` | no (Bearer secret) | Persist subscription events |
 | `health` | yes | Module probe |
 | `openapi` | no | Serve OpenAPI JSON |
-| `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password |
+| `admin-auth` | no (custom admin bearer) | Admin dashboard login / logout / session / change-password (+ audit) |
 | `admin-users` | no (custom admin bearer) | Users list / detail / registration stats |
 | `admin-dashboard` | no (custom admin bearer) | Ops KPI aggregation |
-| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue |
+| `admin-subscriptions` | no (custom admin bearer) | Admin plan catalog / records / revenue (+ audit) |
 
 ### Admin auth
 
@@ -117,6 +117,15 @@ Authorization: Bearer <access_token>
 - Endpoints under `/functions/v1/admin-subscriptions/{plans,records,revenue}`
 - Records/revenue read `subscriptions` + `purchase_events` (RevenueCat webhook)
 - Google Play: Future Reserved — do not display mock Android revenue as live ops data
+
+### Audit log + observability (Issue #57)
+
+- Table: `admin_audit_logs` (service_role only; secret-redacted before/after diffs)
+- Shared helpers: `_shared/logger.ts` (redaction), `_shared/request-context.ts`, `_shared/audit.ts`, `_shared/monitor.ts`
+- Admin APIs + RevenueCat webhook propagate `X-Request-Id` / `X-Correlation-Id` / optional `X-Job-Id`
+- Error envelope: `{ error: { code, message, details }, request_id }`
+- Monitoring: structured `monitor.webhook_failure` (etc.) events — **no** fake Operational status
+- Redaction tests: `deno test supabase/functions/_shared/logger_test.ts`
 
 ## Migrations
 
@@ -136,6 +145,9 @@ Admin live vs mock matrix: [`ADMIN_API_CONTRACT.md`](./ADMIN_API_CONTRACT.md).
     "code": "unauthorized",
     "message": "…",
     "details": null
-  }
+  },
+  "request_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
+
+Response headers (Admin / webhook): `X-Request-Id`, `X-Correlation-Id`, optional `X-Job-Id`.

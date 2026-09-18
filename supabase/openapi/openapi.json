@@ -3,7 +3,7 @@
   "info": {
     "title": "CookApp Cloud Backend API",
     "version": "1.0.0",
-    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
+    "description": "Supabase-backed API for CookApp. Primary data access is PostgREST (`/rest/v1`)\nwith Row Level Security. Privileged operations use Edge Functions (`/functions/v1`).\n\nAuthentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).\nThird-party OAuth tokens are never stored server-side.\n\nObservability (Issue #57): Admin and webhook Edge Functions accept/propagate\n`X-Request-Id`, `X-Correlation-Id`, and optional `X-Job-Id`. Error responses use\nthe unified envelope `{ error: { code, message, details }, request_id }`.\nPrivileged Admin mutations append to `admin_audit_logs` (secret values redacted).\n\nProject: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`\n",
     "contact": {
       "name": "CookApp"
     }
@@ -62,6 +62,9 @@
     },
     {
       "name": "AdminSubscriptions"
+    },
+    {
+      "name": "Observability"
     }
   ],
   "paths": {
@@ -114,10 +117,22 @@
     "/functions/v1/revenuecat-webhook": {
       "post": {
         "tags": [
-          "Subscription"
+          "Subscription",
+          "Observability"
         ],
         "summary": "RevenueCat webhook",
-        "description": "Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.\nJWT verification disabled; service role used internally.\n",
+        "description": "Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.\nJWT verification disabled; service role used internally.\nPropagates `X-Request-Id` / `X-Correlation-Id` / `X-Job-Id` (Issue #57).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/XCorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/XJobId"
+          }
+        ],
         "security": [
           {
             "WebhookBearer": []
@@ -146,7 +161,8 @@
     "/functions/v1/admin-auth/login": {
       "post": {
         "tags": [
-          "AdminAuth"
+          "AdminAuth",
+          "Observability"
         ],
         "summary": "Admin login",
         "description": "Issues a custom admin bearer session (not end-user JWT).\nProduction rejects default `admin`/`admin` credentials (Issue #51).\nSet `COOKAPP_ADMIN_ALLOW_DEFAULT_CREDENTIALS=true` or `COOKAPP_ADMIN_ENV=development`\nonly for local/dev.\n",
@@ -1496,6 +1512,56 @@
           "type": "string",
           "example": "return=representation"
         }
+      },
+      "XRequestId": {
+        "name": "X-Request-Id",
+        "in": "header",
+        "required": false,
+        "description": "Client-supplied request id. When omitted, the server generates a UUID.\nEchoed on every Admin / webhook response and included in structured logs\nand `admin_audit_logs.request_id`.\n",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "XCorrelationId": {
+        "name": "X-Correlation-Id",
+        "in": "header",
+        "required": false,
+        "description": "Cross-service correlation id. Defaults to `X-Request-Id` when omitted.\n",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "XJobId": {
+        "name": "X-Job-Id",
+        "in": "header",
+        "required": false,
+        "description": "Optional async job / sync run id (import jobs, provider syncs, webhook\nevent id). Stored on audit rows and structured logs when present.\n",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      }
+    },
+    "headers": {
+      "XRequestId": {
+        "description": "Request id for this response (echo or server-generated).",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "XCorrelationId": {
+        "description": "Correlation id for this response.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "XJobId": {
+        "description": "Job / sync id when applicable.",
+        "schema": {
+          "type": "string"
+        }
       }
     },
     "responses": {
@@ -1504,7 +1570,25 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/ErrorBody"
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "description": "Unified Edge Function error body. Always includes `request_id` (may be\nnull only on legacy paths that predate Issue #57). Secrets are never\nreturned in `details`.\n",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/XRequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/XCorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
             }
           }
         }
@@ -1525,6 +1609,134 @@
               },
               "details": {}
             }
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "description": "Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).\n",
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Machine-readable code (e.g. unauthorized, validation_error)"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "description": "Optional non-secret details (never passwords/tokens/keys)",
+                "type": [
+                  "object",
+                  "null",
+                  "array",
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            }
+          },
+          "request_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Same value as `X-Request-Id` response header"
+          }
+        }
+      },
+      "AdminAuditLog": {
+        "type": "object",
+        "description": "Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.\n",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actor_admin_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "actor_username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "description": "e.g. admin.login, subscription_plan.update, ai.provider.update,\nrecipe.delete, user.admin_action, integration.config_update\n"
+          },
+          "object_type": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "before_diff": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "after_diff": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "request_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "correlation_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "job_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1573,6 +1785,249 @@
           },
           "admin": {
             "$ref": "#/components/schemas/AdminIdentity"
+          }
+        }
+      },
+      "AdminAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "Present after #51 hardening migration"
+          }
+        }
+      },
+      "AdminLoginRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "AdminLoginResponse": {
+        "type": "object",
+        "required": [
+          "token",
+          "expiresAt",
+          "admin"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "admin": {
+            "$ref": "#/components/schemas/AdminAccount"
+          }
+        }
+      },
+      "AdminChangePasswordRequest": {
+        "type": "object",
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "format": "password"
+          },
+          "newPassword": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended",
+              "deleted"
+            ]
+          },
+          "subscription": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro",
+              "lifetime"
+            ]
+          },
+          "registrationProvider": {
+            "type": "string",
+            "enum": [
+              "apple",
+              "google",
+              "email",
+              "unknown"
+            ]
+          },
+          "deviceType": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "web",
+              "unknown"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "favoriteCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "AdminUserDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdminUser"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "registrationIp": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "payments": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedAdminUsers": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUser"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "UserRegistrationStats": {
+        "type": "object",
+        "properties": {
+          "byProvider": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "byDevice": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "DashboardData": {
+        "type": "object",
+        "description": "Ops aggregation from admin-dashboard (#47). Source labels should be preserved by clients.",
+        "additionalProperties": true
+      },
+      "SubscriptionPlanProduct": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "planKey": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "app_store",
+              "play_store"
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "billingPeriod": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2167,249 +2622,6 @@
             "format": "date-time"
           },
           "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "AdminAccount": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "username": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string",
-            "description": "Present after #51 hardening migration"
-          }
-        }
-      },
-      "AdminLoginRequest": {
-        "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
-        "properties": {
-          "username": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string",
-            "format": "password"
-          }
-        }
-      },
-      "AdminLoginResponse": {
-        "type": "object",
-        "required": [
-          "token",
-          "expiresAt",
-          "admin"
-        ],
-        "properties": {
-          "token": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "admin": {
-            "$ref": "#/components/schemas/AdminAccount"
-          }
-        }
-      },
-      "AdminChangePasswordRequest": {
-        "type": "object",
-        "required": [
-          "currentPassword",
-          "newPassword"
-        ],
-        "properties": {
-          "currentPassword": {
-            "type": "string",
-            "format": "password"
-          },
-          "newPassword": {
-            "type": "string",
-            "format": "password"
-          }
-        }
-      },
-      "AdminUser": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "active",
-              "suspended",
-              "deleted"
-            ]
-          },
-          "subscription": {
-            "type": "string",
-            "enum": [
-              "free",
-              "pro",
-              "lifetime"
-            ]
-          },
-          "registrationProvider": {
-            "type": "string",
-            "enum": [
-              "apple",
-              "google",
-              "email",
-              "unknown"
-            ]
-          },
-          "deviceType": {
-            "type": "string",
-            "enum": [
-              "ios",
-              "android",
-              "web",
-              "unknown"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "favoriteCount": {
-            "type": "integer"
-          }
-        }
-      },
-      "AdminUserDetail": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/AdminUser"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "registrationIp": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "payments": {
-                "type": "array",
-                "items": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "PaginatedAdminUsers": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdminUser"
-            }
-          },
-          "total": {
-            "type": "integer"
-          },
-          "page": {
-            "type": "integer"
-          },
-          "pageSize": {
-            "type": "integer"
-          }
-        }
-      },
-      "UserRegistrationStats": {
-        "type": "object",
-        "properties": {
-          "byProvider": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          },
-          "byDevice": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        }
-      },
-      "DashboardData": {
-        "type": "object",
-        "description": "Ops aggregation from admin-dashboard (#47). Source labels should be preserved by clients.",
-        "additionalProperties": true
-      },
-      "SubscriptionPlanProduct": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "planKey": {
-            "type": "string"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "platform": {
-            "type": "string",
-            "enum": [
-              "app_store",
-              "play_store"
-            ]
-          },
-          "productId": {
-            "type": "string"
-          },
-          "price": {
-            "type": "number"
-          },
-          "currency": {
-            "type": "string"
-          },
-          "billingPeriod": {
-            "type": "string",
-            "enum": [
-              "monthly",
-              "yearly",
-              "lifetime"
-            ]
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "updatedAt": {
             "type": "string",
             "format": "date-time"
           }

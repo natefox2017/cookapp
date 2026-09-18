@@ -9,6 +9,11 @@ info:
     Authentication: Supabase Auth session JWT (`Authorization: Bearer <access_token>`).
     Third-party OAuth tokens are never stored server-side.
 
+    Observability (Issue #57): Admin and webhook Edge Functions accept/propagate
+    `X-Request-Id`, `X-Correlation-Id`, and optional `X-Job-Id`. Error responses use
+    the unified envelope `{ error: { code, message, details }, request_id }`.
+    Privileged Admin mutations append to `admin_audit_logs` (secret values redacted).
+
     Project: `semsjyrqjnumpvanibip` · Base: `https://semsjyrqjnumpvanibip.supabase.co`
   contact:
     name: CookApp
@@ -32,6 +37,7 @@ tags:
   - name: AdminUsers
   - name: AdminDashboard
   - name: AdminSubscriptions
+  - name: Observability
 
 paths:
   /auth/v1/token:
@@ -66,11 +72,16 @@ paths:
 
   /functions/v1/revenuecat-webhook:
     post:
-      tags: [Subscription]
+      tags: [Subscription, Observability]
       summary: RevenueCat webhook
       description: |
         Server-to-server. Auth via `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
         JWT verification disabled; service role used internally.
+        Propagates `X-Request-Id` / `X-Correlation-Id` / `X-Job-Id` (Issue #57).
+      parameters:
+        - $ref: "#/components/parameters/XRequestId"
+        - $ref: "#/components/parameters/XCorrelationId"
+        - $ref: "#/components/parameters/XJobId"
       security:
         - WebhookBearer: []
       responses:
@@ -87,7 +98,7 @@ paths:
 
   /functions/v1/admin-auth/login:
     post:
-      tags: [AdminAuth]
+      tags: [AdminAuth, Observability]
       summary: Admin login
       description: |
         Issues a custom admin bearer session (not end-user JWT).
@@ -871,6 +882,50 @@ components:
       schema:
         type: string
         example: return=representation
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: |
+        Client-supplied request id. When omitted, the server generates a UUID.
+        Echoed on every Admin / webhook response and included in structured logs
+        and `admin_audit_logs.request_id`.
+      schema:
+        type: string
+        maxLength: 128
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: |
+        Cross-service correlation id. Defaults to `X-Request-Id` when omitted.
+      schema:
+        type: string
+        maxLength: 128
+    XJobId:
+      name: X-Job-Id
+      in: header
+      required: false
+      description: |
+        Optional async job / sync run id (import jobs, provider syncs, webhook
+        event id). Stored on audit rows and structured logs when present.
+      schema:
+        type: string
+        maxLength: 128
+
+  headers:
+    XRequestId:
+      description: Request id for this response (echo or server-generated).
+      schema:
+        type: string
+    XCorrelationId:
+      description: Correlation id for this response.
+      schema:
+        type: string
+    XJobId:
+      description: Job / sync id when applicable.
+      schema:
+        type: string
 
   responses:
     Unauthorized:
@@ -878,7 +933,21 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ErrorBody"
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ErrorEnvelope:
+      description: |
+        Unified Edge Function error body. Always includes `request_id` (may be
+        null only on legacy paths that predate Issue #57). Secrets are never
+        returned in `details`.
+      headers:
+        X-Request-Id:
+          $ref: "#/components/headers/XRequestId"
+        X-Correlation-Id:
+          $ref: "#/components/headers/XCorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
 
   schemas:
     ErrorBody:
@@ -890,6 +959,52 @@ components:
             code: { type: string }
             message: { type: string }
             details: {}
+    ErrorEnvelope:
+      type: object
+      required: [error, request_id]
+      description: |
+        Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable code (e.g. unauthorized, validation_error)
+            message:
+              type: string
+            details:
+              description: Optional non-secret details (never passwords/tokens/keys)
+              type: [object, "null", array, string, number, boolean]
+        request_id:
+          type: [string, "null"]
+          description: Same value as `X-Request-Id` response header
+
+    AdminAuditLog:
+      type: object
+      description: |
+        Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.
+      properties:
+        id: { type: string, format: uuid }
+        actor_admin_id: { type: [string, "null"], format: uuid }
+        actor_username: { type: [string, "null"] }
+        action:
+          type: string
+          description: |
+            e.g. admin.login, subscription_plan.update, ai.provider.update,
+            recipe.delete, user.admin_action, integration.config_update
+        object_type: { type: string }
+        object_id: { type: [string, "null"] }
+        before_diff: { type: [object, "null"], additionalProperties: true }
+        after_diff: { type: [object, "null"], additionalProperties: true }
+        request_id: { type: [string, "null"] }
+        correlation_id: { type: [string, "null"] }
+        job_id: { type: [string, "null"] }
+        ip: { type: [string, "null"] }
+        user_agent: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+
 
     AdminIdentity:
       type: object

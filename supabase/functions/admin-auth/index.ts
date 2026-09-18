@@ -1,12 +1,12 @@
 // Admin Dashboard auth: login / logout / session / change-password / bootstrap.
 // Custom bearer sessions (not end-user Supabase Auth JWT).
-// Issue: #51 (hardening) · legacy #32
+// Issues: #51 (hardening) · #57 (audit / request ids) · legacy #32
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { publicCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { AppError, errorResponse, json } from "../_shared/errors.ts";
 import { createServiceClient } from "../_shared/auth.ts";
-import { log } from "../_shared/logger.ts";
+import { createLogger } from "../_shared/logger.ts";
 import {
   createAdminSession,
   requireAdminSession,
@@ -16,6 +16,8 @@ import {
   isDefaultAdminCredentials,
   validateAdminPassword,
 } from "../_shared/admin-password.ts";
+import { writeAdminAudit } from "../_shared/audit.ts";
+import { resolveRequestContext } from "../_shared/request-context.ts";
 
 function routeAction(req: Request): string {
   const url = new URL(req.url);
@@ -93,6 +95,9 @@ Deno.serve(async (req) => {
   const cors = handleCors(req, "public");
   if (cors) return cors;
 
+  const ctx = resolveRequestContext(req);
+  const log = createLogger(ctx);
+
   try {
     const action = routeAction(req);
     const method = req.method.toUpperCase();
@@ -110,6 +115,14 @@ Deno.serve(async (req) => {
         isDefaultAdminCredentials(username, password)
       ) {
         log("warn", "admin_default_credentials_blocked", { username });
+        await writeAdminAudit({
+          actor: { username },
+          action: "admin.login_failed",
+          objectType: "admin_session",
+          after: { reason: "default_credentials_blocked" },
+          ctx,
+          req,
+        });
         throw new AppError(
           "forbidden",
           "Default admin credentials are disabled in production. Bootstrap an Owner password first.",
@@ -125,11 +138,27 @@ Deno.serve(async (req) => {
 
       if (error) {
         log("error", "admin_verify_failed", { message: error.message });
+        await writeAdminAudit({
+          actor: { username },
+          action: "admin.login_failed",
+          objectType: "admin_session",
+          after: { reason: "verify_error" },
+          ctx,
+          req,
+        });
         throw new AppError("internal_error", "Credential verification failed", 500);
       }
 
       const row = Array.isArray(data) ? data[0] : data;
       if (!row?.id) {
+        await writeAdminAudit({
+          actor: { username },
+          action: "admin.login_failed",
+          objectType: "admin_session",
+          after: { reason: "invalid_credentials" },
+          ctx,
+          req,
+        });
         throw new AppError("unauthorized", "Invalid username or password", 401);
       }
 
@@ -139,6 +168,14 @@ Deno.serve(async (req) => {
         account.is_default_seed &&
         isDefaultAdminCredentials(username, password)
       ) {
+        await writeAdminAudit({
+          actor: { username },
+          action: "admin.login_failed",
+          objectType: "admin_session",
+          after: { reason: "default_seed_blocked" },
+          ctx,
+          req,
+        });
         throw new AppError(
           "forbidden",
           "Default seed account cannot sign in to production. Call /admin-auth/bootstrap.",
@@ -151,6 +188,15 @@ Deno.serve(async (req) => {
         admin_id: account.id,
         role: account.role,
       });
+      await writeAdminAudit({
+        actor: { adminId: account.id as string, username: account.username as string },
+        action: "admin.login",
+        objectType: "admin_session",
+        objectId: account.id as string,
+        after: { username: account.username, role: account.role },
+        ctx,
+        req,
+      });
       return json(
         {
           token: session.token,
@@ -159,6 +205,7 @@ Deno.serve(async (req) => {
         },
         200,
         publicCorsHeaders,
+        ctx,
       );
     }
 
@@ -204,6 +251,15 @@ Deno.serve(async (req) => {
 
       const session = await createAdminSession(row.id as string);
       log("info", "admin_bootstrap_ok", { admin_id: row.id, role: row.role });
+      await writeAdminAudit({
+        actor: { adminId: row.id as string, username: row.username as string },
+        action: "admin.bootstrap",
+        objectType: "admin_account",
+        objectId: row.id as string,
+        after: { username: row.username, role: row.role ?? "owner" },
+        ctx,
+        req,
+      });
       return json(
         {
           token: session.token,
@@ -217,6 +273,7 @@ Deno.serve(async (req) => {
         },
         200,
         publicCorsHeaders,
+        ctx,
       );
     }
 
@@ -232,7 +289,15 @@ Deno.serve(async (req) => {
         throw new AppError("internal_error", "Failed to revoke admin session", 500);
       }
       log("info", "admin_logout_ok", { admin_id: session.adminId });
-      return json({ ok: true }, 200, publicCorsHeaders);
+      await writeAdminAudit({
+        actor: { adminId: session.adminId, username: session.username },
+        action: "admin.logout",
+        objectType: "admin_session",
+        objectId: session.sessionId,
+        ctx,
+        req,
+      });
+      return json({ ok: true }, 200, publicCorsHeaders, ctx);
     }
 
     if (action === "session" && method === "GET") {
@@ -244,6 +309,7 @@ Deno.serve(async (req) => {
         },
         200,
         publicCorsHeaders,
+        ctx,
       );
     }
 
@@ -279,12 +345,30 @@ Deno.serve(async (req) => {
         throw new AppError("internal_error", "Password change failed", 500);
       }
       if (!data) {
+        await writeAdminAudit({
+          actor: { adminId: session.adminId, username: session.username },
+          action: "admin.password_change_failed",
+          objectType: "admin_account",
+          objectId: session.adminId,
+          after: { reason: "current_password_incorrect" },
+          ctx,
+          req,
+        });
         throw new AppError("unauthorized", "Current password is incorrect", 401);
       }
 
       const account = await loadAdminRow(session.adminId);
       const next = await createAdminSession(session.adminId);
       log("info", "admin_password_changed", { admin_id: session.adminId });
+      await writeAdminAudit({
+        actor: { adminId: session.adminId, username: session.username },
+        action: "admin.password_change",
+        objectType: "admin_account",
+        objectId: session.adminId,
+        after: { password_changed: true },
+        ctx,
+        req,
+      });
       return json(
         {
           ok: true,
@@ -294,6 +378,7 @@ Deno.serve(async (req) => {
         },
         200,
         publicCorsHeaders,
+        ctx,
       );
     }
 
@@ -303,6 +388,6 @@ Deno.serve(async (req) => {
       404,
     );
   } catch (err) {
-    return errorResponse(err, publicCorsHeaders);
+    return errorResponse(err, publicCorsHeaders, ctx);
   }
 });
