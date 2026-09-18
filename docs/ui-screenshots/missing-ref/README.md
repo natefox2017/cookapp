@@ -32,6 +32,6 @@ Owner 提供的缺图页素材。文件夹编号 = Figma Interaction Tree 正式
 | `45-46/` | 45 How To · 46 Import/Share | 3 | 1 | 45 图可用色块；46 系统分享不画 |
 | `47-49/` | 49 What’s New | 1 | — | **47/48 不画**；49 按钮关闭回上页 |
 
-**本包未含：** `37`（若树中有独立页）。`03` 已收录（Owner 确认图）。
+**37 Clipboard Detection：** 不在本编号包内，但 Owner 已提供主截图集 `docs/ui-screenshots/settings-general-voice-clipboard.jpg`（勿报缺图）。`03` 已收录（Owner 确认图）。
 
 根目录 `readme.txt` 为 Owner 总说明（长图拼接 + 录屏补页）。
