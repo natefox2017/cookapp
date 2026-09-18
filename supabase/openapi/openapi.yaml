@@ -89,6 +89,10 @@ paths:
       responses:
         '200':
           description: Event received
+      parameters:
+      - $ref: '#/components/parameters/XJobId'
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/health:
     get:
       tags:
@@ -138,6 +142,9 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: Default credentials blocked in production
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-auth/bootstrap:
     post:
       tags:
@@ -156,6 +163,8 @@ paths:
         '
       security: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: X-CookApp-Bootstrap-Token
         in: header
         required: false
@@ -214,6 +223,9 @@ paths:
                     type: boolean
         '401':
           $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-auth/session:
     get:
       tags:
@@ -235,6 +247,9 @@ paths:
                     $ref: '#/components/schemas/AdminIdentity'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-auth/change-password:
     post:
       tags:
@@ -280,6 +295,9 @@ paths:
           description: Weak password
         '401':
           $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /rest/v1/profiles:
     get:
       tags:
@@ -758,6 +776,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: q
         in: query
         schema:
@@ -808,6 +828,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserRegistrationStats'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-users/{id}:
     get:
       tags:
@@ -817,6 +840,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: id
         in: path
         required: true
@@ -845,6 +870,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DashboardData'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-subscriptions/plans:
     get:
       tags:
@@ -862,6 +890,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SubscriptionPlanProduct'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
     post:
       tags:
       - AdminSubscriptions
@@ -878,6 +909,9 @@ paths:
       responses:
         '201':
           description: Created
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-subscriptions/plans/{id}:
     put:
       tags:
@@ -887,6 +921,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: id
         in: path
         required: true
@@ -904,6 +940,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: id
         in: path
         required: true
@@ -924,6 +962,9 @@ paths:
       responses:
         '200':
           description: OK
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-subscriptions/revenue:
     get:
       tags:
@@ -935,6 +976,9 @@ paths:
       responses:
         '200':
           description: OK
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-recipe-import/jobs:
     get:
       tags:
@@ -944,6 +988,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: status
         in: query
         schema:
@@ -1016,6 +1062,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorBody'
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-recipe-import/jobs/{jobId}:
     get:
       tags:
@@ -1025,6 +1074,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - $ref: '#/components/parameters/RecipeImportJobId'
       responses:
         '200':
@@ -1055,6 +1106,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - $ref: '#/components/parameters/RecipeImportJobId'
       requestBody:
         content:
@@ -1076,6 +1129,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - $ref: '#/components/parameters/RecipeImportJobId'
       responses:
         '200':
@@ -1089,6 +1144,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - $ref: '#/components/parameters/RecipeImportJobId'
       requestBody:
         content:
@@ -1111,6 +1168,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - $ref: '#/components/parameters/RecipeImportJobId'
       requestBody:
         content:
@@ -1151,6 +1210,9 @@ paths:
       responses:
         '201':
           description: Batch created with pending jobs
+      parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
   /functions/v1/admin-recipe-import/batches/{batchId}:
     get:
       tags:
@@ -1160,6 +1222,8 @@ paths:
       security:
       - AdminBearer: []
       parameters:
+      - $ref: '#/components/parameters/XCorrelationId'
+      - $ref: '#/components/parameters/XRequestId'
       - name: batchId
         in: path
         required: true
@@ -1251,6 +1315,42 @@ components:
       schema:
         type: string
         format: uuid
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: 'Client-supplied request id. When omitted, the server generates a UUID.
+
+        Echoed on every Admin / webhook response and included in structured logs
+
+        and `admin_audit_logs.request_id`.
+
+        '
+      schema:
+        type: string
+        maxLength: 128
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: 'Cross-service correlation id. Defaults to `X-Request-Id` when omitted.
+
+        '
+      schema:
+        type: string
+        maxLength: 128
+    XJobId:
+      name: X-Job-Id
+      in: header
+      required: false
+      description: 'Optional async job / sync run id (import jobs, provider syncs, webhook
+
+        event id). Stored on audit rows and structured logs when present.
+
+        '
+      schema:
+        type: string
+        maxLength: 128
   responses:
     Unauthorized:
       description: Missing or invalid session
@@ -1258,6 +1358,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorBody'
+    ErrorEnvelope:
+      description: 'Unified Edge Function error body. Always includes `request_id` (may be
+
+        null only on legacy paths that predate Issue #57). Secrets are never
+
+        returned in `details`.
+
+        '
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        X-Correlation-Id:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
   schemas:
     ErrorBody:
       type: object
@@ -2083,6 +2200,104 @@ components:
         created_at:
           type: string
           format: date-time
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      - request_id
+      description: 'Canonical Admin / Edge Function error envelope (Issue #57 / V2 §17).
+
+        '
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable code (e.g. unauthorized, validation_error)
+            message:
+              type: string
+            details:
+              description: Optional non-secret details (never passwords/tokens/keys)
+              type:
+              - object
+              - 'null'
+              - array
+              - string
+              - number
+              - boolean
+        request_id:
+          type:
+          - string
+          - 'null'
+          description: Same value as `X-Request-Id` response header
+    AdminAuditLog:
+      type: object
+      description: 'Row in `admin_audit_logs` (service_role only). Diffs are secret-redacted.
+
+        '
+      properties:
+        id:
+          type: string
+          format: uuid
+        actor_admin_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        actor_username:
+          type:
+          - string
+          - 'null'
+        action:
+          type: string
+          description: 'e.g. admin.login, subscription_plan.update, ai.provider.update,
+
+            recipe.delete, user.admin_action, integration.config_update
+
+            '
+        object_type:
+          type: string
+        object_id:
+          type:
+          - string
+          - 'null'
+        before_diff:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        after_diff:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        request_id:
+          type:
+          - string
+          - 'null'
+        correlation_id:
+          type:
+          - string
+          - 'null'
+        job_id:
+          type:
+          - string
+          - 'null'
+        ip:
+          type:
+          - string
+          - 'null'
+        user_agent:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
     MediaObjectMetadata:
       type: object
       description: 'Postgres metadata pattern for object storage (never base64/blobs).
@@ -2170,7 +2385,19 @@ components:
                 type: string
               message:
                 type: string
-  headers: {}
+  headers:
+    XRequestId:
+      description: Request id for this response (echo or server-generated).
+      schema:
+        type: string
+    XCorrelationId:
+      description: Correlation id for this response.
+      schema:
+        type: string
+    XJobId:
+      description: Job / sync id when applicable.
+      schema:
+        type: string
 security:
 - BearerAuth: []
   Apikey: []

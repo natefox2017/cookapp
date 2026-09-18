@@ -1,13 +1,15 @@
 /** Shared CORS helpers for CookApp Edge Functions. */
 
 const ALLOW_HEADERS =
-  "authorization, x-client-info, apikey, content-type";
+  "authorization, x-client-info, apikey, content-type, x-request-id, x-correlation-id, x-job-id";
+const EXPOSE_HEADERS = "x-request-id, x-correlation-id, x-job-id";
 const ALLOW_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS";
 
 /** Public endpoints (e.g. openapi) may use a wildcard origin. */
 export const publicCorsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": ALLOW_HEADERS,
+  "Access-Control-Expose-Headers": EXPOSE_HEADERS,
   "Access-Control-Allow-Methods": ALLOW_METHODS,
 };
 
@@ -24,6 +26,7 @@ export function authCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin");
   const headers: Record<string, string> = {
     "Access-Control-Allow-Headers": ALLOW_HEADERS,
+    "Access-Control-Expose-Headers": EXPOSE_HEADERS,
     "Access-Control-Allow-Methods": ALLOW_METHODS,
     Vary: "Origin",
   };

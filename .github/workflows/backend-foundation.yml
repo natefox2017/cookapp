@@ -91,6 +91,14 @@ jobs:
           count=$(ls supabase/migrations/*.sql | wc -l)
           test "$count" -ge 2
           echo "migrations=$count"
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Log redaction + request id tests
+        run: |
+          set -euo pipefail
+          deno test --allow-env supabase/functions/_shared/logger_test.ts
       - name: Media storage unit tests
         run: |
           set -euo pipefail
