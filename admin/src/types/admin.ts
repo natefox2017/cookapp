@@ -1,6 +1,9 @@
 export type UserStatus = 'active' | 'suspended' | 'deleted'
 export type SubscriptionPlan = 'free' | 'pro' | 'lifetime'
-export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'trialing'
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'trialing' | 'billing_issue'
+/** Store platforms used for plan catalog + record filters. */
+export type StorePlatform = 'app_store' | 'play_store'
+export type BillingPeriod = 'monthly' | 'yearly' | 'lifetime'
 
 export interface AdminUser {
   id: string
@@ -122,6 +125,25 @@ export interface TaxonomyItem {
   usageCount: number
 }
 
+/** Admin-managed catalog row — one product SKU per platform. */
+export interface SubscriptionPlanProduct {
+  id: string
+  /** Logical plan key shown to ops (e.g. pro_monthly). */
+  planKey: string
+  displayName: string
+  platform: StorePlatform
+  /** App Store / Play Console product identifier. */
+  productId: string
+  price: number
+  currency: string
+  billingPeriod: BillingPeriod
+  active: boolean
+  description: string | null
+  updatedAt: string
+}
+
+export type SubscriptionPlanInput = Omit<SubscriptionPlanProduct, 'id' | 'updatedAt'>
+
 export interface SubscriptionRecord {
   id: string
   user: {
@@ -131,8 +153,36 @@ export interface SubscriptionRecord {
   }
   plan: SubscriptionPlan
   status: SubscriptionStatus
+  platform: StorePlatform | null
+  productId: string | null
+  /** Last known paid amount for this entitlement (null for free). */
+  amount: number | null
+  currency: string | null
   startDate: string
   expirationDate: string | null
+}
+
+export interface SubscriptionRevenuePoint {
+  month: string
+  apple: number
+  android: number
+  total: number
+}
+
+export interface SubscriptionRevenueStats {
+  mrr: number
+  appleRevenue: number
+  androidRevenue: number
+  activePaid: number
+}
+
+export interface SubscriptionRevenueData {
+  stats: SubscriptionRevenueStats
+  series: SubscriptionRevenuePoint[]
+}
+
+export interface ListSubscriptionsParams {
+  platform?: StorePlatform | 'all'
 }
 
 export interface DashboardStats {

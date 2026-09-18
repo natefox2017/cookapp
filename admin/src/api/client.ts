@@ -1,5 +1,6 @@
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK ?? 'true') === 'true'
 const API_BASE = import.meta.env.VITE_ADMIN_API_BASE_URL ?? ''
+const ADMIN_TOKEN_KEY = 'cookapp-admin-token'
 
 export class ApiError extends Error {
   status: number
@@ -8,6 +9,15 @@ export class ApiError extends Error {
     super(message)
     this.name = 'ApiError'
     this.status = status
+  }
+}
+
+function adminAuthHeaders(): Record<string, string> {
+  try {
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY)
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  } catch {
+    return {}
   }
 }
 
@@ -28,6 +38,7 @@ export async function httpRequest<T>(
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...adminAuthHeaders(),
       ...(init?.headers ?? {}),
     },
   })
