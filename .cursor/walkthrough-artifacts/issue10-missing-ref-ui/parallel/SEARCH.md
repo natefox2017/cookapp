@@ -46,6 +46,10 @@ Standalone / local frames moved to **y=72**:
 | `374:7856` 43 Add Section local header | 58 | **72** |
 | `180:12831` Page=Cookbook (folders flow, not 127:10295) | 58 | **72** |
 
-## Independent QA
+## 18 result cards (user markup)
 
-`VERDICT: PASS` (search glass + title lock).
+- Cropped baked servings (people+count) and baked titles out of photo fills; mayo uses meal-plan hash `71de5555`.
+- Vector titles stay inside 197×150 (`clipsContent`); muffin no longer overflows.
+- Matches Ingredient = glass pill, carrot + label only.
+- Hid extra More `641:9906`. Search bar on 18 has GLASS.
+- Independent QA: **PASS**.
