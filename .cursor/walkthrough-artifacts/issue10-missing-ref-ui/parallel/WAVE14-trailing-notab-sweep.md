@@ -45,6 +45,16 @@ Explicit no-tab confirms (no `Bottom Chrome` / `Four Tab` nodes, or hidden):
 - `WAVE14-recipe-menu-notab.png` — Recipe Menu, no tab
 - `WAVE14-list-menu.png` — List Menu, no tab
 
+## MenuOpen fidelity follow-up (QA FAIL → fixed)
+
+`State=MenuOpen` was missing **Recently Added**, used 3-row counts (5/5/1), and left Categories/Cuisines expanded. Aligned to Pestle `folders-home-menu-open.jpg` (minus tab):
+
+- All Recipes Group: All / Your / Recently Added / Bookmarks (6/6/1/1), row ys `0/52/104/156`
+- Categories + Cuisines groups hidden; section disclosures → ChevronRight; ys 408/466/524
+- Same Recently Added row + stack fix applied to FoldersExpanded / CategoriesExpanded / CuisinesExpanded
+
 ## Note vs Pestle stills
 
 `docs/ui-screenshots/folders-home*.jpg` still show a Pestle tab bar. **Owner override**: Folders (and menu overlays) must **not** show tab chrome in the Interaction Tree.
+
+Dark appearance: Interaction Tree page is **White Theme** only — dark chrome certification is out of scope for this wave (Glass / Top Button kit already carries light glass recipe).
